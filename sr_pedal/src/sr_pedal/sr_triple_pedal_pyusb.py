@@ -90,4 +90,3 @@ if __name__ == "__main__":
     rospy.init_node("sr_pedal")
     sr_pedal = SrPedal()
     sr_pedal.run()
-    # rospy.spin()
