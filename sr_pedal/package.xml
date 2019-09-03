@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>sr_pedal</name>
+  <version>0.0.0</version>
+  <description>The sr_pedal package</description>
+  <maintainer email="software@shadowrobot.com">Shadow Robot's software team</maintainer>
+
+  <license>Private</license>
+
+  <url type="website">http://www.shadowrobot.com</url>
+  <url type="repository">https://github.com/shadow-robot/sr_teleop_internal</url>
+  <url type="bugtracker">https://github.com/shadow-robot/sr_teleop_internal/issues</url>
+
+  <author>Ethan Fowler</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_export_depend>rospy</build_export_depend>
+  <exec_depend>libusb-1.0</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>python-evdev</exec_depend>
+  <exec_depend>rospy</exec_depend>
+
+</package>
