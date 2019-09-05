@@ -19,6 +19,7 @@ import actionlib
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 from trajectory_msgs.msg import JointTrajectoryPoint
 
+
 class CybergloveMock(object):
     def __init__(self):
         self._hand_traj_client = actionlib.SimpleActionClient('/rh_trajectory_controller' +

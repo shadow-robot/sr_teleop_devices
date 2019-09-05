@@ -16,7 +16,8 @@ import rospy
 import rospkg
 from sys import exit as sysexit
 from time import sleep
-import usb.core, usb.util
+import usb.core
+import usb.util
 import yaml
 
 
