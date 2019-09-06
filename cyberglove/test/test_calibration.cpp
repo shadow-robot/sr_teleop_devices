@@ -26,7 +26,7 @@
 
 
 #include <ros/ros.h>
-
+#include <ros/package.h>
 #include <math.h>
 #include <cyberglove/xml_calibration_parser.h>
 #include <gtest/gtest.h>
@@ -35,7 +35,7 @@
 
 #define TEST_EXPRESSION(a) EXPECT_EQ((a), meval::EvaluateMathExpression(#a))
 
-std::string path_to_calibration = "test/cyberglove_test.cal";
+std::string path_to_calibration = ros::package::getPath("cyberglove") + "/test/cyberglove_test.cal";
 
 float epsilon = 0.01f;
 
