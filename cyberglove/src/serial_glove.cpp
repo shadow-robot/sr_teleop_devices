@@ -1,5 +1,5 @@
 /*
-* @file   serial_glove.hpp
+* @file   serial_glove.cpp
 * @author Ugo Cupcic <ugo@shadowrobot.com>
 * @date   Thu May  5 15:30:17 2011
 *
@@ -21,7 +21,7 @@
 *
 */
 
-#include "cyberglove/serial_glove.hpp"
+#include "cyberglove/serial_glove.h"
 
 #include <iostream>
 #include <iomanip>

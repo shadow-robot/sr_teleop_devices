@@ -35,7 +35,7 @@
 #include <vector>
 #include <boost/smart_ptr.hpp>
 
-#include "cyberglove/serial_glove.hpp"
+#include "cyberglove/serial_glove.h"
 
 // messages
 #include <sensor_msgs/JointState.h>

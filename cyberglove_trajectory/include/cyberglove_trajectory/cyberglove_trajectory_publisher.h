@@ -38,7 +38,7 @@
 #include <trajectory_msgs/JointTrajectoryPoint.h>
 #include <control_msgs/FollowJointTrajectoryAction.h>
 #include <control_msgs/FollowJointTrajectoryGoal.h>
-#include "cyberglove/serial_glove.hpp"
+#include "cyberglove/serial_glove.h"
 #include <sensor_msgs/JointState.h>
 #include <sr_utilities/calibration.hpp>
 #include <sr_utilities/thread_safe_map.hpp>
