@@ -126,8 +126,8 @@ class LogitechR400Usb(object):
             for i, device in enumerate(self._devices):
                 try:
                     data = device.read(endpoint[i].bEndpointAddress,
-                                              endpoint[i].wMaxPacketSize,
-                                              timeout=50)
+                                       endpoint[i].wMaxPacketSize,
+                                       timeout=50)
 
                     self._fill_state(i, data)
                 except usb.core.USBError:

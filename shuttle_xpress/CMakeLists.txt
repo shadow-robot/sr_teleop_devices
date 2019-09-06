@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 roslint_cpp()
 roslint_python()
+roslint_python(src/shuttle_xpress/shuttle_xpress)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
