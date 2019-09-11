@@ -1,0 +1,1 @@
+SUBSYSTEM=="input" ATTRS{name}=="VEC  VEC USB Footpedal", MODE="666"
