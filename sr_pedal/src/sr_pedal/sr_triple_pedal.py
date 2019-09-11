@@ -18,6 +18,7 @@ import rospy
 import evdev
 from sr_pedal.msg import Status
 
+
 class SrPedal():
     def __init__(self):
         self.device = None
@@ -65,7 +66,7 @@ class SrPedal():
                     pedal = device
                     break
             except OSError:
-                pass # Probably because the device doesn't exist any more
+                pass  # Probably because the device doesn't exist any more
         return pedal
 
     def disconnect(self):
@@ -85,7 +86,7 @@ class SrPedal():
         self.right_pressed = False
         self.publish()
 
-    def publish(self, time = None):
+    def publish(self, time=None):
         if time is None:
             time = rospy.Time.now()
         self.message.header.stamp = time

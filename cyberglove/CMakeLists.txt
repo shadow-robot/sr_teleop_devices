@@ -6,6 +6,7 @@ project(cyberglove)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roslib
+  roslint
   roscpp
   rospy
   std_msgs
@@ -19,6 +20,9 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED system filesystem date_time thread)
+
+roslint_cpp()
+roslint_python()
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed

@@ -16,7 +16,8 @@ import rospy
 import rospkg
 from sys import exit as sysexit
 from time import sleep
-import usb.core, usb.util
+import usb.core
+import usb.util
 import yaml
 
 
@@ -125,8 +126,8 @@ class LogitechR400Usb(object):
             for i, device in enumerate(self._devices):
                 try:
                     data = device.read(endpoint[i].bEndpointAddress,
-                                              endpoint[i].wMaxPacketSize,
-                                              timeout=50)
+                                       endpoint[i].wMaxPacketSize,
+                                       timeout=50)
 
                     self._fill_state(i, data)
                 except usb.core.USBError:

@@ -33,7 +33,7 @@ file.close()
 matrix_t = []
 
 for i in range(0, len(matrix[0])):
-    matrix_t.append(range(0,len(matrix)))
+    matrix_t.append(range(0, len(matrix)))
 
 for i in range(0, len(matrix)):
     for j in range(0, len(line)):
@@ -42,9 +42,6 @@ for i in range(0, len(matrix)):
 file = open("cyberglovetoshadowhand_transposed.map", "w")
 for line in matrix_t:
     for col in line:
-        file.write(col+ " ")
+        file.write(col + " ")
     file.write("\n")
 file.close()
-
-
-

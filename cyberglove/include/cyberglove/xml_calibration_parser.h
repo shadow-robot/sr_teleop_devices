@@ -1,10 +1,10 @@
-/**
+/*
 * @file   xml_calibration_parser.h
 * @author Ugo Cupcic <ugo@shadowrobot.com>
 * @date   Tue Apr 27 11:30:41 2010
 *
 *
-/* Copyright 2011 Shadow Robot Company Ltd.
+* Copyright 2011 Shadow Robot Company Ltd.
 *
 * This program is free software: you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the Free
@@ -35,25 +35,24 @@
 */
 
 
-#ifndef   	XML_CALIBRATION_PARSER_H_
-# define   	XML_CALIBRATION_PARSER_H_
+#ifndef CYBERGLOVE_XML_CALIBRATION_PARSER_H_
+#define CYBERGLOVE_XML_CALIBRATION_PARSER_H_
 
-//xml parser library
+// xml parser library
 #include <tinyxml.h>
-
-//generic C/C++ include
 #include <string>
 #include <vector>
 #include <map>
 
-namespace xml_calibration_parser{
+namespace xml_calibration_parser
+{
 
 class XmlCalibrationParser
 {
  public:
-  XmlCalibrationParser(){};
-  XmlCalibrationParser(std::string path_to_calibration);
-  ~XmlCalibrationParser(){};
+  XmlCalibrationParser() {}
+  explicit XmlCalibrationParser(std::string path_to_calibration);
+  ~XmlCalibrationParser() {}
 
   float get_calibration_value(float position, std::string joint_name);
 
@@ -73,8 +72,8 @@ class XmlCalibrationParser
   std::vector<JointCalibration> getJointsCalibrations();
 
  protected:
-  void parse_calibration_file( TiXmlNode* pParent );
-  std::vector<Calibration> parse_joint_attributes( TiXmlNode* pParent );
+  void parse_calibration_file(TiXmlNode* pParent);
+  std::vector<Calibration> parse_joint_attributes(TiXmlNode* pParent);
 
   /// The vector containing the calibration
   std::vector<JointCalibration> jointsCalibrations;
@@ -88,15 +87,13 @@ class XmlCalibrationParser
 
   float compute_lookup_value(int index, std::vector<Calibration> calib);
 
-  float linear_interpolate( float x ,
-			    float x0, float y0,
-			    float x1, float y1 );
+  float linear_interpolate(float x , float x0, float y0, float x1, float y1);
 
   // consts for the lookup tables
   static const float lookup_precision;
   static const float lookup_offset;
 
-  /**
+  /*
    * rounds the given number
    *
    * @param number a float
@@ -105,7 +102,7 @@ class XmlCalibrationParser
    */
   int round(float number);
 
-  /**
+  /*
    * inline function to convert a raw position to a valid index for
    * our lookup table
    *
@@ -115,7 +112,7 @@ class XmlCalibrationParser
    */
   int return_index_from_raw_position(float raw_position);
 
-  /**
+  /*
    * inline function to convert an index of our lookup table to a raw
    * position.
    *
@@ -125,10 +122,9 @@ class XmlCalibrationParser
    */
   static inline float return_raw_position_from_index(int lookup_index)
   {
-    return ((float)lookup_index)/lookup_precision;
+    return (static_cast<float>(lookup_index))/lookup_precision;
   };
+};  // end class XmlCalibrationParser
 
-}; // end class XmlCalibrationParser
-
-} // end namespace
-#endif 	    /* !XML_CALIBRATION_PARSER_H_ */
+}  // namespace xml_calibration_parser
+#endif  // CYBERGLOVE_XML_CALIBRATION_PARSER_H_

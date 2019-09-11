@@ -1,10 +1,10 @@
-/**
+/*
 * @file   shadowhand_to_cyberglove_remapper_node.cpp
 * @author Ugo Cupcic <ugo@shadowrobot.com>, Contact <contact@shadowrobot.com>
 * @date   Thu May 13 10:39:44 2010
 *
 *
-/* Copyright 2011 Shadow Robot Company Ltd.
+* Copyright 2011 Shadow Robot Company Ltd.
 *
 * This program is free software: you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the Free
@@ -27,19 +27,11 @@
 
 #include "sr_remappers/shadowhand_to_cyberglove_remapper.h"
 
-using namespace ros;
-using namespace shadowhand_to_cyberglove_remapper;
-
-  /////////////////////////////////
-  //           MAIN              //
-  /////////////////////////////////
-
-
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "cyberglove_remapper");
 
-  ShadowhandToCybergloveRemapper remapper;
+  shadowhand_to_cyberglove_remapper::ShadowhandToCybergloveRemapper remapper;
   ros::spin();
 
   return 0;

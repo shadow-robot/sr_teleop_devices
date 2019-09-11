@@ -13,6 +13,7 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>cyberglove</build_depend>
   <build_depend>roscpp</build_depend>
+  <build_depend>roslint</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>sr_remappers</build_depend>
   <build_depend>trajectory_msgs</build_depend>
