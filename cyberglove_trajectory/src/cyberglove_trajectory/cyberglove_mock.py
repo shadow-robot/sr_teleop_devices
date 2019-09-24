@@ -28,7 +28,10 @@ class CybergloveMock(object):
                                                               FollowJointTrajectoryAction)
 
     def open_hand(self):
-        CONST_OPEN_HAND_JOINT_VALUES = [0] * 24
+        num_of_joints = 22
+        if self._wrist_control:
+            num_of_joints += 2
+        CONST_OPEN_HAND_JOINT_VALUES = [0] * num_of_joints
 
         self._send_goal_to_hand(CONST_OPEN_HAND_JOINT_VALUES)
 
@@ -40,7 +43,9 @@ class CybergloveMock(object):
                                         0.0, 1.571, 1.571,
                                         1.571, 0.0, 0.0,
                                         0.0, 0.0, 0.0,
-                                        0.0, 0.14, 0.0]
+                                        0.0]
+        if self._wrist_control:                            
+        CONST_PACK_HAND_JOINT_VALUES += [0.14, 0.0]
 
         self._send_goal_to_hand(CONST_PACK_HAND_JOINT_VALUES)
 
