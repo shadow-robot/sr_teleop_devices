@@ -20,8 +20,9 @@ from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryG
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 class CybergloveMock(object):
-    def __init__(self):
-        self._hand_traj_client = actionlib.SimpleActionClient('/rh_trajectory_controller' +
+    def __init__(self, hand_prefix='rh'):
+        self._hand_prefix = hand_prefix
+        self._hand_traj_client = actionlib.SimpleActionClient('/{}_trajectory_controller'.format(self._hand_prefix) +
                                                               '/follow_joint_trajectory',
                                                               FollowJointTrajectoryAction)
 
@@ -46,10 +47,11 @@ class CybergloveMock(object):
         self._hand_traj_client.wait_for_server()
         goal = FollowJointTrajectoryGoal()
         goal.trajectory.header.stamp = rospy.Time.now()
-        goal.trajectory.joint_names = ["rh_FFJ1", "rh_FFJ2", "rh_FFJ3", "rh_FFJ4", "rh_MFJ1", "rh_MFJ2",
-                                       "rh_MFJ3", "rh_MFJ4", "rh_RFJ1", "rh_RFJ2", "rh_RFJ3", "rh_RFJ4",
-                                       "rh_LFJ1", "rh_LFJ2", "rh_LFJ3", "rh_LFJ4", "rh_LFJ5", "rh_THJ1",
-                                       "rh_THJ2", "rh_THJ3", "rh_THJ4", "rh_THJ5", "rh_WRJ1", "rh_WRJ2"]
+        goal.trajectory.joint_names = ["_FFJ1", "_FFJ2", "_FFJ3", "_FFJ4", "_MFJ1", "_MFJ2",
+                                       "_MFJ3", "_MFJ4", "_RFJ1", "_RFJ2", "_RFJ3", "_RFJ4",
+                                       "_LFJ1", "_LFJ2", "_LFJ3", "_LFJ4", "_LFJ5", "_THJ1",
+                                       "_THJ2", "_THJ3", "_THJ4", "_THJ5", "_WRJ1", "_WRJ2"]
+        goal.trajectory.joint_names = [self._hand_prefix + name for name in goal.trajectory.joint_names] 
         joint_traj_point = JointTrajectoryPoint()
 
         joint_traj_point.positions = hand_positions
