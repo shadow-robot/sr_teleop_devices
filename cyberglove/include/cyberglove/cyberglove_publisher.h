@@ -1,10 +1,10 @@
-/**
+/*
 * @file   cyberglove_publisher.h
 * @author Ugo Cupcic <ugo@shadowrobot.com>, Contact <contact@shadowrobot.com>
 * @date   Thu Apr 22 10:25:55 2010
 *
 *
-/* Copyright 2011 Shadow Robot Company Ltd.
+* Copyright 2011 Shadow Robot Company Ltd.
 *
 * This program is free software: you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the Free
@@ -27,81 +27,82 @@
 *
 */
 
-#ifndef   	CYBERGLOVE_PUBLISHER_H_
-# define   	CYBERGLOVE_PUBLISHER_H_
+#ifndef CYBERGLOVE_CYBERGLOVE_PUBLISHER_H_
+#define CYBERGLOVE_CYBERGLOVE_PUBLISHER_H_
 
 #include <ros/ros.h>
+#include <string>
 #include <vector>
 #include <boost/smart_ptr.hpp>
 
-#include "cyberglove/serial_glove.hpp"
+#include "cyberglove/serial_glove.h"
 
-//messages
+// messages
 #include <sensor_msgs/JointState.h>
 #include "cyberglove/xml_calibration_parser.h"
 
-using namespace ros;
+namespace cyberglove
+{
 
-namespace cyberglove{
+class CyberglovePublisher
+{
+public:
+  /// Constructor
+  CyberglovePublisher();
 
-  class CyberglovePublisher
-  {
-  public:
-    /// Constructor
-    CyberglovePublisher();
+  /// Destructor
+  ~CyberglovePublisher();
 
-    /// Destructor
-    ~CyberglovePublisher();
+  ros::Publisher cyberglove_pub;
+  void initialize_calibration(std::string path_to_calibration);
+  bool isPublishing();
+  void setPublishing(bool value);
+private:
+  /////////////////
+  //  CALLBACKS  //
+  /////////////////
 
-    Publisher cyberglove_pub;
-    void initialize_calibration(std::string path_to_calibration);
-    bool isPublishing();
-    void setPublishing(bool value);
-  private:
-    /////////////////
-    //  CALLBACKS  //
-    /////////////////
+  // ros node handle
+  ros::NodeHandle node, n_tilde;
+  unsigned int publish_counter_max, publish_counter_index;
 
-    //ros node handle
-    NodeHandle node, n_tilde;
-    unsigned int publish_counter_max, publish_counter_index;
+  // the actual connection with the cyberglove is done here.
+  boost::shared_ptr<CybergloveSerial> serial_glove;
 
-    ///the actual connection with the cyberglove is done here.
-    boost::shared_ptr<CybergloveSerial> serial_glove;
+  /*
+   * The callback function: called each time a full message
+   * is received. This function is bound to the serial_glove
+   * object using boost::bind.
+   *
+   * @param glove_pos A vector containing the current raw joints positions.
+   * @param light_on true if the light is on, false otherwise.
+   */
+  void glove_callback(std::vector<float> glove_pos, bool light_on);
 
-    /**
-     * The callback function: called each time a full message
-     * is received. This function is bound to the serial_glove
-     * object using boost::bind.
-     *
-     * @param glove_pos A vector containing the current raw joints positions.
-     * @param light_on true if the light is on, false otherwise.
-     */
-    void glove_callback(std::vector<float> glove_pos, bool light_on);
+  std::string path_to_glove;
+  bool publishing;
 
-    std::string path_to_glove;
-    bool publishing;
+  // the calibration parser
+  xml_calibration_parser::XmlCalibrationParser calibration_parser;
 
-    ///the calibration parser
-    xml_calibration_parser::XmlCalibrationParser calibration_parser;
+  ros::Publisher cyberglove_raw_pub;
 
-    Publisher cyberglove_raw_pub;
+  sensor_msgs::JointState jointstate_msg;
+  sensor_msgs::JointState jointstate_raw_msg;
 
-    sensor_msgs::JointState jointstate_msg;
-    sensor_msgs::JointState jointstate_raw_msg;
+  void add_jointstate(float position, std::string joint_name);
 
-    void add_jointstate(float position, std::string joint_name);
+  std::vector<float> calibration_values;
 
-    std::vector<float> calibration_values;
+  std::vector<std::vector<float> > glove_positions;
 
-    std::vector<std::vector<float> > glove_positions;
+  std::string cyberglove_version_;
+  std::string streaming_protocol_;
+};  // end class CyberglovePublisher
 
-    std::string cyberglove_version_;
-    std::string streaming_protocol_;
-  }; // end class CyberglovePublisher
+}  // namespace cyberglove
 
-} // end namespace
-#endif 	    /* !CYBERGLOVE_PUBLISHER_H_ */
+#endif  // CYBERGLOVE_CYBERGLOVE_PUBLISHER_H_
 
 /* For the emacs weenies in the crowd.
 Local Variables:

@@ -9,6 +9,7 @@
   <url type="repository">https://github.com/shadow-robot/sr_teleop_devices</url>
 
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roslint</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>message_generation</build_depend>
 

@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   control_msgs
   cyberglove
   roscpp
+  roslint
   rospy
   sr_remappers
   trajectory_msgs
@@ -18,6 +19,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
+roslint_cpp()
+roslint_python()
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed

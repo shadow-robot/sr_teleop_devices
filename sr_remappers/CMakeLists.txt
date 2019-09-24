@@ -6,6 +6,7 @@ project(sr_remappers)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  roslint
   rospy
   std_msgs
   sensor_msgs
@@ -16,6 +17,9 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED system filesystem date_time thread)
+
+roslint_cpp()
+roslint_python()
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed

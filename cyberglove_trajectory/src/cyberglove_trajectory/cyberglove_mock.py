@@ -19,6 +19,7 @@ import actionlib
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 from trajectory_msgs.msg import JointTrajectoryPoint
 
+
 class CybergloveMock(object):
     def __init__(self, hand_prefix='rh', wrist_control=True):
         self._hand_prefix = hand_prefix
