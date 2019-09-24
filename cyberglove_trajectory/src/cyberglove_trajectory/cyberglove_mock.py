@@ -20,8 +20,9 @@ from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryG
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 class CybergloveMock(object):
-    def __init__(self, hand_prefix='rh'):
+    def __init__(self, hand_prefix='rh', wrist_control=True):
         self._hand_prefix = hand_prefix
+        self._wrist_control = wrist_control
         self._hand_traj_client = actionlib.SimpleActionClient('/{}_trajectory_controller'.format(self._hand_prefix) +
                                                               '/follow_joint_trajectory',
                                                               FollowJointTrajectoryAction)
@@ -50,7 +51,9 @@ class CybergloveMock(object):
         goal.trajectory.joint_names = ["_FFJ1", "_FFJ2", "_FFJ3", "_FFJ4", "_MFJ1", "_MFJ2",
                                        "_MFJ3", "_MFJ4", "_RFJ1", "_RFJ2", "_RFJ3", "_RFJ4",
                                        "_LFJ1", "_LFJ2", "_LFJ3", "_LFJ4", "_LFJ5", "_THJ1",
-                                       "_THJ2", "_THJ3", "_THJ4", "_THJ5", "_WRJ1", "_WRJ2"]
+                                       "_THJ2", "_THJ3", "_THJ4", "_THJ5"]
+        if self._wrist_control:
+             goal.trajectory.joint_names += ["_WRJ1", "_WRJ2"]
         goal.trajectory.joint_names = [self._hand_prefix + name for name in goal.trajectory.joint_names] 
         joint_traj_point = JointTrajectoryPoint()
 
