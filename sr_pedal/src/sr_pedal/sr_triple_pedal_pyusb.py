@@ -23,6 +23,7 @@ import usb.core
 import usb.util
 from sr_pedal.msg import Status
 
+
 class SrPedal():
     def __init__(self):
         self.device = None
@@ -75,7 +76,7 @@ class SrPedal():
         self.right_pressed = False
         self.publish()
 
-    def publish(self, time = None):
+    def publish(self, time=None):
         if time is None:
             time = rospy.Time.now()
         self.message.header.stamp = time

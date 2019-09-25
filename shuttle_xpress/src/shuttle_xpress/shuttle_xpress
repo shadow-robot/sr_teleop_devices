@@ -11,7 +11,8 @@
 see README.md
 """
 
-import usb.core, usb.util
+import usb.core
+import usb.util
 from sys import exit as sysexit
 from time import sleep
 
@@ -20,6 +21,7 @@ from shuttle_xpress.msg import ShuttleXpress
 
 CONTOUR_ID_VENDOR = 0x0b33
 CONTOUR_ID_PRODUCT = 0x0020
+
 
 class ShuttleXpressUsb(object):
     """
@@ -70,7 +72,7 @@ class ShuttleXpressUsb(object):
                 self.__device.detach_kernel_driver(self.__interface)
                 rospy.logdebug("kernel driver detached")
             except usb.core.USBError as usb_exc:
-                sysexit("Could not detach kernel driver: %s" %str(usb_exc))
+                sysexit("Could not detach kernel driver: %s" % str(usb_exc))
 
         self.__device.set_configuration()
         usb.util.claim_interface(self.__device, self.__interface)
@@ -89,7 +91,7 @@ class ShuttleXpressUsb(object):
         """
         Reads the data - called from a thread.
         """
-        #Reading the data
+        # Reading the data
         endpoint = self.__device[0][(0, 0)][0]
         while not rospy.is_shutdown():
             try:
@@ -131,7 +133,7 @@ class ShuttleXpressUsb(object):
         """
         returns a positive value if the bit at btn_index in raw_data is set.
         """
-        raw_data = raw_data >> 4 # for some reason the buttons start at bit 4
+        raw_data = raw_data >> 4  # for some reason the buttons start at bit 4
         btn_index = 1 << btn_index
 
         return raw_data & btn_index

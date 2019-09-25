@@ -1,10 +1,10 @@
-/**
+/*
 * @file   cyberglove_node.cpp
 * @author Ugo Cupcic <ugo@shadowrobot.com>
 * @date   Thu Apr 22 10:21:50 2010
 *
 *
-/* Copyright 2011 Shadow Robot Company Ltd.
+* Copyright 2011 Shadow Robot Company Ltd.
 *
 * This program is free software: you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the Free
@@ -29,14 +29,12 @@
 #include "cyberglove_trajectory/cyberglove_trajectory_publisher.h"
 #include <boost/smart_ptr.hpp>
 
-using namespace cyberglove;
-
 /////////////////////////////////
 //           MAIN              //
 /////////////////////////////////
 
 
-/**
+/*
 *  Start the cyberglove trajectory publisher.
 *
 * @param argc
@@ -48,7 +46,8 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "cyberglove_trajectory_node");
 
-  boost::shared_ptr<CybergloveTrajectoryPublisher> cyberglove_pub(new CybergloveTrajectoryPublisher());
+  boost::shared_ptr<cyberglove::CybergloveTrajectoryPublisher> cyberglove_pub(
+    new cyberglove::CybergloveTrajectoryPublisher());
 
   ros::spin();
 

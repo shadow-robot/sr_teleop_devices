@@ -1,10 +1,10 @@
-/**
+/*
 * @file   shadowhand_publisher.cpp
 * @author Ugo Cupcic <ugo@shadowrobot.com>, Toni Oliver <toni@shadowrobot.com>
 * @date   12/11/2014
 *
 *
-/* Copyright 2014 Shadow Robot Company Ltd.
+* Copyright 2014 Shadow Robot Company Ltd.
 *
 * This program is free software: you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the Free
@@ -23,22 +23,18 @@
 *
 */
 
-//ROS include
 #include <ros/ros.h>
-
-//generic C/C++ include
 #include <string>
+#include <vector>
 #include <sstream>
-
 #include "cyberglove_trajectory/cyberglove_trajectory_publisher.h"
 #include <boost/assign.hpp>
 #include <math.h>
 #include <sr_utilities/sr_math_utils.hpp>
 #include <std_srvs/Empty.h>
 
-using namespace ros;
-
-namespace cyberglove{
+namespace cyberglove
+{
 
 const std::vector<std::string> CybergloveTrajectoryPublisher::joint_name_vector_ = boost::assign::list_of
                                                                                   ("THJ1")
@@ -92,7 +88,7 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::joint_mapping_vect
 
 
 
-//initialises joint names (the order is important)
+// initialises joint names (the order is important)
 const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vector_ = boost::assign::list_of
                                                                                     ("G_ThumbRotate")
                                                                                     ("G_ThumbMPJ")
@@ -138,7 +134,8 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
     searched_param = "joint_prefix";
     n_tilde.param(searched_param, joint_prefix, std::string());
     std::string action_server_name = "trajectory_controller/follow_joint_trajectory";
-    action_client_.reset(new actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>(joint_prefix + action_server_name, true));
+    action_client_.reset(new actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>(
+      joint_prefix + action_server_name, true));
 
     for (size_t i = 0; i < joint_name_vector_.size(); i++)
     {
@@ -151,7 +148,7 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
     reload_calibration_service = n_tilde.advertiseService<std_srvs::Empty::Request, std_srvs::Empty::Response>(
       "reload_calibration", boost::bind(&CybergloveTrajectoryPublisher::reload_calibration, this, _1, _2));
 
-    //initialises joint names (the order is important)
+    // initialises joint names (the order is important)
     raw_jointstate_msg.name.push_back("G_ThumbRotate");
     raw_jointstate_msg.name.push_back("G_ThumbMPJ");
     raw_jointstate_msg.name.push_back("G_ThumbIJ");
@@ -199,7 +196,7 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
     cal_jointstate_msg.name.push_back("G_WristYaw");
 
 
-    //set sampling frequency
+    // set sampling frequency
     double sampling_freq;
     n_tilde.param("sampling_frequency", sampling_freq, 100.0);
 
@@ -207,16 +204,16 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
     // before publishing.
     double publish_freq;
     n_tilde.param("publish_frequency", publish_freq, 20.0);
-    publish_counter_max = (int)(sampling_freq / publish_freq);
+    publish_counter_max = static_cast<int>(sampling_freq / publish_freq);
 
     ROS_INFO_STREAM("Sampling at " << sampling_freq << "Hz ; Publishing at "
                     << publish_freq << "Hz ; Publish counter: "<< publish_counter_max);
 
-    //Get the cyberglove version '2' or '3'
+    // Get the cyberglove version '2' or '3'
     n_tilde.param("cyberglove_version", cyberglove_version_, std::string("2"));
     ROS_INFO("Cyberglove version: %s", cyberglove_version_.c_str());
 
-    //Get the cyberglove streaming protocol '8bit' or '16bit'
+    // Get the cyberglove streaming protocol '8bit' or '16bit'
     n_tilde.param("streaming_protocol", streaming_protocol_, std::string("8bit"));
     ROS_INFO("Streaming protocol: %s", streaming_protocol_.c_str());
 
@@ -224,28 +221,29 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
     n_tilde.param("path_to_glove", path_to_glove, std::string("/dev/ttyS0"));
     ROS_INFO("Opening glove on port: %s", path_to_glove.c_str());
 
-    //set trajectory tx delay: the delay it takes to get to the trajectory controller.
+    // set trajectory tx delay: the delay it takes to get to the trajectory controller.
     // it is used to set the timestamp of the trajectory goal. 10ms default
     // (the trajectory point might be discarded if the trajectory arrives later)
     double delay;
     n_tilde.param("trajectory_tx_delay", delay, 0.01);
     trajectory_tx_delay_ = ros::Duration(delay);
 
-    //set trajectory delay: the delay from the trajectory beginning to the trajectory point.
+    // set trajectory delay: the delay from the trajectory beginning to the trajectory point.
     // it is used to set the time_from start of the single trajectory point. 2ms default
     // (it can be very small, but not zero, or the point will be discarded as past).
     n_tilde.param("trajectory_delay", delay, 0.002);
     trajectory_delay_ = ros::Duration(delay);
 
-    //initialize the connection with the cyberglove and binds the callback function
-    serial_glove = boost::shared_ptr<CybergloveSerial>(new CybergloveSerial(path_to_glove, cyberglove_version_, streaming_protocol_, boost::bind(&CybergloveTrajectoryPublisher::glove_callback, this, _1, _2)));
+    // initialize the connection with the cyberglove and binds the callback function
+    serial_glove = boost::shared_ptr<CybergloveSerial>(new CybergloveSerial(path_to_glove, cyberglove_version_,
+      streaming_protocol_, boost::bind(&CybergloveTrajectoryPublisher::glove_callback, this, _1, _2)));
 
     int res = -1;
-    if(cyberglove_version_ == "2")
+    if (cyberglove_version_ == "2")
     {
       cyberglove_freq::CybergloveFreq frequency;
 
-      switch( (int)sampling_freq)
+      switch (static_cast<int>(sampling_freq))
       {
       case 100:
         res = serial_glove->set_frequency(frequency.hundred_hz);
@@ -264,7 +262,7 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
         break;
       }
 
-      //We want the glove to transmit the status (light on/off)
+      // We want the glove to transmit the status (light on/off)
       res = serial_glove->set_transmit_info(true);
     }
 
@@ -275,7 +273,7 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
     ROS_INFO("Filtering: %s", filt_msg.c_str());
     res = serial_glove->set_filtering(filtering);
 
-    //start reading the data.
+    // start reading the data.
     res = serial_glove->start_stream();
   }
 
@@ -300,7 +298,8 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
     publishing = value;
   }
 
-  bool CybergloveTrajectoryPublisher::reload_calibration(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+  bool CybergloveTrajectoryPublisher::reload_calibration(std_srvs::Empty::Request& request,
+    std_srvs::Empty::Response& response)
   {
     calibration_map.reset(new CalibrationMap(read_joint_calibration()));
     return true;
@@ -311,8 +310,8 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
   /////////////////////////////////
   void CybergloveTrajectoryPublisher::glove_callback(std::vector<float> glove_pos, bool light_on)
   {
-    //if the light is off, we don't publish any data.
-    if( !light_on )
+    // if the light is off, we don't publish any data.
+    if (!light_on )
     {
       publishing = false;
       ROS_DEBUG("The glove button is off, no data will be read / sent");
@@ -321,13 +320,13 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
     }
     publishing = true;
 
-    //appends the current position to the vector of position
-    glove_positions.push_back( glove_pos );
+    // appends the current position to the vector of position
+    glove_positions.push_back(glove_pos);
 
     publish_counter_index += 1;
 
-    //if we've enough samples, publish the data:
-    if( publish_counter_index == publish_counter_max )
+    // if we've enough samples, publish the data:
+    if (publish_counter_index == publish_counter_max )
     {
       std::vector<double> glove_calibrated_positions, hand_positions, hand_positions_no_J0;
 
@@ -337,10 +336,10 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
       cal_jointstate_msg.header.stamp = ros::Time::now();
 
 
-      //fill the joint_state msg with the averaged glove data
-      for(unsigned int index_joint = 0; index_joint < CybergloveSerial::glove_size; ++index_joint)
+      // fill the joint_state msg with the averaged glove data
+      for (unsigned int index_joint = 0; index_joint < CybergloveSerial::glove_size; ++index_joint)
       {
-        //compute the average over the samples for the current joint
+        // compute the average over the samples for the current joint
         float averaged_value = 0.0f;
         for (unsigned int index_sample = 0; index_sample < publish_counter_max; ++index_sample)
         {
@@ -348,8 +347,8 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
         }
         averaged_value /= publish_counter_max;
 
-	calibration_tmp = calibration_map->find(glove_sensors_vector_[index_joint]);
-	double calibration_value = calibration_tmp->compute(static_cast<double> (averaged_value));
+        calibration_tmp = calibration_map->find(glove_sensors_vector_[index_joint]);
+        double calibration_value = calibration_tmp->compute(static_cast<double> (averaged_value));
 
         raw_jointstate_msg.position.push_back(averaged_value);
         cal_jointstate_msg.position.push_back(calibration_value);
@@ -365,11 +364,11 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
       applyJointMapping(glove_calibrated_positions, hand_positions);
       processJointZeros(hand_positions, hand_positions_no_J0);
 
-      //Build and send the goal
+      // Build and send the goal
 
       trajectory_goal_.trajectory.points.clear();
-      //WARNING if this node runs on a different machine from the trajectory controller, both machines will need to be synchronized
-      // chrony (sudo apt-get install crony) has been used successfully to achieve that
+      // WARNING if this node runs on a different machine from the trajectory controller, both machines will need to be
+      // synchronized. chrony (sudo apt-get install crony) has been used successfully to achieve that
       // The extra 10ms will allow time for the trajectory to get to the trajectory controller
       trajectory_goal_.trajectory.header.stamp = ros::Time::now() + trajectory_tx_delay_;
 
@@ -380,7 +379,7 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
 
       for (size_t i=0; i < trajectory_point.positions.size(); i++)
       {
-        if(isnan(trajectory_point.positions[i]))
+        if (isnan(trajectory_point.positions[i]))
           return;
       }
 
@@ -393,20 +392,22 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
   }
 
 
-  void CybergloveTrajectoryPublisher::applyJointMapping(const std::vector<double>& glove_postions, std::vector<double>& hand_positions )
+  void CybergloveTrajectoryPublisher::applyJointMapping(const std::vector<double>& glove_postions,
+    std::vector<double>& hand_positions )
   {
-      //Do conversion
+      // Do conversion
       std::vector<double> vect = map_calibration_parser->get_remapped_vector(glove_postions);
 
-      //Process J4's
+      // Process J4's
       getAbductionJoints(glove_postions, vect);
 
       hand_positions = vect;
   }
 
-  void CybergloveTrajectoryPublisher::processJointZeros(const std::vector<double>& postions_with_J0, std::vector<double>& postions_without_J0 )
+  void CybergloveTrajectoryPublisher::processJointZeros(const std::vector<double>& postions_with_J0,
+    std::vector<double>& postions_without_J0 )
   {
-    for(unsigned int i = 0; i < postions_with_J0.size(); ++i )
+    for (unsigned int i = 0; i < postions_with_J0.size(); ++i )
     {
       if (joint_mapping_vector_[i][joint_mapping_vector_[i].size()-1] == '0')
       {
@@ -420,55 +421,57 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
     }
   }
 
-  void CybergloveTrajectoryPublisher::getAbductionJoints(const std::vector<double>& glove_postions, std::vector<double>& hand_positions)
+  void CybergloveTrajectoryPublisher::getAbductionJoints(const std::vector<double>& glove_postions,
+    std::vector<double>& hand_positions)
   {
     double middleIndexAb = glove_postions[10];
     double ringMiddleAb = glove_postions[14];
     double pinkieRingAb = glove_postions[18];
 
-    // if the abduction sensors are less than 0, it is an artifact of the calibration (we don't want to consider anything smaller than 0 for these sensors)
+    // if the abduction sensors are less than 0, it is an artifact of the calibration (we don't want to consider
+    // anything smaller than 0 for these sensors)
     if (middleIndexAb < 0.0)
       middleIndexAb = 0.0;
     if (ringMiddleAb < 0.0)
       ringMiddleAb = 0.0;
     if (pinkieRingAb < 0.0)
       pinkieRingAb = 0.0;
-    //Add the 3 abduction angles to have an idea of where the centre lies
+    // Add the 3 abduction angles to have an idea of where the centre lies
     double ab_total = middleIndexAb + ringMiddleAb +  pinkieRingAb;
 
-    //When trying to understand this code bear in mind that the abduction sign convention
+    // When trying to understand this code bear in mind that the abduction sign convention
     // in the shadow hand is the opposite for ff and mf than for rf and lf.
-    if (ab_total/2 < middleIndexAb) // If the centre lies between ff and mf
+    if (ab_total/2 < middleIndexAb)  // If the centre lies between ff and mf
     {
-      //FFJ4
+      // FFJ4
       hand_positions[7] = -ab_total/2;
-      //MFJ4
+      // MFJ4
       hand_positions[10] = middleIndexAb - ab_total/2;
-      //RFJ4
+      // RFJ4
       hand_positions[13] = -(ringMiddleAb + hand_positions[10]);
-      //LFJ4
+      // LFJ4
       hand_positions[16] = -pinkieRingAb + hand_positions[13];
     }
-    else if (ab_total/2 < middleIndexAb + ringMiddleAb) // If the centre lies between mf and rf
+    else if (ab_total/2 < middleIndexAb + ringMiddleAb)  // If the centre lies between mf and rf
     {
-      //MFJ4
+      // MFJ4
       hand_positions[10] = -(ab_total/2 - middleIndexAb);
-      //FFJ4
+      // FFJ4
       hand_positions[7] = -middleIndexAb + hand_positions[10];
-      //RFJ4
+      // RFJ4
       hand_positions[13] = -(ringMiddleAb + hand_positions[10]);
-      //LFJ4
+      // LFJ4
       hand_positions[16] = -pinkieRingAb + hand_positions[13];
     }
-    else // If the centre lies between rf and lf
+    else  // If the centre lies between rf and lf
     {
-      //LFJ4
+      // LFJ4
       hand_positions[16] = -ab_total/2;
-      //RFJ4
+      // RFJ4
       hand_positions[13] = pinkieRingAb + hand_positions[16];
-      //MFJ4
+      // MFJ4
       hand_positions[10] = -(ringMiddleAb + hand_positions[13]);
-      //FFJ4
+      // FFJ4
       hand_positions[7] = -middleIndexAb + hand_positions[10];
     }
   }
@@ -480,22 +483,22 @@ CybergloveTrajectoryPublisher::CalibrationMap CybergloveTrajectoryPublisher::rea
   XmlRpc::XmlRpcValue calib;
   n_tilde.getParam("cyberglove_calibration", calib);
   ROS_ASSERT(calib.getType() == XmlRpc::XmlRpcValue::TypeArray);
-  //iterate on all the joints
+  // iterate on all the joints
   for (int32_t index_cal = 0; index_cal < calib.size(); ++index_cal)
   {
-    //check the calibration is well formatted:
+    // check the calibration is well formatted:
     // first joint name, then calibration table
     ROS_ASSERT(calib[index_cal][0].getType() == XmlRpc::XmlRpcValue::TypeString);
     ROS_ASSERT(calib[index_cal][1].getType() == XmlRpc::XmlRpcValue::TypeArray);
 
-    string joint_name = static_cast<string> (calib[index_cal][0]);
-    vector<joint_calibration::Point> calib_table_tmp;
+    std::string joint_name = static_cast<std::string> (calib[index_cal][0]);
+    std::vector<joint_calibration::Point> calib_table_tmp;
 
-    //now iterates on the calibration table for the current joint
+    // now iterates on the calibration table for the current joint
     for (int32_t index_table = 0; index_table < calib[index_cal][1].size(); ++index_table)
     {
       ROS_ASSERT(calib[index_cal][1][index_table].getType() == XmlRpc::XmlRpcValue::TypeArray);
-      //only 2 values per calibration point: raw and calibrated (doubles)
+      // only 2 values per calibration point: raw and calibrated (doubles)
       ROS_ASSERT(calib[index_cal][1][index_table].size() == 2);
       ROS_ASSERT(calib[index_cal][1][index_table][0].getType() == XmlRpc::XmlRpcValue::TypeDouble);
       ROS_ASSERT(calib[index_cal][1][index_table][1].getType() == XmlRpc::XmlRpcValue::TypeDouble);
@@ -507,13 +510,14 @@ CybergloveTrajectoryPublisher::CalibrationMap CybergloveTrajectoryPublisher::rea
       calib_table_tmp.push_back(point_tmp);
     }
 
-    joint_calibration.insert(joint_name, boost::shared_ptr<shadow_robot::JointCalibration>(new shadow_robot::JointCalibration(calib_table_tmp)));
+    joint_calibration.insert(joint_name, boost::shared_ptr<shadow_robot::JointCalibration>(
+      new shadow_robot::JointCalibration(calib_table_tmp)));
   }
 
   return joint_calibration;
-} //end read_joint_calibration
+}  //  end read_joint_calibration
 
-}// end namespace
+}  // namespace cyberglove
 
 
 
