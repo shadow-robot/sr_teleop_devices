@@ -45,7 +45,7 @@ class CybergloveMock(object):
                                         1.571, 0.0, 0.0,
                                         0.0, 0.0, 0.0,
                                         0.0]
-        if self._wrist_control:            
+        if self._wrist_control:
             CONST_PACK_HAND_JOINT_VALUES += [0.14, 0.0]
 
         self._send_goal_to_hand(CONST_PACK_HAND_JOINT_VALUES)
