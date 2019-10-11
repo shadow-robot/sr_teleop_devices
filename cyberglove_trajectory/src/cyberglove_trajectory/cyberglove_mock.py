@@ -42,7 +42,7 @@ class CybergloveMock(object):
                 self.joint_names += ["_WRJ1", "_WRJ2"]
         else:
             raise ValueError("Unsupported hand type!")
-        
+
         self.joint_names = [self._hand_prefix + name for name in self.joint_names]
 
     def open_hand(self):
