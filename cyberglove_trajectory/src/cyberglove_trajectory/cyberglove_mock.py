@@ -21,32 +21,49 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 
 
 class CybergloveMock(object):
-    def __init__(self, hand_prefix='rh', wrist_control=True):
+    def __init__(self, hand_prefix='rh', wrist_control=True, hand_type='hand_e'):
         self._hand_prefix = hand_prefix
         self._wrist_control = wrist_control
+        self.hand_type = hand_type
         self._hand_traj_client = actionlib.SimpleActionClient('/{}_trajectory_controller'.format(self._hand_prefix) +
                                                               '/follow_joint_trajectory',
                                                               FollowJointTrajectoryAction)
+        self.joint_names = []
+
+        self._set_up_joint_list()
+
+    def _set_up_joint_list(self):
+        if 'hand_e' == self.hand_type:
+            self.joint_names = ["_FFJ1", "_FFJ2", "_FFJ3", "_FFJ4", "_MFJ1", "_MFJ2",
+                                "_MFJ3", "_MFJ4", "_RFJ1", "_RFJ2", "_RFJ3", "_RFJ4",
+                                "_LFJ1", "_LFJ2", "_LFJ3", "_LFJ4", "_LFJ5", "_THJ1",
+                                "_THJ2", "_THJ3", "_THJ4", "_THJ5"]
+            if self._wrist_control:
+                self.joint_names += ["_WRJ1", "_WRJ2"]
+        else:
+            raise ValueError("Unsupported hand type!")
+        
+        self.joint_names = [self._hand_prefix + name for name in self.joint_names]
 
     def open_hand(self):
-        num_of_joints = 22
-        if self._wrist_control:
-            num_of_joints += 2
+        num_of_joints = len(self.joint_names)
         CONST_OPEN_HAND_JOINT_VALUES = [0] * num_of_joints
-
         self._send_goal_to_hand(CONST_OPEN_HAND_JOINT_VALUES)
 
     def pack_hand(self):
-        CONST_PACK_HAND_JOINT_VALUES = [1.571, 1.57, 1.571,
-                                        0.0, 1.57, 1.571,
-                                        1.571, 0.0, 0.0,
-                                        1.571, 1.571, 1.571,
-                                        0.0, 1.571, 1.571,
-                                        1.571, 0.0, 0.0,
-                                        0.0, 0.0, 0.0,
-                                        0.0]
-        if self._wrist_control:
-            CONST_PACK_HAND_JOINT_VALUES += [0.14, 0.0]
+        if 'hand_e' == self.hand_type:
+            CONST_PACK_HAND_JOINT_VALUES = [1.571, 1.57, 1.571,
+                                            0.0, 1.57, 1.571,
+                                            1.571, 0.0, 0.0,
+                                            1.571, 1.571, 1.571,
+                                            0.0, 1.571, 1.571,
+                                            1.571, 0.0, 0.0,
+                                            0.0, 0.0, 0.0,
+                                            0.0]
+            if self._wrist_control:
+                CONST_PACK_HAND_JOINT_VALUES += [0.14, 0.0]
+        else:
+            raise ValueError("Unsupported hand type!")
 
         self._send_goal_to_hand(CONST_PACK_HAND_JOINT_VALUES)
 
@@ -54,13 +71,7 @@ class CybergloveMock(object):
         self._hand_traj_client.wait_for_server()
         goal = FollowJointTrajectoryGoal()
         goal.trajectory.header.stamp = rospy.Time.now()
-        goal.trajectory.joint_names = ["_FFJ1", "_FFJ2", "_FFJ3", "_FFJ4", "_MFJ1", "_MFJ2",
-                                       "_MFJ3", "_MFJ4", "_RFJ1", "_RFJ2", "_RFJ3", "_RFJ4",
-                                       "_LFJ1", "_LFJ2", "_LFJ3", "_LFJ4", "_LFJ5", "_THJ1",
-                                       "_THJ2", "_THJ3", "_THJ4", "_THJ5"]
-        if self._wrist_control:
-            goal.trajectory.joint_names += ["_WRJ1", "_WRJ2"]
-        goal.trajectory.joint_names = [self._hand_prefix + name for name in goal.trajectory.joint_names]
+        goal.trajectory.joint_names = self.joint_names
         joint_traj_point = JointTrajectoryPoint()
 
         joint_traj_point.positions = hand_positions
