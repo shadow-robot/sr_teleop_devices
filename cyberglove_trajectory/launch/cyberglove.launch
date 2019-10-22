@@ -1,6 +1,6 @@
 <launch>
   <arg name="serial_port" default="/dev/ttyUSB0"/>
-  <arg name="joint_prefix" default="rh_"/>
+  <arg name="hand_prefix" default="rh"/>
   <arg name="calibration" default="$(find sr_cyberglove_config)/calibrations/right_cyberglove.yaml"/>
   <arg name="mapping" default="$(find sr_cyberglove_config)/mappings/GloveToHandMappings_generic"/>
   <arg name="version" default="2"/>
@@ -12,7 +12,7 @@
   <!-- this is the delay from the beginning of the trajectory. I.e. the time_from_start of the single trajectory point -->
   <arg name="trajectory_delay" default="0.002"/>
 
-  <node pkg="cyberglove_trajectory" name="$(arg joint_prefix)cyberglove" type="cyberglove_trajectory" output="screen">
+  <node pkg="cyberglove_trajectory" name="$(arg hand_prefix)cyberglove" type="cyberglove_trajectory" output="screen">
     <!-- We're doing some oversampling. You can set the frequency at which
 	 the data are sampled as well as the frequency at which they're published
 	 possible values:
@@ -26,7 +26,7 @@
     <param name="path_to_glove" type="string" value="$(arg serial_port)" />
     <rosparam command="load" file="$(arg calibration)"/>
     <param name="cyberglove_mapping_path" type="string" value="$(arg mapping)" />
-    <param name="joint_prefix" type="string" value="$(arg joint_prefix)" />
+    <param name="hand_prefix" type="string" value="$(arg hand_prefix)" />
     <param name="cyberglove_version" type="string" value="$(arg version)" />
     <param name="streaming_protocol" type="string" value="$(arg protocol)" />
     <param name="filter" type="bool" value="$(arg filter)" />
