@@ -8,5 +8,6 @@
     
     <node name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal.py" output="screen">
         <param name="rate" value="$(arg rate)"/>
+    </node>
     <node name="sr_pedal_unlock" pkg="sr_pedal" type="sr_ur_release.py" output="screen"/>
 </launch>
