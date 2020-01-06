@@ -40,19 +40,19 @@ class SrUrUnlock():
         try:
             safety_mode_service = rospy.ServiceProxy("/ur_hardware_interface/dashboard/get_safety_mode", GetSafetyMode)
             safety_mode_msg = safety_mode_service()
-            if safety_mode_msg.safety_mode == SafetyMode.PROTECTIVE_STOP:
+            if safety_mode_msg.safety_mode.mode == SafetyMode.PROTECTIVE_STOP:
                 serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/unlock_protective_stop", Trigger)
                 resp = serv_call()
                 serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/play", Trigger)
                 resp = serv_call()
-            if safety_mode_msg.safety_mode == SafetyMode.FAULT:
+            if safety_mode_msg.safety_mode.mode == SafetyMode.FAULT:
                 serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/restart_safety", Trigger)
                 resp = serv_call()
                 serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/close_safety_popup", Trigger)
                 resp = serv_call()
                 serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/close_popup", Trigger)
                 resp = serv_call()
-                rospy.sleep(1)
+                rospy.sleep(2)
                 serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/brake_release", Trigger)
                 resp = serv_call()
                 rospy.sleep(1)
