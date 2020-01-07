@@ -61,6 +61,7 @@ class SrUrUnlock():
             play_mode_service = rospy.ServiceProxy("/ur_hardware_interface/dashboard/program_state", GetProgramState)
             play_msg = play_mode_service()
             if play_msg.state.state == ProgramState.STOPPED or play_msg.state.state == ProgramState.PAUSED:                
+                rospy.sleep(5)
                 serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/play", Trigger)
                 resp = serv_call()
         except rospy.ServiceException:
