@@ -16,8 +16,8 @@
 
 import rospy
 from sr_pedal.msg import Status
-from ur_dashboard_msgs.srv import GetSafetyMode
-from ur_dashboard_msgs.msg import SafetyMode
+from ur_dashboard_msgs.srv import GetSafetyMode, GetProgramState, GetRobotMode
+from ur_dashboard_msgs.msg import SafetyMode, ProgramState, RobotMode
 from std_srvs.srv import Trigger
 
 class SrUrUnlock():
@@ -35,7 +35,7 @@ class SrUrUnlock():
             self.release_arm()
 
     def release_arm(self):
-        # first check the status of the lock. Namespace will change with bimanual
+        # Namespace will change with bimanual
         rospy.wait_for_service("/ur_hardware_interface/dashboard/get_safety_mode")
         try:
             safety_mode_service = rospy.ServiceProxy("/ur_hardware_interface/dashboard/get_safety_mode", GetSafetyMode)
@@ -43,19 +43,24 @@ class SrUrUnlock():
             if safety_mode_msg.safety_mode.mode == SafetyMode.PROTECTIVE_STOP:
                 serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/unlock_protective_stop", Trigger)
                 resp = serv_call()
-                serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/play", Trigger)
-                resp = serv_call()
             if safety_mode_msg.safety_mode.mode == SafetyMode.FAULT:
                 serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/restart_safety", Trigger)
                 resp = serv_call()
-                serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/close_safety_popup", Trigger)
-                resp = serv_call()
-                serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/close_popup", Trigger)
-                resp = serv_call()
-                rospy.sleep(2)
+            serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/close_safety_popup", Trigger)
+            resp = serv_call()
+            rospy.sleep(1)
+            serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/close_popup", Trigger)
+            resp = serv_call()
+            rospy.sleep(1)
+            get_mode_service = rospy.ServiceProxy("/ur_hardware_interface/dashboard/get_robot_mode", GetRobotMode)
+            get_mode_msg = get_mode_service()
+            if get_mode_msg.robot_mode.mode == RobotMode.IDLE or get_mode_msg.robot_mode.mode == RobotMode.POWER_OFF:
                 serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/brake_release", Trigger)
                 resp = serv_call()
                 rospy.sleep(1)
+            play_mode_service = rospy.ServiceProxy("/ur_hardware_interface/dashboard/program_state", GetProgramState)
+            play_msg = play_mode_service()
+            if play_msg.state.state == ProgramState.STOPPED or play_msg.state.state == ProgramState.PAUSED:                
                 serv_call = rospy.ServiceProxy("/ur_hardware_interface/dashboard/play", Trigger)
                 resp = serv_call()
         except rospy.ServiceException:
