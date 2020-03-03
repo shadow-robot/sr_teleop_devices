@@ -21,6 +21,7 @@ from std_srvs.srv import Trigger
 
 class SrUrUnlock():
     def __init__(self):
+        self.external_control_program_name = "external_ctrl.urp"
         self.arms = []
         if rospy.has_param('ra_sr_ur_robot_hw'):
             self.arms.append('ra')
@@ -28,7 +29,6 @@ class SrUrUnlock():
             self.arms.append('la')
         if len(self.arms) == 0:
             rospy.signal_shutdown("No arms detected, shutting down %s", rospy.get_name())
-
         self.subscriber = rospy.Subscriber("sr_pedal/status", Status, self.pedal_sub)
         self.rate = rospy.Rate(5)
         while not rospy.is_shutdown():
@@ -64,7 +64,7 @@ class SrUrUnlock():
 
     def load_external_control_program(self, arm):
         serv_call = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/load_program", Load)
-        resp = serv_call("external_ctrl.urp")
+        resp = serv_call(self.external_control_program_name)
         print resp
 
     def release_arm(self):
