@@ -46,6 +46,11 @@ class SrUrUnlock():
         serv_call = rospy.ServiceProxy(service_string, Trigger)
         resp = serv_call()
 
+    def call_service(self, side, service_name):
+        service_string = "/" + side + "_sr_ur_robot_hw/" + service_name
+        serv_call = rospy.ServiceProxy(service_string, Trigger)
+        resp = serv_call()
+
     def get_safety_mode(self, arm):
         safety_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/get_safety_mode", GetSafetyMode)
         safety_mode_msg = safety_mode_service()
@@ -115,41 +120,48 @@ class SrUrUnlock():
     def check_program_loaded_arms(self, arms):
         sleep_time = False
         for arm in arms:
-            play_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/program_state", GetProgramState)
-            play_msg = play_mode_service()
-            if play_msg.program_name == "null":
-                rospy.loginfo("Loading program: %s for arm: %s", play_msg.program_name, arm)
-                self.load_external_control_program(arm)
-                sleep_time = True
+            if not rospy.get_param("/" + arm + "_sr_ur_robot_hw/headless_mode") :
+                play_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/program_state", GetProgramState)
+                play_msg = play_mode_service()
+                if play_msg.program_name == "null":
+                    rospy.loginfo("Not in headless mode. Loading program: %s for arm: %s", self.external_control_program_name, arm)
+                    self.load_external_control_program(arm)
+                    sleep_time = True
         return sleep_time
 
     def check_program_playing_arms(self, arms):
         sleep_time = False
         for arm in arms:
-            play_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/program_state", GetProgramState)
-            play_msg = play_mode_service()
-            if play_msg.state.state == ProgramState.STOPPED or play_msg.state.state == ProgramState.PAUSED:
-                rospy.loginfo("Starting program: %s for arm: %s", play_msg.program_name, arm)
-                self.call_dashboard_service(arm, "play")
+            if not rospy.get_param("/" + arm + "_sr_ur_robot_hw/headless_mode") :
+                play_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/program_state", GetProgramState)
+                play_msg = play_mode_service()
+                if play_msg.state.state == ProgramState.STOPPED or play_msg.state.state == ProgramState.PAUSED:
+                    rospy.loginfo("Not in headless mode. Starting program: %s for arm: %s", play_msg.program_name, arm)
+                    self.call_dashboard_service(arm, "play")
+                    sleep_time = True
+            else:
+                rospy.loginfo("Headless mode detected, resending robot program to arm: %s", arm)
+                self.call_service(arm, "resend_robot_program")
                 sleep_time = True
         return sleep_time
 
     def release_arm(self):
         try:
-            self.check_arms_e_stops(arms)
-            self.check_arms_protective_stop(arms)
-            if self.check_arms_fault(arms):
+            self.check_arms_e_stops(self.arms)
+            self.check_arms_protective_stop(self.arms)
+            if self.check_arms_fault(self.arms):
+                rospy.loginfo("Resetting robot safety, please wait approximately 15 seconds...")
                 rospy.sleep(15)
-            self.check_arms_protective_stop(arms)
-            self.clear_arms_popups(arms)
-            if self.check_arms_robot_mode(arms):
-                self.startup_arms(arms)
-            if self.check_program_loaded_arms(arms):
+            self.check_arms_protective_stop(self.arms)
+            self.clear_arms_popups(self.arms)
+            if self.check_arms_robot_mode(self.arms):
+                self.startup_arms(self.arms)
+            if self.check_program_loaded_arms(self.arms):
                 rospy.sleep(2)
-            if self.check_program_playing_arms(arms):
+            if self.check_program_playing_arms(self.arms):
                 rospy.sleep(5)
         except rospy.ServiceException:
-            print "Service call failed for arm: " + arm 
+            print "Service call failed for arm in: " + self.arms
 
 if __name__ == "__main__":
     rospy.init_node("sr_ur_unlock_node")
