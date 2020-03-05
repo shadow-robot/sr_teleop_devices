@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Copyright 2019 Shadow Robot Company Ltd.
+# Copyright 2020 Shadow Robot Company Ltd.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
