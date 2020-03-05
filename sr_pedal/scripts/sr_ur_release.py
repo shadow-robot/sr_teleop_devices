@@ -184,9 +184,9 @@ class SrUrUnlock():
             rospy.loginfo("Checking if program is running ...")
             if self.check_program_playing_arms(self.arms):
                 rospy.sleep(5)
-        except rospy.ServiceException:
+        except rospy.ServiceException, e:
             for arm in self.arms:
-                print "Service call failed for arm: " + arm
+                rospy.logerr("Arm checking/restarting failed for arm: %s. %s", arm, e)
 
 if __name__ == "__main__":
     rospy.init_node("sr_ur_unlock_node")
