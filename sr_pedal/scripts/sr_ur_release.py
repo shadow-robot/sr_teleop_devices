@@ -124,12 +124,19 @@ class SrUrUnlock():
             self.call_dashboard_service(arm, "close_popup")
         rospy.sleep(2)
 
+    def get_program_state(self, arm):
+        try:
+            play_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/program_state", GetProgramState)
+            play_msg = play_mode_service()
+            return play_msg
+        except rospy.ServiceException, e:
+            rospy.logerr("Service call to 'program_state' failed for arm %s. %s", arm, e)
+
     def check_program_loaded_arms(self, arms):
         sleep_time = False
         for arm in arms:
             if not rospy.get_param("/" + arm + "_sr_ur_robot_hw/headless_mode") :
-                play_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/program_state", GetProgramState)
-                play_msg = play_mode_service()
+                play_msg = self.get_program_state(arm)
                 if play_msg.program_name == "null":
                     rospy.loginfo("Not in headless mode. Loading program: %s for arm: %s", self.external_control_program_name, arm)
                     self.load_external_control_program(arm)
@@ -140,8 +147,7 @@ class SrUrUnlock():
         sleep_time = False
         for arm in arms:
             if not rospy.get_param("/" + arm + "_sr_ur_robot_hw/headless_mode") :
-                play_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/program_state", GetProgramState)
-                play_msg = play_mode_service()
+                play_msg = self.get_program_state(arm)
                 if play_msg.state.state == ProgramState.STOPPED or play_msg.state.state == ProgramState.PAUSED:
                     rospy.loginfo("Not in headless mode. Starting program: %s for arm: %s", play_msg.program_name, arm)
                     self.call_dashboard_service(arm, "play")
