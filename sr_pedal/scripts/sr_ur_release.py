@@ -67,49 +67,76 @@ class SrUrUnlock():
         resp = serv_call(self.external_control_program_name)
         print resp
 
-    def release_arm(self):
-        for arm in self.arms:
-            rospy.loginfo("Checking arm: %s", arm)
-            rospy.wait_for_service("/" + arm + "_sr_ur_robot_hw/dashboard/get_safety_mode")
-            try:
-                safety_mode = self.get_safety_mode(arm)
-                if safety_mode == SafetyMode.ROBOT_EMERGENCY_STOP:
+    def check_arms_e_stops(self, arms):
+        for arm in arms:
+            safety_mode = self.get_safety_mode(arm)
+            if safety_mode == SafetyMode.ROBOT_EMERGENCY_STOP:
+                while safety_mode == SafetyMode.ROBOT_EMERGENCY_STOP:
                     rospy.logwarn("Emergency stop button is still pressed for arm %s, please release", arm)
-                    while safety_mode == SafetyMode.ROBOT_EMERGENCY_STOP:
-                        rospy.logwarn("Emergency stop button is still pressed for arm %s, please release", arm)
-                        safety_mode = self.get_safety_mode(arm)
-                        rospy.sleep(2)
-                if safety_mode == SafetyMode.PROTECTIVE_STOP:
-                    rospy.loginfo("Protective stop detected on: %s", arm)
-                    self.call_dashboard_service(arm, "unlock_protective_stop")
-                if safety_mode == SafetyMode.FAULT:
-                    rospy.loginfo("Fault detected on: %s", arm)
-                    self.call_dashboard_service(arm, "restart_safety")
-                    rospy.sleep(15)
-                safety_mode = self.get_safety_mode(arm)
-                if safety_mode == SafetyMode.PROTECTIVE_STOP:
-                    rospy.loginfo("Protective stop detected on: %s", arm)
-                    self.call_dashboard_service(arm, "unlock_protective_stop")
-                self.call_dashboard_service(arm, "close_safety_popup")
-                rospy.sleep(2)
-                self.call_dashboard_service(arm, "close_popup")
-                rospy.sleep(2)
-                robot_mode = self.get_robot_mode(arm)
-                if robot_mode == RobotMode.IDLE or robot_mode == RobotMode.POWER_OFF:
-                    rospy.loginfo("Starting arm: %s", arm)
-                    self.startup_arm(arm)
-                play_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/program_state", GetProgramState)
-                play_msg = play_mode_service()
-                if play_msg.program_name == "null":
-                    rospy.loginfo("Loading program: %s for arm: %s", play_msg.program_name, arm)
-                    self.load_external_control_program(arm)
+                    safety_mode = self.get_safety_mode(arm)
                     rospy.sleep(2)
-                if play_msg.state.state == ProgramState.STOPPED or play_msg.state.state == ProgramState.PAUSED:
-                    rospy.sleep(5)
-                    rospy.loginfo("Starting program: %s for arm: %s", play_msg.program_name, arm)
-                    self.call_dashboard_service(arm, "play")
-            except rospy.ServiceException:
-                print "Service call failed for arm: " + arm 
+
+    def check_arms_protective_stop(self, arms):
+        for arm in arms:
+            safety_mode = self.get_safety_mode(arm)
+            if safety_mode == SafetyMode.PROTECTIVE_STOP:
+                rospy.loginfo("Protective stop detected on: %s", arm)
+                self.call_dashboard_service(arm, "unlock_protective_stop")
+
+    def check_arms_fault(self, arms):
+        fault = False
+        for arm in arms:
+            safety_mode = self.get_safety_mode(arm)
+            if safety_mode == SafetyMode.FAULT:
+                fault = True
+                rospy.loginfo("Fault detected on: %s", arm)
+                self.call_dashboard_service(arm, "restart_safety")
+        return fault
+
+    def check_arms_robot_mode(self, arms):
+        for arm in arms:
+            robot_mode = self.get_robot_mode(arm)
+            if robot_mode == RobotMode.IDLE or robot_mode == RobotMode.POWER_OFF:
+                rospy.loginfo("Starting arm: %s", arm)
+                self.startup_arm(arm)
+
+    def clear_arms_popups(self, arms):
+        for arm in arms:
+            self.call_dashboard_service(arm, "close_safety_popup")
+        rospy.sleep(2)
+        for arm in arms:
+            self.call_dashboard_service(arm, "close_popup")
+        rospy.sleep(2)
+
+    def load_program_arms(self, arms):
+        arms_play_mode = []
+        sleep_time = False
+        for arm in arms:
+            play_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/program_state", GetProgramState)
+            play_msg = play_mode_service()
+            if play_msg.program_name == "null":
+                rospy.loginfo("Loading program: %s for arm: %s", play_msg.program_name, arm)
+                self.load_external_control_program(arm)
+                rospy.sleep(2)
+            if play_msg.state.state == ProgramState.STOPPED or play_msg.state.state == ProgramState.PAUSED:
+                sleep_time = True
+                rospy.loginfo("Starting program: %s for arm: %s", play_msg.program_name, arm)
+                self.call_dashboard_service(arm, "play")
+        return sleep_time
+
+    def release_arm(self):
+        try:
+            self.check_arms_e_stops(arms)
+            self.check_arms_protective_stop(arms)
+            if self.check_arms_fault(arms):
+                rospy.sleep(15)
+            self.check_arms_protective_stop(arms)
+            self.clear_arms_popups(arms)
+            self.check_arms_robot_mode(arms)
+            if self.load_program_arms(arms):
+                rospy.sleep(5)
+        except rospy.ServiceException:
+            print "Service call failed for arm: " + arm 
 
 if __name__ == "__main__":
     rospy.init_node("sr_ur_unlock_node")
