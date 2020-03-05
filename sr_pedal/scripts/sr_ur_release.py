@@ -56,10 +56,12 @@ class SrUrUnlock():
         get_mode_msg = get_mode_service()
         return get_mode_msg.robot_mode.mode
 
-    def startup_arm(self, arm):
-        self.call_dashboard_service(arm, "power_on")
+    def startup_arms(self, arms):
+        for arm in arms:
+            self.call_dashboard_service(arm, "power_on")
         rospy.sleep(5)
-        self.call_dashboard_service(arm, "brake_release")
+        for arm in arms:
+            self.call_dashboard_service(arm, "brake_release")
         rospy.sleep(5)
 
     def load_external_control_program(self, arm):
@@ -94,11 +96,13 @@ class SrUrUnlock():
         return fault
 
     def check_arms_robot_mode(self, arms):
+        arm_needs_starting = False
         for arm in arms:
             robot_mode = self.get_robot_mode(arm)
             if robot_mode == RobotMode.IDLE or robot_mode == RobotMode.POWER_OFF:
                 rospy.loginfo("Starting arm: %s", arm)
-                self.startup_arm(arm)
+                arm_needs_starting = True
+        return arm_needs_starting
 
     def clear_arms_popups(self, arms):
         for arm in arms:
@@ -108,8 +112,7 @@ class SrUrUnlock():
             self.call_dashboard_service(arm, "close_popup")
         rospy.sleep(2)
 
-    def load_program_arms(self, arms):
-        arms_play_mode = []
+    def check_program_loaded_arms(self, arms):
         sleep_time = False
         for arm in arms:
             play_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/program_state", GetProgramState)
@@ -117,11 +120,18 @@ class SrUrUnlock():
             if play_msg.program_name == "null":
                 rospy.loginfo("Loading program: %s for arm: %s", play_msg.program_name, arm)
                 self.load_external_control_program(arm)
-                rospy.sleep(2)
-            if play_msg.state.state == ProgramState.STOPPED or play_msg.state.state == ProgramState.PAUSED:
                 sleep_time = True
+        return sleep_time
+
+    def check_program_playing_arms(self, arms):
+        sleep_time = False
+        for arm in arms:
+            play_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/program_state", GetProgramState)
+            play_msg = play_mode_service()
+            if play_msg.state.state == ProgramState.STOPPED or play_msg.state.state == ProgramState.PAUSED:
                 rospy.loginfo("Starting program: %s for arm: %s", play_msg.program_name, arm)
                 self.call_dashboard_service(arm, "play")
+                sleep_time = True
         return sleep_time
 
     def release_arm(self):
@@ -132,8 +142,11 @@ class SrUrUnlock():
                 rospy.sleep(15)
             self.check_arms_protective_stop(arms)
             self.clear_arms_popups(arms)
-            self.check_arms_robot_mode(arms)
-            if self.load_program_arms(arms):
+            if self.check_arms_robot_mode(arms):
+                self.startup_arms(arms)
+            if self.check_program_loaded_arms(arms):
+                rospy.sleep(2)
+            if self.check_program_playing_arms(arms):
                 rospy.sleep(5)
         except rospy.ServiceException:
             print "Service call failed for arm: " + arm 
