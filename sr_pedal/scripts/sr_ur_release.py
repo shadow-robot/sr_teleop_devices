@@ -162,17 +162,26 @@ class SrUrUnlock():
 
     def release_arm(self):
         try:
+            rospy.loginfo("Pedal release signal received. Checking arms.")
+            rospy.loginfo("Checking e-stops ...")
             self.check_arms_e_stops(self.arms)
+            rospy.loginfo("Checking protective stops ...")
             self.check_arms_protective_stop(self.arms)
+            rospy.loginfo("Checking for faults ...")
             if self.check_arms_fault(self.arms):
                 rospy.loginfo("Resetting robot safety, please wait approximately 15 seconds...")
                 rospy.sleep(15)
+            rospy.loginfo("Checking protective stops again ...")
             self.check_arms_protective_stop(self.arms)
+            rospy.loginfo("Closing popups ...")
             self.clear_arms_popups(self.arms)
+            rospy.loginfo("Checking robot mode ...")
             if self.check_arms_robot_mode(self.arms):
                 self.startup_arms(self.arms)
+            rospy.loginfo("Checking if program is loaded ...")
             if self.check_program_loaded_arms(self.arms):
                 rospy.sleep(2)
+            rospy.loginfo("Checking if program is running ...")
             if self.check_program_playing_arms(self.arms):
                 rospy.sleep(5)
         except rospy.ServiceException:
