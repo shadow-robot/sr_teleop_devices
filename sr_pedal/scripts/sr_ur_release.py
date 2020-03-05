@@ -97,6 +97,7 @@ class SrUrUnlock():
             if safety_mode == SafetyMode.FAULT:
                 fault = True
                 rospy.loginfo("Fault detected on: %s", arm)
+                rospy.loginfo("This can be caused by using the external e-stop. Have you released it?")
                 self.call_dashboard_service(arm, "restart_safety")
         return fault
 
