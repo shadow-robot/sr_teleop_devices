@@ -143,6 +143,8 @@ class SrUrUnlock():
             else:
                 rospy.loginfo("Headless mode detected, resending robot program to arm: %s", arm)
                 self.call_service(arm, "resend_robot_program")
+                rospy.sleep(2)
+                self.call_service(arm, "resend_robot_program")
                 sleep_time = True
         return sleep_time
 
