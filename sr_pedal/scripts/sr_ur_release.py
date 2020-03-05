@@ -52,14 +52,20 @@ class SrUrUnlock():
         resp = serv_call()
 
     def get_safety_mode(self, arm):
-        safety_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/get_safety_mode", GetSafetyMode)
-        safety_mode_msg = safety_mode_service()
-        return safety_mode_msg.safety_mode.mode
+        try:
+            safety_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/get_safety_mode", GetSafetyMode)
+            safety_mode_msg = safety_mode_service()
+            return safety_mode_msg.safety_mode.mode
+        except rospy.ServiceException, e:
+            rospy.logerr("Service call to 'get_safety_mode' failed for arm %s. %s", arm, e)
 
     def get_robot_mode(self, arm):
-        get_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/get_robot_mode", GetRobotMode)
-        get_mode_msg = get_mode_service()
-        return get_mode_msg.robot_mode.mode
+        try:
+            get_mode_service = rospy.ServiceProxy("/" + arm + "_sr_ur_robot_hw/dashboard/get_robot_mode", GetRobotMode)
+            get_mode_msg = get_mode_service()
+            return get_mode_msg.robot_mode.mode
+        except rospy.ServiceException, e:
+            rospy.logerr("Service call to 'get_robot_mode' failed for arm %s. %s", arm, e)
 
     def startup_arms(self, arms):
         for arm in arms:
@@ -164,7 +170,8 @@ class SrUrUnlock():
             if self.check_program_playing_arms(self.arms):
                 rospy.sleep(5)
         except rospy.ServiceException:
-            print "Service call failed for arm in: " + self.arms
+            for arm in self.arms:
+                print "Service call failed for arm: " + arm
 
 if __name__ == "__main__":
     rospy.init_node("sr_ur_unlock_node")
