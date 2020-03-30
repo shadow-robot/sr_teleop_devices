@@ -8,12 +8,6 @@ class SrPedalArmRemapper():
     def __init__(self):
         self.subscriber = rospy.Subscriber("sr_pedal/status", Status, self.pedal_sub)
         self.publisher = rospy.Publisher("sr_arm/release", Bool, queue_size=1)
-        self.rate = rospy.Rate(5)
-        while not rospy.is_shutdown():
-            try:
-                self.rate.sleep()
-            except rospy.ROSInterruptException:
-                rospy.loginfo("Shutting down %s", rospy.get_name())
 
     def pedal_sub(self, data):
         if data.connected and data.left_pressed and data.right_pressed:
@@ -22,3 +16,4 @@ class SrPedalArmRemapper():
 if __name__ == '__main__':
     rospy.init_node('sr_pedal_arm_remapper', anonymous=True)
     sr_pedal_arm_remapper = SrPedalArmRemapper()
+    rospy.spin()
