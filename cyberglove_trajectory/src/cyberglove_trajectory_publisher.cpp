@@ -139,7 +139,7 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
 
     for (size_t i = 0; i < joint_name_vector_.size(); i++)
     {
-      trajectory_goal_.trajectory.joint_names.push_back(hand_prefix + joint_name_vector_[i]);
+      trajectory_goal_.trajectory.joint_names.push_back(hand_prefix + '_' + joint_name_vector_[i]);
     }
 
     cyberglove_raw_pub = n_tilde.advertise<sensor_msgs::JointState>("raw/joint_states", 2);
