@@ -4,6 +4,11 @@
     local-name: cereal_port
 
 - git: 
+    uri: https://github.com/shadow-robot/leap_motion.git
+    version: F_add_bone_orientation
+    local-name: leap_motion
+
+- git: 
     uri: https://github.com/shadow-robot/sr_common.git
     version: melodic-devel
     local-name: sr_common

@@ -1,0 +1,18 @@
+<launch>
+    <arg name="rviz" default="false"/>
+    <arg name="right_root_tf_name" default="sr_leap_motion_root"/>
+    <arg name="left_root_tf_name" default="sr_leap_motion_root"/>
+    <arg name="bone_starts" default="false"/>
+    <arg name="bone_middles" default="false"/>
+    <arg name="heartbeat_topic" default="/sr_leap_motion/heartbeat"/>
+    <include file="$(find sr_leap_motion)/launch/leap_motion.launch"/>
+    <node pkg="sr_leap_motion" type="sr_leap_motion.py" name="sr_leap_motion" output="screen">
+        <param name="right_root_tf_name" value="$(arg right_root_tf_name)"/>
+        <param name="left_root_tf_name" value="$(arg left_root_tf_name)"/>
+        <param name="bone_starts" value="$(arg bone_starts)"/>
+        <param name="bone_middles" value="$(arg bone_middles)"/>
+        <param name="heartbeat_topic" value="$(arg heartbeat_topic)"/>
+    </node>
+    <!-- Open a preconfigured RViz window -->
+    <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find sr_leap_motion)/config/rviz.rviz" />
+</launch>
