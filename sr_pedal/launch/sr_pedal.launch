@@ -9,5 +9,4 @@
     <node name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal.py" output="screen">
         <param name="rate" value="$(arg rate)"/>
     </node>
-    <node name="sr_pedal_arm_remapper" pkg="sr_teleop_utilities" type="sr_pedal_arm_remapper.py" output="screen"/>
 </launch>
