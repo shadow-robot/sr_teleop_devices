@@ -88,9 +88,7 @@
     </collision>
   </link>
 
- <!--------------------------------
-|             JOINTS               |
- --------------------------------->   
+<!--JOINTS-->
 <!--
  <joint name="attachment" type="continuous">
    <parent link="world"/>
