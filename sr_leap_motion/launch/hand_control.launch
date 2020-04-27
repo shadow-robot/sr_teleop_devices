@@ -1,0 +1,30 @@
+<launch>
+    <arg name="run_without_heartbeat" default="true"/>
+    <arg name="heartbeat_topic" default="/sr_leap_motion/heartbeat"/>
+
+    <!-- Leap motion nodes -->
+    <include file="$(find sr_leap_motion)/launch/sr_leap_motion.launch">
+        <arg name="right_root_tf_name" value="rh_leap_mf_mca_end"/>
+        <arg name="heartbeat_topic" value="$(arg heartbeat_topic)"/>
+    </include>
+
+    <!-- Fingertip teleoperation nodes -->
+    <include file="$(find sr_fingertip_hand_teleop)/launch/sr_fingertip_hand_teleop.launch">
+        <arg name="heartbeat_topic_name" value="$(arg heartbeat_topic)"/>
+    </include>
+    <arg name="leap_to_sr_rotation" value="1.57079632679 0 1.57079632679"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="sr_to_join" args="0.011 0 0.099 0 0 0 1.0 rh_palm rh_leap_sr_join" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="leap_to_join" args="0 0 0 0 -1.57079632679 -1.57079632679 rh_leap_sr_join rh_leap_mf_mca_end" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="leap_to_sr_ff" args="0 0 0 $(arg leap_to_sr_rotation) rh_leap_ff_dis_end rh_first_finger_tip_mocap" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="leap_to_sr_mf" args="0 0 0 $(arg leap_to_sr_rotation) rh_leap_mf_dis_end rh_middle_finger_tip_mocap" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="leap_to_sr_rf" args="0 0 0 $(arg leap_to_sr_rotation) rh_leap_rf_dis_end rh_ring_finger_tip_mocap" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="leap_to_sr_lf" args="0 0 0 $(arg leap_to_sr_rotation) rh_leap_lf_dis_end rh_little_finger_tip_mocap" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="leap_to_sr_th" args="0 0 0 $(arg leap_to_sr_rotation) rh_leap_th_dis_end rh_thumb_tip_mocap" />
+
+    <!-- Wrist teleoperation node -->
+    <include file="$(find sr_fingertip_hand_teleop)/launch/sr_wrist_joint_teleop.launch">
+        <arg name="user_palm_tf_name" value="rh_leap_mf_mca_end"/>
+        <arg name="user_forearm_tf_name" value="ra_leap_arm_center"/>
+        <arg name="heartbeat_topic" value="$(arg heartbeat_topic)"/>
+    </include>
+</launch>

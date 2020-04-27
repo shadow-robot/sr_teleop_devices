@@ -3,6 +3,13 @@
     version: master
     local-name: cereal_port
 
+# Once this PR is merged, we can stop using our fork:
+# https://github.com/ros-drivers/leap_motion/pull/57
+- git: 
+    uri: https://github.com/shadow-robot/leap_motion.git
+    version: F_add_bone_orientation
+    local-name: leap_motion
+
 - git: 
     uri: https://github.com/shadow-robot/sr_common.git
     version: melodic-devel
