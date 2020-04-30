@@ -107,7 +107,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES sr_pedal
-  CATKIN_DEPENDS rospy message_runtime
+  CATKIN_DEPENDS rospy message_runtime std_msgs
 #  DEPENDS system_lib
 )
 
