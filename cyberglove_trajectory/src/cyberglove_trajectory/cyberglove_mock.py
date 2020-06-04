@@ -25,12 +25,15 @@ class CybergloveMock(object):
         self._hand_prefix = hand_prefix
         self._wrist_control = wrist_control
         self.hand_type = hand_type
-        self._hand_traj_client = actionlib.SimpleActionClient('/{}_trajectory_controller'.format(self._hand_prefix) +
-                                                              '/follow_joint_trajectory',
-                                                              FollowJointTrajectoryAction)
+        self._set_traj_server('/{}_trajectory_controller/follow_joint_trajectory'.format(self._hand_prefix))
         self.joint_names = []
 
         self._set_up_joint_list()
+
+    def _set_traj_server(self, traj_server_ns):
+        self._hand_traj_ns = traj_server_ns
+        self._hand_traj_client = actionlib.SimpleActionClient(self._hand_traj_ns,
+                                                              FollowJointTrajectoryAction)
 
     def _set_up_joint_list(self):
         if 'hand_e' == self.hand_type:
@@ -52,14 +55,11 @@ class CybergloveMock(object):
 
     def pack_hand(self):
         if 'hand_e' == self.hand_type:
-            CONST_PACK_HAND_JOINT_VALUES = [1.571, 1.57, 1.571,
-                                            0.0, 1.57, 1.571,
-                                            1.571, 0.0, 0.0,
-                                            1.571, 1.571, 1.571,
-                                            0.0, 1.571, 1.571,
-                                            1.571, 0.0, 0.0,
-                                            0.0, 0.0, 0.0,
-                                            0.0]
+            CONST_PACK_HAND_JOINT_VALUES = [1.571, 1.571, 1.571, 0.0,
+                                            1.571, 1.571, 1.571, 0.0,
+                                            1.571, 1.571, 1.571, 0.0,
+                                            1.571, 1.571, 1.571, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0, 0.0]
             if self._wrist_control:
                 CONST_PACK_HAND_JOINT_VALUES += [0.14, 0.0]
         else:
@@ -68,7 +68,9 @@ class CybergloveMock(object):
         self._send_goal_to_hand(CONST_PACK_HAND_JOINT_VALUES)
 
     def _send_goal_to_hand(self, hand_positions):
-        self._hand_traj_client.wait_for_server()
+        if not self._hand_traj_client.wait_for_server(timeout=rospy.Duration(3)):
+            rospy.logwarn("Failed to connected to actionlib server '{}'.".format(self._hand_traj_ns))
+            return
         goal = FollowJointTrajectoryGoal()
         goal.trajectory.header.stamp = rospy.Time.now()
         goal.trajectory.joint_names = self.joint_names
