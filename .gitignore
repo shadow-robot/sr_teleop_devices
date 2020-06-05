@@ -1,0 +1,47 @@
+# VS code configuration
+.vscode
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Python byte code
+*.pyc
+
+# PyCharm IDE
+.idea
+
+# QtCreator files
+CMakeLists.txt.user
+
+# ssh keys
+id_rsa
+id_rsa.pub
+
+# pre-merge backup files
+*.orig
