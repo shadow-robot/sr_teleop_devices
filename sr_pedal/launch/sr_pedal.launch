@@ -5,8 +5,32 @@
          relatively slow hardware searching. Default is 20 to allow heartbeat clients to use a 10Hz/0.1s timeout,
          ensuring a <0.1s response to pedal data being lost for whatever reason. -->
     <arg name="rate" default="20"/>
+
+    <!-- If true, a mock pedal status is published.-->
+    <arg name="mock" default="false"/>
     
-    <node name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal.py" output="screen">
+    <node unless="$(arg mock)" name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal.py" output="screen">
         <param name="rate" value="$(arg rate)"/>
+    </node>
+
+    <!-- Mock pedal and arguments -->
+
+    <!-- Whether the mock pedal is "connected" when the mock starts. -->
+    <arg name="mock_connected" default="true"/>
+    <!-- Which pedals are pressed when the mock starts: 'none', 'left', 'middle', 'right', 'outer', or 'all'. -->
+    <arg name="mock_pressed" default="none"/>
+    <arg name="mock_left_pressed" default="$(eval mock_pressed in ['left', 'all', 'outer'])"/>
+    <arg name="mock_middle_pressed" default="$(eval mock_pressed in ['middle', 'all'])"/>
+    <arg name="mock_right_pressed" default="$(eval mock_pressed in ['right', 'all', 'outer'])"/>
+    <!-- Whether to provide keyboard control of the mock pedal. -->
+    <arg name="mock_keyboard_control" default="true"/>
+    
+    <node if="$(arg mock)" name="sr_pedal_mock" pkg="sr_pedal" type="sr_triple_pedal_mock.py" output="screen">
+        <param name="connected" value="$(arg mock_connected)"/>
+        <param name="left_pressed" value="$(arg mock_left_pressed)"/>
+        <param name="middle_pressed" value="$(arg mock_middle_pressed)"/>
+        <param name="right_pressed" value="$(arg mock_right_pressed)"/>
+        <param name="rate" value="$(arg rate)"/>
+        <param name="keyboard_control" value="$(arg mock_keyboard_control)"/>
     </node>
 </launch>
