@@ -25,7 +25,7 @@
     <!-- Whether to provide keyboard control of the mock pedal. -->
     <arg name="mock_keyboard_control" default="true"/>
     
-    <node if="$(arg mock)" name="sr_pedal_mock" pkg="sr_pedal" type="sr_triple_pedal_mock.py" output="screen">
+    <node if="$(arg mock)" name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal_mock.py" output="screen">
         <param name="connected" value="$(arg mock_connected)"/>
         <param name="left_pressed" value="$(arg mock_left_pressed)"/>
         <param name="middle_pressed" value="$(arg mock_middle_pressed)"/>
