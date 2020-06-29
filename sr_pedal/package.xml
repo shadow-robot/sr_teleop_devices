@@ -23,6 +23,7 @@
   <exec_depend>libusb-1.0</exec_depend>
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>python-evdev</exec_depend>
+  <exec_depend>pynput-pip</exec_depend>
   <exec_depend>rospy</exec_depend>
 
 </package>
