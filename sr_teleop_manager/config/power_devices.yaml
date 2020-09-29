@@ -1,0 +1,7 @@
+ -  name: right_arm
+    power_ip: 10.6.10.105
+    data_ip: 192.168.1.1
+
+ -  name: left_arm
+    power_ip: 10.6.10.106
+    data_ip: 192.168.2.1
