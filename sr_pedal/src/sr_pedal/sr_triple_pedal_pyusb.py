@@ -22,7 +22,12 @@ import rospy
 import usb.core
 import usb.util
 from sr_pedal.msg import Status
+import array
 
+CONST_LEFT_PEDAL_VALUE = 1
+CONST_MIDDLE_PEDAL_VALUE = 2
+CONST_RIGHT_PEDAL_VALUE = 4
+CONST_RIGHT_LEFT_PEDAL_VALUE = 5
 
 class SrPedal():
     def __init__(self):
@@ -37,26 +42,29 @@ class SrPedal():
         self.goal_rate = rospy.Rate(20)
 
     def run(self):
+        self.connect()
         while not rospy.is_shutdown():
-            self.connect()
-            while not rospy.is_shutdown():
-                if usb.core.find(idVendor=self.vendor_id, idProduct=self.product_id) is None:
-                    self.disconnect()
-                    break
-                try:
-                    value = self.device.read(0x81, 2, self.goal_rate.remaining().to_sec*1000)
-                    rospy.logwarn_throttle(1, value)
-                    print(value)
-                except:
-                    pass
-                self.publish()
-                self.goal_rate.sleep()
+            if usb.core.find(idVendor=self.vendor_id, idProduct=self.product_id) is None:
+                self.disconnect()
+                break
+            try:
+                value = self.device.read(0x83, 512, 100)
+                self.left_pressed = CONST_LEFT_PEDAL_VALUE in value
+                self.middle_pressed = CONST_MIDDLE_PEDAL_VALUE in value
+                self.right_pressed = CONST_RIGHT_PEDAL_VALUE in value
+                if CONST_RIGHT_LEFT_PEDAL_VALUE in value:
+                    self.left_pressed = True
+                    self.right_pressed = True
+            except usb.core.USBError:
+                pass
+            self.publish()
+            self.goal_rate.sleep()
 
     def connect(self):
         rospy.loginfo("Waiting for pedal...")
         while ((not rospy.is_shutdown()) and self.device is None):
             self.device = usb.core.find(idVendor=self.vendor_id, idProduct=self.product_id)
-            self.publish()
+            self.device.reset()
             if self.device is not None:
                 rospy.loginfo("Pedal connected.")
                 try:
@@ -75,6 +83,7 @@ class SrPedal():
         self.middle_pressed = False
         self.right_pressed = False
         self.publish()
+        self.device.reset()
 
     def publish(self, time=None):
         if time is None:

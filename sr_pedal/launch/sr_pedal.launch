@@ -9,7 +9,7 @@
     <!-- If true, a mock pedal status is published.-->
     <arg name="mock" default="false"/>
     
-    <node unless="$(arg mock)" name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal.py" output="screen">
+    <node unless="$(arg mock)" name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal_pyusb.py" output="screen">
         <param name="rate" value="$(arg rate)"/>
     </node>
 
