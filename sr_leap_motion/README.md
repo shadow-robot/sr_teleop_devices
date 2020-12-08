@@ -4,25 +4,24 @@ This package contains an interface between Shadow software and Leap motion softw
 
 ## Prerequisites
 
-The Leap Motion SDK V2 for Linux is required; you can get it [here](https://developer.leapmotion.com/setup/desktop). Download the SDK; the following instructions assume to your `~/Downloads` directory.
+The Leap Motion SDK V2 for Linux is required; you can get it by running [install_sdk.sh](scripts/install.sh):
 
 ```bash
-cd Downloads && tar -zxvf Leap_Motion_SDK_Linux_2.3.1.tgz && \
-sudo dpkg -i LeapDeveloperKit_2.3.1+31549_linux/Leap-2.3.1+31549-x64.deb && \
-sudo apt install -f && \
-rm -rf LeapDeveloperKit_2.3.1+31549_linux && rm Leap_Motion_SDK_Linux_2.3.1.tgz
+rosrun sr_leap_motion install_sdk.sh
 ```
 
-We need the Leap service to be running all the time; Ubuntu has changed how services work since V2 was released. As a result, you should copy `leapd.service` into systemd's folders and enable the service:
+There are also the usual ROS prerequisite steps (rosdep to install binary dependencies listed in [package.xml](package.xml), wstool and catkin to fetch and install src dependencies). If you are running in a docker container that had this repository pre-built, this should have been handled for you already.
+
+### Running outside docker
+
+We need the Leap service to be running all the time; Ubuntu has changed how services work since V2 was released. As a result, you need to run [install_systemctl.sh](scripts/install_systemctl.sh):
 
 ```bash
-sudo cp $(rospack find sr_leap_motion)/resources/leapd.service lib/systemd/system/. && \
-sudo ln -s /lib/systemd/system/leapd.service /etc/systemd/system/leapd.service && \
-sudo systemctl daemon-reload && \
-sudo service leapd start
+rosrun sr_leap_motion install_systemctl.sh
 ```
 
-There are also the usual ROS prerequisite steps (rosdep to install binary dependencies listed in [package.xml](package.xml), wstool and catkin to fetch and install src dependencies).
+### Running inside docker
+Inside docker, a script started in [leap_motion.launch](launch/leap_motion.launch) takes care of the service lifecycle for you.
 
 ## Running
 
