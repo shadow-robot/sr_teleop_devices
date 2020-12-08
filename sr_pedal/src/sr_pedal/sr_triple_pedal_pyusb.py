@@ -23,6 +23,7 @@ import usb.core
 import usb.util
 from sr_pedal.msg import Status
 import array
+import usb.util as util
 
 CONST_LEFT_PEDAL_VALUE = 1
 CONST_MIDDLE_PEDAL_VALUE = 2
@@ -34,6 +35,7 @@ class SrPedal():
         self.device = None
         self.vendor_id = 0x05f3
         self.product_id = 0x00ff
+        self.endpoint_in = 0x81
         self.left_pressed = False
         self.middle_pressed = False
         self.right_pressed = False
@@ -42,29 +44,32 @@ class SrPedal():
         self.goal_rate = rospy.Rate(20)
 
     def run(self):
-        self.connect()
         while not rospy.is_shutdown():
-            if usb.core.find(idVendor=self.vendor_id, idProduct=self.product_id) is None:
-                self.disconnect()
-                break
-            try:
-                value = self.device.read(0x83, 512, 100)
-                self.left_pressed = CONST_LEFT_PEDAL_VALUE in value
-                self.middle_pressed = CONST_MIDDLE_PEDAL_VALUE in value
-                self.right_pressed = CONST_RIGHT_PEDAL_VALUE in value
-                if CONST_RIGHT_LEFT_PEDAL_VALUE in value:
-                    self.left_pressed = True
-                    self.right_pressed = True
-            except usb.core.USBError:
-                pass
-            self.publish()
-            self.goal_rate.sleep()
+            self.connect()
+            while not rospy.is_shutdown():
+                if usb.core.find(idVendor=self.vendor_id, idProduct=self.product_id) is None:
+                    self.disconnect()
+                    break
+                try:
+                    value = self.device.read(self.endpoint_in, 512, 100)
+                    self.left_pressed = CONST_LEFT_PEDAL_VALUE in value
+                    self.middle_pressed = CONST_MIDDLE_PEDAL_VALUE in value
+                    self.right_pressed = CONST_RIGHT_PEDAL_VALUE in value
+                    if CONST_RIGHT_LEFT_PEDAL_VALUE in value:
+                        self.left_pressed = True
+                        self.right_pressed = True
+                except usb.core.USBError as e:
+                    print("{}".format(e))
+                self.publish()
+                self.goal_rate.sleep()
+
 
     def connect(self):
         rospy.loginfo("Waiting for pedal...")
         while ((not rospy.is_shutdown()) and self.device is None):
             self.device = usb.core.find(idVendor=self.vendor_id, idProduct=self.product_id)
             self.device.reset()
+            self.endpoint_in = self.find_endpoint_in(self.device)
             if self.device is not None:
                 rospy.loginfo("Pedal connected.")
                 try:
@@ -83,7 +88,6 @@ class SrPedal():
         self.middle_pressed = False
         self.right_pressed = False
         self.publish()
-        self.device.reset()
 
     def publish(self, time=None):
         if time is None:
@@ -95,7 +99,11 @@ class SrPedal():
         self.message.right_pressed = self.right_pressed
         self.publisher.publish(self.message)
 
-
+    def find_endpoint_in(self, device):
+        for cfg in device:
+            for interface in cfg:
+                return interface[0].bEndpointAddress
+       
 if __name__ == "__main__":
     rospy.init_node("sr_pedal")
     sr_pedal = SrPedal()
