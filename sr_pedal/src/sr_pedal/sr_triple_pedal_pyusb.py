@@ -58,8 +58,8 @@ class SrPedal():
                     if CONST_RIGHT_LEFT_PEDAL_VALUE in value:
                         self.left_pressed = True
                         self.right_pressed = True
-                except usb.core.USBError as e:
-                    print("{}".format(e))
+                except usb.core.USBError:
+                    pass
                 self.publish()
                 self.goal_rate.sleep()
 
