@@ -30,6 +30,7 @@ CONST_MIDDLE_PEDAL_VALUE = 2
 CONST_RIGHT_PEDAL_VALUE = 4
 CONST_RIGHT_LEFT_PEDAL_VALUE = 5
 
+
 class SrPedal():
     def __init__(self):
         self.device = None
@@ -62,7 +63,6 @@ class SrPedal():
                     pass
                 self.publish()
                 self.goal_rate.sleep()
-
 
     def connect(self):
         rospy.loginfo("Waiting for pedal...")
@@ -103,7 +103,7 @@ class SrPedal():
         for cfg in device:
             for interface in cfg:
                 return interface[0].bEndpointAddress
-       
+
 if __name__ == "__main__":
     rospy.init_node("sr_pedal")
     sr_pedal = SrPedal()
