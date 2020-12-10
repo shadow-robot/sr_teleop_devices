@@ -9,9 +9,20 @@
     <!-- If true, a mock pedal status is published.-->
     <arg name="mock" default="false"/>
     
-    <node unless="$(arg mock)" name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal_pyusb.py" output="screen">
-        <param name="rate" value="$(arg rate)"/>
-    </node>
+    <!-- This flag allows to launch the driver compatible with the outdated version of VEC Infinity pedal. 
+         This pedal has USB HID v1.00 and it is now outdated. New pedals run with USB HID v.1.11 
+         Normally, this flag should be set to false. 
+         If there are doubts about which driver to run email software@shadowrobot.com -->
+    <arg name="old_pedal_driver" default="false"/>
+
+    <group unless="$(arg mock)">
+        <node if="$(arg old_pedal_driver)" name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal.py" output="screen">
+            <param name="rate" value="$(arg rate)"/>
+        </node>
+        <node unless="$(arg old_pedal_driver)" name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal_pyusb.py" output="screen">
+            <param name="rate" value="$(arg rate)"/>
+        </node>
+    </group>
 
     <!-- Mock pedal and arguments -->
 
