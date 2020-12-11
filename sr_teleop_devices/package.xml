@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+  <name>sr_teleop_devices</name>
+  <version>0.0.0</version>
+  <description>Metapackage for sr_teleop_devices repository</description>
+
+  <maintainer email="software@shadowrobot.com">Shadow Robot's software team</maintainer>
+
+  <license>GPL</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <export>
+    <metapackage/>
+  </export>
+</package>
