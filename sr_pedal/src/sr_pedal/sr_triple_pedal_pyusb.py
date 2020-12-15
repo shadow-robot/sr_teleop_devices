@@ -67,13 +67,11 @@ class SrPedal():
         rospy.loginfo("Waiting for pedal...")
         while ((not rospy.is_shutdown()) and self.device is None):
             self.device = usb.core.find(idVendor=self.vendor_id, idProduct=self.product_id)
-            try:
-                self.device.reset()
-            except AttributeError:
-                rospy.logerr("Cannot connect to pedal, is it plugged in?")
-            self.endpoint_in = self.find_device_endpoint_IN(self.device)
             if self.device is not None:
                 rospy.loginfo("Pedal connected.")
+                self.device.reset()
+                self.endpoint_in = self.find_device_endpoint_IN(self.device)
+
                 try:
                     self.device.detach_kernel_driver(0)
                 except:
