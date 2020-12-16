@@ -25,5 +25,6 @@
   <exec_depend>python-evdev</exec_depend>
   <exec_depend>pynput-pip</exec_depend>
   <exec_depend>rospy</exec_depend>
+  <exec_depend>python-pyusb-pip</exec_depend>
 
 </package>
