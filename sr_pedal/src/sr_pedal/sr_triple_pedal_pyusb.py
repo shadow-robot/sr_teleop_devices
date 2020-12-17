@@ -49,7 +49,6 @@ class SrPedal():
         while not rospy.is_shutdown():
             if usb.core.find(idVendor=self.vendor_id, idProduct=self.product_id) is None:
                 self.disconnect()
-                break
             try:
                 value = self.device.read(self.endpoint_in, 512, 100)
                 self.left_pressed = CONST_LEFT_PEDAL_VALUE in value
@@ -83,11 +82,13 @@ class SrPedal():
 
     def disconnect(self):
         rospy.logwarn("Pedal disconnected.")
+        self.pedal_connected = False
         self.device = None
         self.left_pressed = False
         self.middle_pressed = False
         self.right_pressed = False
         self.publish()
+        self.run()
 
     def publish(self, time=None):
         if time is None:
