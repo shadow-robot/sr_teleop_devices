@@ -12,39 +12,38 @@ public:
     : started(false),
     context(nullptr)
     {
-        libusb_init(&context);
+      libusb_init(&context);
     }
 
     ~Discovery()
     {
-        Stop();
-        libusb_exit(context);
+      Stop();
+      libusb_exit(context);
     }
 
     void Start()
     {
-        std::cout << "Start" << std::endl;
-        if (!started)
+      std::cout << "Start" << std::endl;
+      if (!started)
+      {
+        int ret;
+        ret = libusb_hotplug_register_callback(context,
+                                               (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
+                                                LIBUSB_HOTPLUG_ENUMERATE,
+                                                LIBUSB_HOTPLUG_MATCH_ANY, // vid
+                                                LIBUSB_HOTPLUG_MATCH_ANY, // pid
+                                                LIBUSB_HOTPLUG_MATCH_ANY, // class
+                                                OnUsbHotplugCallback,
+                                                (void*)this,
+                                                &handle);
+
+        if (LIBUSB_SUCCESS == ret)
         {
-            int ret;
-            ret = libusb_hotplug_register_callback(context,
-                                                   (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
-                                                   LIBUSB_HOTPLUG_ENUMERATE,
-                                                   LIBUSB_HOTPLUG_MATCH_ANY, // vid
-                                                   LIBUSB_HOTPLUG_MATCH_ANY, // pid
-                                                   LIBUSB_HOTPLUG_MATCH_ANY, // class
-                                                   OnUsbHotplugCallback,
-                                                   (void*)this,
-                                                   &handle);
-
-            if (LIBUSB_SUCCESS == ret)
-            {
-                started = true;
-            }
-
-            loop = new std::thread([this] { this->Loop(); });
+          started = true;
         }
-    }
+        loop = new std::thread([this] { this->Loop(); });
+      }
+  }
 
     void Stop()
     {
