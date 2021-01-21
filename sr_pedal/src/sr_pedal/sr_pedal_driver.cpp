@@ -10,7 +10,6 @@ SrTriplePedal::SrTriplePedal()
 SrTriplePedal::~SrTriplePedal()
 {
   stop();
-  libusb_exit(_context);
 }
 
 void SrTriplePedal::start()
@@ -32,22 +31,18 @@ void SrTriplePedal::start()
     {
       _started = true;
     }
-    _loop_thread = new std::thread([this] { this->_loop(); });
+    _loop_thread.reset(new std::thread([this] { this->_loop(); }));
    }
 }
 
 void SrTriplePedal::stop()
 {
-  if (_started)
-  {
-    libusb_hotplug_deregister_callback(_context, _handle);
-    _started = false;
-    hid_exit();
-
-    _loop_thread->join();
-    delete _loop_thread;
-    _loop_thread = nullptr;
-  }
+  libusb_hotplug_deregister_callback(_context, _handle);
+  hid_close(handle);
+  hid_exit();
+  _started = false;
+  _loop_thread->join();
+  libusb_exit(_context);
 }
 
 void SrTriplePedal::detect_device_event(struct libusb_device *device, int16_t vid, int16_t pid, libusb_hotplug_event event)
@@ -101,22 +96,27 @@ void SrTriplePedal::device_read()
       sprintf(data, "%02x %02x %02x %02x -- %02x %02x %02x %02x -- %02x %02x %02x %02x", 
 		          buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6],
               buf[7], buf[8], buf[9], buf[10], buf[11]);
-      //std::cout<<"data: "<<data<<"\n";
+
       left_pressed = false;
       middle_pressed = false;
       right_pressed = false;
 
-      if ((data[1] & 0x1) != 0)
+      if (data[1] == 49)
       {
         left_pressed = true;
       }
-      if ((data[1] & 0x2) != 0)
+      else if (data[1] == 50)
       {
         middle_pressed = true;
       }
-      if ((data[1] & 0x4) != 0)
+      else if (data[1] == 52)
       {
         right_pressed = true;
+      }
+      else if (data[1] == 53)
+      {
+        right_pressed = true;
+        left_pressed = true;
       }
     }
     _publish_pedal_data();
@@ -168,6 +168,7 @@ void SrTriplePedal::_loop()
   while (_started)
   {
     libusb_handle_events_completed(_context, nullptr);
+    publish_rate_.sleep();
   }
 }
 

@@ -37,7 +37,7 @@ class SrTriplePedal
     bool _started;
     libusb_context *_context;
     libusb_hotplug_callback_handle _handle;
-    std::thread *_loop_thread;
+    std::shared_ptr<std::thread> _loop_thread;
     bool left_pressed;
     bool right_pressed;
     bool middle_pressed;
