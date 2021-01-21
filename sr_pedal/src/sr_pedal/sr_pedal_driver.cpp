@@ -1,10 +1,16 @@
+/*
+* Copyright (C) 2020 Shadow Robot Company Ltd - All Rights Reserved. Proprietary and Confidential.
+* Unauthorized copying of the content in this file, via any medium is strictly prohibited.
+*/
+
 #include "sr_pedal_driver.hpp"
 #include <typeinfo>
 
 SrTriplePedal::SrTriplePedal()
-  :_started(false), _context(nullptr), right_pressed(false), left_pressed(false), middle_pressed(false), connected(false)
+  :started_(false), context_(nullptr), right_pressed_(false), left_pressed_(false),
+  middle_pressed_(false), connected_(false)
 {
-  libusb_init(&_context);
+  libusb_init(&context_);
 }
 
 SrTriplePedal::~SrTriplePedal()
@@ -14,128 +20,120 @@ SrTriplePedal::~SrTriplePedal()
 
 void SrTriplePedal::start()
 {
-
-  if (!_started)
+  if (!started_)
   {
     int ret;
-    ret = libusb_hotplug_register_callback(_context,
-                                           (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
-                                           LIBUSB_HOTPLUG_ENUMERATE,
-                                           LIBUSB_HOTPLUG_MATCH_ANY, // vid
-                                           LIBUSB_HOTPLUG_MATCH_ANY, // pid
-                                           LIBUSB_HOTPLUG_MATCH_ANY, // class
-                                           &SrTriplePedal::_on_usb_hotplug_callback,
-                                           (void*)this,
-                                           &_handle);
+    ret = libusb_hotplug_register_callback(context_,
+            (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
+            LIBUSB_HOTPLUG_ENUMERATE, LIBUSB_HOTPLUG_MATCH_ANY, LIBUSB_HOTPLUG_MATCH_ANY, LIBUSB_HOTPLUG_MATCH_ANY,
+            &SrTriplePedal::on_usb_hotplug_callback, reinterpret_cast<void*>(this), &hotplug_callback_handle_);
+
     if (LIBUSB_SUCCESS == ret)
-    {
-      _started = true;
-    }
-    _loop_thread.reset(new std::thread([this] { this->_loop(); }));
-   }
+      started_ = true;
+
+    hotplug_loop_thread_ = std::thread(&SrTriplePedal::hotplug_loop, this);
+  }
 }
 
 void SrTriplePedal::stop()
 {
-  libusb_hotplug_deregister_callback(_context, _handle);
-  hid_close(handle);
+  libusb_hotplug_deregister_callback(context_, hotplug_callback_handle_);
+  hid_close(device_handle);
   hid_exit();
-  _started = false;
-  _loop_thread->join();
-  libusb_exit(_context);
+  started_ = false;
+  hotplug_loop_thread_.join();
+  libusb_exit(context_);
 }
 
-void SrTriplePedal::detect_device_event(struct libusb_device *device, int16_t vid, int16_t pid, libusb_hotplug_event event)
+void SrTriplePedal::detect_device_event(libusb_hotplug_event event)
 {
-  std::string event_string;
- 
   switch (event)
   {
     case LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED:
       ROS_INFO("Pedal detected");
-      device_open();
+      open_device();
       break;
     case LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT:
       ROS_INFO("Pedal disconnected");
-      device_close();
+      close_device();
       break;
     default:
-      event_string = "unknown";
+      ROS_WARN("Unknown event detected");
       break;
   }
 }
 
-void SrTriplePedal::device_open()
+void SrTriplePedal::open_device()
 {
-  handle = hid_open(PEDAL_VENDOR, PEDAL_ID, NULL);
-  if (!handle)
+  device_handle = hid_open(PEDAL_VENDOR, PEDAL_ID, NULL);
+  if (device_handle)
   {
-    ROS_ERROR("Could not open pedal");
+    ROS_INFO("Pedal device connected correctly");
+    connected_ = true;
+    hid_set_nonblocking(device_handle, 1);
+    read_data_from_device();
   }
   else
   {
-    ROS_INFO("Pedal device connected correctly");
-    connected = true;
-    hid_set_nonblocking(handle, 1);
-    device_read();
+    ROS_ERROR("Could not open pedal");
   }
 }
 
-void SrTriplePedal::device_read()
+void SrTriplePedal::read_data_from_device()
 {
-  char data[256];
-  unsigned char buf[256];
+  char data[8];
+  unsigned char buffer[8];
   int res = 0;
-  while (res >= 0 && ros::ok()) {
-    res = hid_read(handle, buf, sizeof(buf));
+  int raw_data_received = 0;
+  while (res >= 0 && ros::ok())
+  {
+    res = hid_read(device_handle, buffer, sizeof(buffer));
 
     if (res < 0)
       ROS_WARN("Unable to read data from pedal\n");
     else
     {
-      sprintf(data, "%02x %02x %02x %02x -- %02x %02x %02x %02x -- %02x %02x %02x %02x", 
-		          buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6],
-              buf[7], buf[8], buf[9], buf[10], buf[11]);
+      snprintf(data, sizeof(data), "%02x %02x", buffer[0], buffer[1]);
 
-      left_pressed = false;
-      middle_pressed = false;
-      right_pressed = false;
+      raw_data_received = data[1];  // the second char is the one that changes when buttons are pressed
+      left_pressed_ = false;
+      middle_pressed_ = false;
+      right_pressed_ = false;
 
-      if (data[1] == 49)
+      switch (raw_data_received)
       {
-        left_pressed = true;
-      }
-      else if (data[1] == 50)
-      {
-        middle_pressed = true;
-      }
-      else if (data[1] == 52)
-      {
-        right_pressed = true;
-      }
-      else if (data[1] == 53)
-      {
-        right_pressed = true;
-        left_pressed = true;
+        case RAW_LEFT_BUTTON_PRESSED_VALUE:
+          left_pressed_ = true;
+          break;
+        case RAW_MIDDLE_BUTTON_PRESSED_VALUE:
+          middle_pressed_ = true;
+          break;
+        case RAW_RIGHT_BUTTON_PRESSED_VALUE:
+          right_pressed_ = true;
+          break;
+        case RAW_LEFT_RIGHT_BUTTON_PRESSED_VALUE:
+          left_pressed_ = true;
+          right_pressed_ = true;
+          break;
       }
     }
-    _publish_pedal_data();
+    publish_pedal_data();
     publish_rate_.sleep();
     ros::spinOnce();
   }
 }
 
-void SrTriplePedal::device_close()
+void SrTriplePedal::close_device()
 {
-  connected = false;
-  left_pressed = false;
-  middle_pressed = false;
-  right_pressed = false;
-  _publish_pedal_data();
-  hid_close(handle);
+  connected_ = false;
+  left_pressed_ = false;
+  middle_pressed_ = false;
+  right_pressed_ = false;
+  publish_pedal_data();
+  hid_close(device_handle);
 }
 
-int SrTriplePedal::_on_usb_hotplug(struct libusb_context *ctx, struct libusb_device *device, libusb_hotplug_event event)
+int SrTriplePedal::on_usb_hotplug(struct libusb_context *ctx, struct libusb_device *device, libusb_hotplug_event event)
 {
   struct libusb_device_descriptor descriptor;
 
@@ -144,41 +142,41 @@ int SrTriplePedal::_on_usb_hotplug(struct libusb_context *ctx, struct libusb_dev
   {
     if (LIBUSB_SUCCESS == ret)
     {
-      detect_device_event(device, descriptor.idVendor, descriptor.idProduct, event);
+      detect_device_event(event);
     }
     else
     {
-      std::cout << "Got a device but failed to look up its descriptor" << std::endl;
+      ROS_ERROR("Got a device but failed to look up its descriptor");
     }
   }
   return 0;
 }
 
 
-int SrTriplePedal::_on_usb_hotplug_callback(struct libusb_context *ctx,
-                                                   struct libusb_device *device,
-                                                   libusb_hotplug_event event,
-                                                    void* pedal_discovery)
+int SrTriplePedal::on_usb_hotplug_callback(struct libusb_context *ctx,
+                                           struct libusb_device *device,
+                                           libusb_hotplug_event event,
+                                           void* pedal_discovery)
 {
-  return ((SrTriplePedal*)pedal_discovery)->_on_usb_hotplug(ctx, device, event);
+  return (reinterpret_cast<SrTriplePedal*>(pedal_discovery))->on_usb_hotplug(ctx, device, event);
 }
 
-void SrTriplePedal::_loop()
+void SrTriplePedal::hotplug_loop()
 {
-  while (_started)
+  while (started_)
   {
-    libusb_handle_events_completed(_context, nullptr);
+    libusb_handle_events_completed(context_, nullptr);
     publish_rate_.sleep();
   }
 }
 
-void SrTriplePedal::_publish_pedal_data()
+void SrTriplePedal::publish_pedal_data()
 {
-  sr_pedal_status_.connected = connected;
-  sr_pedal_status_.left_pressed = left_pressed;
-  sr_pedal_status_.middle_pressed = middle_pressed;
-  sr_pedal_status_.right_pressed = right_pressed;
-  _pedal_publisher.publish(sr_pedal_status_);
+  sr_pedal_status_.connected = connected_;
+  sr_pedal_status_.left_pressed = left_pressed_;
+  sr_pedal_status_.middle_pressed = middle_pressed_;
+  sr_pedal_status_.right_pressed = right_pressed_;
+  pedal_publisher_.publish(sr_pedal_status_);
 }
 
 

@@ -1,63 +1,63 @@
+/*
+* Copyright (C) 2020 Shadow Robot Company Ltd - All Rights Reserved. Proprietary and Confidential.
+* Unauthorized copying of the content in this file, via any medium is strictly prohibited.
+*/
 
 #ifndef SR_TRIPLE_PEDAL_HPP
 #define SR_TRIPLE_PEDAL_HPP
 
 #include <ros/ros.h>
 #include <libusb-1.0/libusb.h>
-#include <iomanip>
 #include <iostream>
-#include <thread>
+#include <thread>  // NOLINT(build/c++11)
 #include <hidapi/hidapi.h>
 #include <sr_pedal/Status.h>
 
 #define PEDAL_VENDOR 0x05f3
 #define PEDAL_ID 0x00ff
+#define RAW_LEFT_BUTTON_PRESSED_VALUE 49
+#define RAW_MIDDLE_BUTTON_PRESSED_VALUE 50
+#define RAW_RIGHT_BUTTON_PRESSED_VALUE 52
+#define RAW_LEFT_RIGHT_BUTTON_PRESSED_VALUE 53
 
 class SrTriplePedal
 {
   public:
     SrTriplePedal();
     ~SrTriplePedal();
-    
+
     void start();
     void stop();
-    void device_open();
-    void device_read();
-    void device_close();
 
-    void detect_device_event(struct libusb_device *device, int16_t vid, int16_t pid, libusb_hotplug_event event);
-
-    hid_device *handle;
-    uint32_t benchPackets;
-    uint32_t benchBytes;
-    struct timespec t1, t2;
-    uint32_t diff;
   private:
-    ros::NodeHandle _nh = ros::NodeHandle();
-    bool _started;
-    libusb_context *_context;
-    libusb_hotplug_callback_handle _handle;
-    std::shared_ptr<std::thread> _loop_thread;
-    bool left_pressed;
-    bool right_pressed;
-    bool middle_pressed;
-    bool connected;
+    ros::NodeHandle nh_ = ros::NodeHandle();
+    hid_device *device_handle;
+    bool started_;
+    libusb_context *context_;
+    libusb_hotplug_callback_handle hotplug_callback_handle_;
+    std::thread hotplug_loop_thread_;
+    bool left_pressed_;
+    bool right_pressed_;
+    bool middle_pressed_;
+    bool connected_;
+    bool detected_;
     sr_pedal::Status sr_pedal_status_;
-
     ros::Rate publish_rate_ = ros::Rate(125);
-    int _on_usb_hotplug(struct libusb_context *ctx,
+    ros::Publisher pedal_publisher_ = nh_.advertise<sr_pedal::Status>("sr_pedal/status", 1);
+
+    void open_device();
+    void read_data_from_device();
+    void close_device();
+    void detect_device_event(libusb_hotplug_event event);
+    int on_usb_hotplug(struct libusb_context *ctx,
                         struct libusb_device *device,
                         libusb_hotplug_event event);
-    static int _on_usb_hotplug_callback(struct libusb_context *ctx,
+    static int on_usb_hotplug_callback(struct libusb_context *ctx,
                                  struct libusb_device *device,
                                  libusb_hotplug_event event,
                                  void* discovery);
-    void _on_data_in(struct libusb_transfer *transfer);
-
-    static void _on_data_in_callback(struct libusb_transfer *transfer, void* pedal_discovery);
-    void _loop();
-    ros::Publisher _pedal_publisher = _nh.advertise<sr_pedal::Status>("sr_pedal/status", 1);
-    void _publish_pedal_data();
+    void hotplug_loop();
+    void publish_pedal_data();
 };
 
 #endif  //  SR_TRIPLE_PEDAL_HPP
