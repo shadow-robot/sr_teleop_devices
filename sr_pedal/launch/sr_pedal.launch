@@ -19,7 +19,7 @@
         <node if="$(arg old_pedal_driver)" name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal.py" output="screen">
             <param name="rate" value="$(arg rate)"/>
         </node>
-        <node unless="$(arg old_pedal_driver)" name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal_pyusb.py" output="screen">
+        <node unless="$(arg old_pedal_driver)" name="sr_pedal" pkg="sr_pedal" type="sr_pedal_node" output="screen">
             <param name="rate" value="$(arg rate)"/>
         </node>
     </group>
