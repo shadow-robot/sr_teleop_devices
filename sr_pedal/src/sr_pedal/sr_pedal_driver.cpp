@@ -90,7 +90,7 @@ void SrTriplePedal::read_data_from_device()
     res = hid_read(device_handle, buffer, sizeof(buffer));
 
     if (res < 0)
-      ROS_WARN("Unable to read data from pedal\n");
+      ROS_WARN("Unable to read data from pedal");
     else
     {
       snprintf(data, sizeof(data), "%02x %02x", buffer[0], buffer[1]);
@@ -172,6 +172,7 @@ void SrTriplePedal::hotplug_loop()
 
 void SrTriplePedal::publish_pedal_data()
 {
+  sr_pedal_status_.header.stamp = ros::Time::now();
   sr_pedal_status_.connected = connected_;
   sr_pedal_status_.left_pressed = left_pressed_;
   sr_pedal_status_.middle_pressed = middle_pressed_;
