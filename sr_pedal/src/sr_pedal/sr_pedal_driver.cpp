@@ -8,7 +8,7 @@
 
 SrTriplePedal::SrTriplePedal()
   :started_(false), context_(nullptr), right_pressed_(false), left_pressed_(false),
-  middle_pressed_(false), connected_(false)
+  middle_pressed_(false), connected_(false), detected_(false)
 {
   libusb_init(&context_);
 }
@@ -31,7 +31,24 @@ void SrTriplePedal::start()
     if (LIBUSB_SUCCESS == ret)
       started_ = true;
 
+    // start separate thread to detect hotplug events
     hotplug_loop_thread_ = std::thread(&SrTriplePedal::hotplug_loop, this);
+
+    while (ros::ok())
+    {
+      if (detected_)
+      {
+        if (!connected_)
+          open_device();
+        read_data_from_device();
+      }
+      else
+        close_device();
+
+      publish_pedal_data();
+      publish_rate_.sleep();
+      ros::spinOnce();
+    }
   }
 }
 
@@ -42,6 +59,7 @@ void SrTriplePedal::stop()
   hid_exit();
   started_ = false;
   hotplug_loop_thread_.join();
+  run_thread_.join();
   libusb_exit(context_);
 }
 
@@ -50,12 +68,12 @@ void SrTriplePedal::detect_device_event(libusb_hotplug_event event)
   switch (event)
   {
     case LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED:
-      ROS_INFO("Pedal detected");
-      open_device();
+      ROS_INFO("Pedal device detected");
+      detected_ = true;
       break;
     case LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT:
       ROS_INFO("Pedal disconnected");
-      close_device();
+      detected_ = false;
       break;
     default:
       ROS_WARN("Unknown event detected");
@@ -68,10 +86,9 @@ void SrTriplePedal::open_device()
   device_handle = hid_open(PEDAL_VENDOR, PEDAL_ID, NULL);
   if (device_handle)
   {
-    ROS_INFO("Pedal device connected correctly");
+    ROS_INFO("Pedal device connected");
     connected_ = true;
     hid_set_nonblocking(device_handle, 1);
-    read_data_from_device();
   }
   else
   {
@@ -81,45 +98,57 @@ void SrTriplePedal::open_device()
 
 void SrTriplePedal::read_data_from_device()
 {
-  char data[8];
-  unsigned char buffer[8];
   int res = 0;
   int raw_data_received = 0;
-  while (res >= 0 && ros::ok())
+  res = hid_read(device_handle, buffer_, sizeof(buffer_));
+
+  if (res < 0)
   {
-    res = hid_read(device_handle, buffer, sizeof(buffer));
+    ROS_WARN("Unable to read data from pedal");
+  }
+  else
+  {
+    snprintf(data_, sizeof(data_), "%02x %02x", buffer_[0], buffer_[1]);
 
-    if (res < 0)
-      ROS_WARN("Unable to read data from pedal");
-    else
-    {
-      snprintf(data, sizeof(data), "%02x %02x", buffer[0], buffer[1]);
+    raw_data_received = data_[1];  // the second char of the buffer contains the button combination value
+    left_pressed_ = false;
+    middle_pressed_ = false;
+    right_pressed_ = false;
 
-      raw_data_received = data[1];  // the second char is the one that changes when buttons are pressed
-      left_pressed_ = false;
-      middle_pressed_ = false;
-      right_pressed_ = false;
+    map_command_received(raw_data_received);
+  }
+}
 
-      switch (raw_data_received)
-      {
-        case RAW_LEFT_BUTTON_PRESSED_VALUE:
-          left_pressed_ = true;
-          break;
-        case RAW_MIDDLE_BUTTON_PRESSED_VALUE:
-          middle_pressed_ = true;
-          break;
-        case RAW_RIGHT_BUTTON_PRESSED_VALUE:
-          right_pressed_ = true;
-          break;
-        case RAW_LEFT_RIGHT_BUTTON_PRESSED_VALUE:
-          left_pressed_ = true;
-          right_pressed_ = true;
-          break;
-      }
-    }
-    publish_pedal_data();
-    publish_rate_.sleep();
-    ros::spinOnce();
+void SrTriplePedal::map_command_received(int raw_data_received)
+{
+  switch (raw_data_received)
+  {
+    case RAW_LEFT_BUTTON_PRESSED_VALUE:
+      left_pressed_ = true;
+      break;
+    case RAW_MIDDLE_BUTTON_PRESSED_VALUE:
+      middle_pressed_ = true;
+      break;
+    case RAW_RIGHT_BUTTON_PRESSED_VALUE:
+      right_pressed_ = true;
+      break;
+    case RAW_LEFT_RIGHT_BUTTON_PRESSED_VALUE:
+      left_pressed_ = true;
+      right_pressed_ = true;
+      break;
+    case RAW_ALL_PRESSED_VALUE:
+      left_pressed_ = true;
+      right_pressed_ = true;
+      middle_pressed_ = true;
+      break;
+    case RAW_MID_RIGHT_BUTTON_PRESSED_VALUE:
+      right_pressed_ = true;
+      middle_pressed_ = true;
+      break;
+    case RAW_MID_LEFT_BUTTON_PRESSED_VALUE:
+      left_pressed_ = true;
+      middle_pressed_ = true;
+      break;
   }
 }
 
@@ -130,7 +159,6 @@ void SrTriplePedal::close_device()
   middle_pressed_ = false;
   right_pressed_ = false;
   publish_pedal_data();
-  hid_close(device_handle);
 }
 
 int SrTriplePedal::on_usb_hotplug(struct libusb_context *ctx, struct libusb_device *device, libusb_hotplug_event event)

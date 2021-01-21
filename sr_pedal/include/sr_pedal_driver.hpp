@@ -12,13 +12,17 @@
 #include <thread>  // NOLINT(build/c++11)
 #include <hidapi/hidapi.h>
 #include <sr_pedal/Status.h>
+#include <atomic>
 
 #define PEDAL_VENDOR 0x05f3
 #define PEDAL_ID 0x00ff
 #define RAW_LEFT_BUTTON_PRESSED_VALUE 49
 #define RAW_MIDDLE_BUTTON_PRESSED_VALUE 50
+#define RAW_MID_LEFT_BUTTON_PRESSED_VALUE 51
 #define RAW_RIGHT_BUTTON_PRESSED_VALUE 52
 #define RAW_LEFT_RIGHT_BUTTON_PRESSED_VALUE 53
+#define RAW_MID_RIGHT_BUTTON_PRESSED_VALUE 54
+#define RAW_ALL_PRESSED_VALUE 55
 
 class SrTriplePedal
 {
@@ -36,15 +40,17 @@ class SrTriplePedal
     libusb_context *context_;
     libusb_hotplug_callback_handle hotplug_callback_handle_;
     std::thread hotplug_loop_thread_;
+    std::thread run_thread_;
     bool left_pressed_;
     bool right_pressed_;
     bool middle_pressed_;
     bool connected_;
-    bool detected_;
+    std::atomic<bool> detected_;
     sr_pedal::Status sr_pedal_status_;
-    ros::Rate publish_rate_ = ros::Rate(125);
+    ros::Rate publish_rate_ = ros::Rate(100);
     ros::Publisher pedal_publisher_ = nh_.advertise<sr_pedal::Status>("sr_pedal/status", 1);
-
+    char data_[8];
+    unsigned char buffer_[8];
     void open_device();
     void read_data_from_device();
     void close_device();
@@ -58,7 +64,7 @@ class SrTriplePedal
                                  void* discovery);
     void hotplug_loop();
     void publish_pedal_data();
+    void map_command_received(int raw_data_received);
 };
 
 #endif  //  SR_TRIPLE_PEDAL_HPP
-
