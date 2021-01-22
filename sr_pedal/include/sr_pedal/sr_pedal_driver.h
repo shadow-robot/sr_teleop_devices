@@ -46,7 +46,6 @@ class SrTriplePedal
     bool middle_pressed_;
     bool connected_;
     std::atomic<bool> detected_;
-    sr_pedal::Status sr_pedal_status_;
     int publishing_rate_;
     ros::Publisher pedal_publisher_ = nh_.advertise<sr_pedal::Status>("sr_pedal/status", 1);
     unsigned char buffer_[8];

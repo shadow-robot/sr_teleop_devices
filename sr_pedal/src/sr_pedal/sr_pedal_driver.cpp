@@ -217,12 +217,13 @@ void SrTriplePedal::hotplug_loop()
 
 void SrTriplePedal::publish_pedal_data()
 {
-  sr_pedal_status_.header.stamp = ros::Time::now();
-  sr_pedal_status_.connected = connected_;
-  sr_pedal_status_.left_pressed = left_pressed_;
-  sr_pedal_status_.middle_pressed = middle_pressed_;
-  sr_pedal_status_.right_pressed = right_pressed_;
-  pedal_publisher_.publish(sr_pedal_status_);
+  sr_pedal::Status sr_pedal_status;
+  sr_pedal_status.header.stamp = ros::Time::now();
+  sr_pedal_status.connected = connected_;
+  sr_pedal_status.left_pressed = left_pressed_;
+  sr_pedal_status.middle_pressed = middle_pressed_;
+  sr_pedal_status.right_pressed = right_pressed_;
+  pedal_publisher_.publish(sr_pedal_status);
 }
 
 
