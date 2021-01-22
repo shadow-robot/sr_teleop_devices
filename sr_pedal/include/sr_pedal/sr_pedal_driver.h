@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2020 Shadow Robot Company Ltd - All Rights Reserved. Proprietary and Confidential.
+* Copyright (C) 2021 Shadow Robot Company Ltd - All Rights Reserved. Proprietary and Confidential.
 * Unauthorized copying of the content in this file, via any medium is strictly prohibited.
 */
 
@@ -30,7 +30,7 @@ class SrTriplePedal
     SrTriplePedal();
     ~SrTriplePedal();
 
-    void start();
+    void start(int publishing_rate);
     void stop();
 
   private:
@@ -47,7 +47,7 @@ class SrTriplePedal
     bool connected_;
     std::atomic<bool> detected_;
     sr_pedal::Status sr_pedal_status_;
-    ros::Rate publish_rate_ = ros::Rate(100);
+    int publishing_rate_;
     ros::Publisher pedal_publisher_ = nh_.advertise<sr_pedal::Status>("sr_pedal/status", 1);
     char data_[8];
     unsigned char buffer_[8];

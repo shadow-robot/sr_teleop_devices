@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2020 Shadow Robot Company Ltd - All Rights Reserved. Proprietary and Confidential.
+* Copyright (C) 2021 Shadow Robot Company Ltd - All Rights Reserved. Proprietary and Confidential.
 * Unauthorized copying of the content in this file, via any medium is strictly prohibited.
 */
 
@@ -18,8 +18,9 @@ SrTriplePedal::~SrTriplePedal()
   stop();
 }
 
-void SrTriplePedal::start()
+void SrTriplePedal::start(int publishing_rate)
 {
+  publishing_rate_ = publishing_rate;
   if (!started_)
   {
     int ret;
@@ -46,7 +47,7 @@ void SrTriplePedal::start()
         close_device();
 
       publish_pedal_data();
-      publish_rate_.sleep();
+      ros::Rate(publishing_rate_).sleep();
       ros::spinOnce();
     }
   }
@@ -194,7 +195,7 @@ void SrTriplePedal::hotplug_loop()
   while (started_)
   {
     libusb_handle_events_completed(context_, nullptr);
-    publish_rate_.sleep();
+    ros::Rate(publishing_rate_).sleep();
   }
 }
 
@@ -214,7 +215,10 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "sr_teleop_pedal");
     SrTriplePedal sr_triple_pedal;
 
-    sr_triple_pedal.start();
+    int publishing_rate;
+    ros::param::param<int>("~publishing_rate", publishing_rate, 20);
+
+    sr_triple_pedal.start(publishing_rate);
     ros::spin();
 
     return 0;
