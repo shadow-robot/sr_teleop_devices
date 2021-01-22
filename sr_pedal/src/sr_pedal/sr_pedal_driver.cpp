@@ -77,7 +77,7 @@ void SrTriplePedal::start(int publishing_rate)
 void SrTriplePedal::stop()
 {
   libusb_hotplug_deregister_callback(context_, hotplug_callback_handle_);
-  hid_close(device_handle);
+  hid_close(device_handle_);
   hid_exit();
   started_ = false;
   hotplug_loop_thread_.join();
@@ -104,12 +104,12 @@ void SrTriplePedal::detect_device_event(libusb_hotplug_event event)
 
 void SrTriplePedal::open_device()
 {
-  device_handle = hid_open(PEDAL_VENDOR, PEDAL_ID, NULL);
-  if (device_handle)
+  device_handle_ = hid_open(PEDAL_VENDOR, PEDAL_ID, NULL);
+  if (device_handle_)
   {
     ROS_INFO("Pedal device connected");
     connected_ = true;
-    hid_set_nonblocking(device_handle, 1);
+    hid_set_nonblocking(device_handle_, 1);
   }
   else
   {
@@ -119,8 +119,7 @@ void SrTriplePedal::open_device()
 
 void SrTriplePedal::read_data_from_device()
 {
-  int raw_data_received = 0;
-  int res = hid_read(device_handle, buffer_, sizeof(buffer_));
+  int res = hid_read(device_handle_, buffer_, sizeof(buffer_));
 
   if (res < 0)
   {
@@ -128,17 +127,16 @@ void SrTriplePedal::read_data_from_device()
   }
   else
   {
-    raw_data_received = static_cast<int>(buffer_[0]);
-    left_pressed_ = false;
-    middle_pressed_ = false;
-    right_pressed_ = false;
-
+    int raw_data_received = static_cast<int>(buffer_[0]);
     map_command_received(raw_data_received);
   }
 }
 
 void SrTriplePedal::map_command_received(int raw_data_received)
 {
+  left_pressed_ = false;
+  middle_pressed_ = false;
+  right_pressed_ = false;
   switch (raw_data_received)
   {
     case RAW_LEFT_BUTTON_PRESSED_VALUE:

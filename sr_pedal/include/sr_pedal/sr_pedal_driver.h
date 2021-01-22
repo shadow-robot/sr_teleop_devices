@@ -36,7 +36,7 @@ class SrTriplePedal
 
   private:
     ros::NodeHandle nh_ = ros::NodeHandle();
-    hid_device *device_handle;
+    hid_device *device_handle_;
     bool started_;
     libusb_context *context_;
     libusb_hotplug_callback_handle hotplug_callback_handle_;
