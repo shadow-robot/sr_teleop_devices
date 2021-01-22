@@ -17,6 +17,16 @@
 #include "sr_pedal/sr_pedal_driver.h"
 #include <typeinfo>
 
+#define PEDAL_VENDOR 0x05f3
+#define PEDAL_ID 0x00ff
+#define RAW_LEFT_BUTTON_PRESSED_VALUE 1
+#define RAW_MIDDLE_BUTTON_PRESSED_VALUE 2
+#define RAW_MID_LEFT_BUTTON_PRESSED_VALUE 3
+#define RAW_RIGHT_BUTTON_PRESSED_VALUE 4
+#define RAW_LEFT_RIGHT_BUTTON_PRESSED_VALUE 5
+#define RAW_MID_RIGHT_BUTTON_PRESSED_VALUE 6
+#define RAW_ALL_PRESSED_VALUE 7
+
 SrTriplePedal::SrTriplePedal()
   :started_(false), context_(nullptr), right_pressed_(false), left_pressed_(false),
   middle_pressed_(false), connected_(false), detected_(false)
@@ -46,7 +56,7 @@ void SrTriplePedal::start(int publishing_rate)
     // start separate thread to detect hotplug events
     hotplug_loop_thread_ = std::thread(&SrTriplePedal::hotplug_loop, this);
 
-    while (ros::ok())
+    while (ros::ok() && started_)
     {
       if (detected_)
       {
@@ -71,7 +81,6 @@ void SrTriplePedal::stop()
   hid_exit();
   started_ = false;
   hotplug_loop_thread_.join();
-  run_thread_.join();
   libusb_exit(context_);
 }
 
@@ -110,9 +119,8 @@ void SrTriplePedal::open_device()
 
 void SrTriplePedal::read_data_from_device()
 {
-  int res = 0;
   int raw_data_received = 0;
-  res = hid_read(device_handle, buffer_, sizeof(buffer_));
+  int res = hid_read(device_handle, buffer_, sizeof(buffer_));
 
   if (res < 0)
   {
@@ -120,9 +128,7 @@ void SrTriplePedal::read_data_from_device()
   }
   else
   {
-    snprintf(data_, sizeof(data_), "%02x %02x", buffer_[0], buffer_[1]);
-
-    raw_data_received = data_[1];  // the second char of the buffer contains the button combination value
+    raw_data_received = static_cast<int>(buffer_[0]);
     left_pressed_ = false;
     middle_pressed_ = false;
     right_pressed_ = false;
@@ -170,7 +176,6 @@ void SrTriplePedal::close_device()
   left_pressed_ = false;
   middle_pressed_ = false;
   right_pressed_ = false;
-  publish_pedal_data();
 }
 
 int SrTriplePedal::on_usb_hotplug(struct libusb_context *ctx, struct libusb_device *device, libusb_hotplug_event event)
