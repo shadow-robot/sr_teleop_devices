@@ -3,7 +3,7 @@
 * Unauthorized copying of the content in this file, via any medium is strictly prohibited.
 */
 
-#include "sr_pedal_driver.hpp"
+#include "sr_pedal/sr_pedal_driver.h"
 #include <typeinfo>
 
 SrTriplePedal::SrTriplePedal()
