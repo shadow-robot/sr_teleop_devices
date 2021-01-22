@@ -14,8 +14,8 @@
 * with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SR_PEDAL_DRIVER_H
-#define SR_PEDAL_DRIVER_H
+#ifndef SR_PEDAL_SR_PEDAL_DRIVER_H
+#define SR_PEDAL_SR_PEDAL_DRIVER_H
 
 #include <ros/ros.h>
 #include <libusb-1.0/libusb.h>
@@ -65,4 +65,4 @@ class SrTriplePedal
     void map_command_received(int raw_data_received);
 };
 
-#endif  //  SR_PEDAL_DRIVER_H
+#endif  //  SR_PEDAL_SR_PEDAL_DRIVER_H
