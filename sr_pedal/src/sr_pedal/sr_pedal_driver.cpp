@@ -195,7 +195,6 @@ int SrTriplePedal::on_usb_hotplug(struct libusb_context *ctx, struct libusb_devi
   return 0;
 }
 
-
 int SrTriplePedal::on_usb_hotplug_callback(struct libusb_context *ctx,
                                            struct libusb_device *device,
                                            libusb_hotplug_event event,

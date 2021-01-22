@@ -10,8 +10,8 @@ project(sr_pedal)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslint
-  std_msgs
   message_generation
+  std_msgs
 )
 
 roslint_cpp()
