@@ -1,1 +1,1 @@
-SUBSYSTEM=="usb" ATTRS{name}=="VEC  VEC USB Footpedal", MODE="666"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="05f3", MODE="0666"
