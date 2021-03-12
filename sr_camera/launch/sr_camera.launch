@@ -1,0 +1,61 @@
+<launch>
+   <!-- http://wiki.ros.org/cv_camera (supports camera_info_manager: http://wiki.ros.org/camera_info_manager)-->
+   <!-- <node pkg="cv_camera" type="cv_camera_node" name="cv_camera_node_1" output="screen">
+       <param name="flip_image" value="false" />
+       <param name="device_id" value="2" />
+       <remap from="image_raw" to="image_raw_1"/>
+       <remap from="camera_info" to="camera_info_1" />
+   </node>
+ 
+   <node pkg="cv_camera" type="cv_camera_node" name="cv_camera_node_2" output="screen">
+       <param name="flip_image" value="false" />
+       <param name="device_id" value="4"/>
+       <remap from="image_raw" to="image_raw_2"/>
+       <remap from="camera_info" to="camera_info_2" />
+   </node> -->
+ 
+   <!-- http://wiki.ros.org/libuvc_camera -->
+    <node pkg="libuvc_camera" type="camera_node" name="libuvc_camera_node_1">
+        <param name="vendor" value="eba4"/>
+        <param name="product" value="7588"/>
+        <param name="serial" value="HU123450"/>
+
+        <param name="index" value="0"/>
+
+        <param name="width" value="1280"/>
+        <param name="height" value="720"/>
+        <param name="video_mode" value="mjpeg"/>
+        <param name="frame_rate" value="60"/>
+
+        <remap from="image_raw" to="image_raw_1"/>
+       <remap from="camera_info" to="camera_info_1" />
+
+    </node>
+
+    <node pkg="libuvc_camera" type="camera_node" name="libuvc_camera_node_2">
+        <param name="vendor" value="eba4"/>
+        <param name="product" value="7588"/>
+        <param name="serial" value="HU123450"/>
+
+        <param name="index" value="1"/>
+
+        <param name="width" value="1280"/>
+        <param name="height" value="720"/>
+        <param name="video_mode" value="mjpeg"/>
+        <param name="frame_rate" value="60"/>
+
+        <remap from="image_raw" to="image_raw_2"/>
+       <remap from="camera_info" to="camera_info_2" />
+
+    </node>
+
+   <!-- http://localhost:8080/ -->
+   <!-- http://wiki.ros.org/web_video_server -->
+   <node pkg="web_video_server" type="web_video_server" name="web_video_server" output="screen">
+        <param name="string" value="png"/> <!-- this is for libuvc cam -->
+   </node>
+ 
+   <!-- http://localhost:8080/ -->
+   <!-- http://wiki.ros.org/webrtc_ros -->
+   <!-- <node pkg="webrtc_ros" type="webrtc_ros_server_node" name="webrtc_ros_server_node" output="screen"/> -->
+</launch>
