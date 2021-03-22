@@ -94,6 +94,8 @@ add_library(sr_hazard_light_driver src/sr_hazard_light_driver.cpp)
 ## same as for the library above
 add_dependencies(sr_hazard_light_driver ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
 
+add_executable(sr_hazard_light_node src/sr_hazard_light_node.cpp)
+
 ## Specify libraries to link a library or executable target against
 target_link_libraries(sr_hazard_light_driver
   ${catkin_LIBRARIES}
@@ -102,7 +104,10 @@ target_link_libraries(sr_hazard_light_driver
   usb-1.0
 )
 
-add_executable(sr_hazard_light_node src/sr_hazard_light_node.cpp)
+target_link_libraries(sr_hazard_light_node
+  sr_hazard_light_driver
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
