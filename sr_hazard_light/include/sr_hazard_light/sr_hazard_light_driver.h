@@ -1,6 +1,12 @@
+#ifndef SR_HAZARD_LIGHTS_SR_HAZARD_LIGHTS_H
+#define SR_HAZARD_LIGHTS_SR_HAZARD_LIGHTS_H
+
 #include <libusb-1.0/libusb.h>
-#include <stdint.h>
-#include <stdio.h>
+#include <iostream>
+#include <cstdlib>
+#include <cstdint>
+// #include <ros/ros.h>
+
 
 #define PATLITE_VID 0x191A
 #define PATLITE_PID 0x8003
@@ -31,10 +37,16 @@
  * tone Hz increases by 5.9463%
  */
 
-int patlite_lights(int red, int yellow, int green, int blue, int clear);
+class SrHazardLights
+{
+    public:
+        SrHazardLights() {};
+        ~SrHazardLights() {};
+        int patlite_lights(int red, int yellow, int green, int blue, int clear);
+        int patlite_buzzer(int type, int tonea, int toneb);
+        int patlite_set(std::uint8_t *buf);
+        int patlite_init();
 
-int patlite_buzzer(int type, int tonea, int toneb);
+};
 
-int patlite_set(uint8_t *buf);
-
-int patlite_init();
+#endif //  SR_HAZARD_LIGHTS_SR_HAZARD_LIGHTS_H

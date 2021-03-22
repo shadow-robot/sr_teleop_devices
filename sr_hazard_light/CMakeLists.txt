@@ -10,16 +10,17 @@ project(sr_hazard_light)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslint
+  message_generation
   std_msgs
 )
 
 roslint_cpp()
-# roslint_python()
+roslint_python()
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-# catkin_python_setup()
+catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -46,16 +47,16 @@ roslint_cpp()
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Status.msg
-# )
+add_message_files(
+  FILES
+  Status.msg
+)
 
 ## Generate added messages and services with any dependencies listed here
-#  generate_messages(
-#  DEPENDENCIES
-#  std_msgs
-#)
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -68,7 +69,7 @@ roslint_cpp()
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp std_msgs
+  CATKIN_DEPENDS roscpp rospy message_runtime std_msgs
 )
 
 ###########
@@ -87,14 +88,17 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(sr_hazard_light_node src/sr_hazard_light_driver.c)
+add_executable(sr_hazard_light_node src/sr_hazard_light_node.cpp)
+
+add_library(sr_hazard_light_driver src/sr_hazard_light_driver.cpp)
+
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(sr_hazard_light_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(sr_hazard_light_driver ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(sr_hazard_light_node
+target_link_libraries(sr_hazard_light_driver
   ${catkin_LIBRARIES}
   ${LIBUSB_1_LIBRARIES}
   hidapi-libusb

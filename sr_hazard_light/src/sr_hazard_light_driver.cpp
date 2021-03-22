@@ -1,7 +1,6 @@
 #include <libusb-1.0/libusb.h>
 #include "sr_hazard_light/sr_hazard_light_driver.h"
-#include <stdint.h>
-#include <stdio.h>
+
 
 #define PATLITE_VID 0x191A
 #define PATLITE_PID 0x8003
@@ -34,29 +33,30 @@ static libusb_device_handle *patlite_handle = 0;
  * tone Hz increases by 5.9463%
  */
 
-int patlite_lights(int red, int yellow, int green, int blue, int clear) {
-  uint8_t buf[8] = {0x00, 0x00, 0x08, 0xff, (red<<4) + yellow, (green<<4) + blue, (clear<<4), 0x00};
+int SrHazardLights::patlite_lights(int red, int yellow, int green, int blue, int clear) {
+  std::uint8_t buf[8] = {0x00, 0x00, 0x08, 0xff, (red<<4) + yellow, (green<<4) + blue, (clear<<4), 0x00};
 
   if (red > 9 || yellow > 9 || green > 9 || blue > 9 || clear > 9)
     return 1;
   
-  return patlite_set(buf);
+  return SrHazardLights::patlite_set(buf);
 }
-int patlite_buzzer(int type, int tonea, int toneb) {
-  uint8_t buf[8] = {0x00, 0x00, type, (tonea<<4) + toneb, 0x88, 0x88, 0x80, 0x00};
+
+int SrHazardLights::patlite_buzzer(int type, int tonea, int toneb) {
+  std::uint8_t buf[8] = {0x00, 0x00, type, (tonea<<4) + toneb, 0x88, 0x88, 0x80, 0x00};
 
   if (tonea > 15 || toneb > 15)
     return 1;
   
-  return patlite_set(buf);
+  return SrHazardLights::patlite_set(buf);
 }
 
-int patlite_set(uint8_t *buf) {
+int SrHazardLights::patlite_set(uint8_t *buf) {
   int r;
 
   //Do we have valid handle?
   if (!patlite_handle) {
-    r = patlite_init();
+    r = SrHazardLights::patlite_init();
     if (r)
       return r;
   }
@@ -65,7 +65,7 @@ int patlite_set(uint8_t *buf) {
   r = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, buf, 8, &rs, 1000);
 
   if (r) {
-    printf("Patlite set failed, return %d\n", r);
+    std::cout << "Patlite set failed, return " << r << "\n" << std::endl;
     libusb_close(patlite_handle);
     patlite_handle=0;
     return 2;
@@ -74,17 +74,17 @@ int patlite_set(uint8_t *buf) {
   return 0;
 }
 
-int patlite_init() {
+int SrHazardLights::patlite_init(){
   int r;
   r = libusb_init(NULL);
   if (r < 0) {
-    printf("libusb init failed, err %d\n", r);
+    std::cout << "libusb init failed, err " << r << "\n" << std::endl;
     return r;
   }
 
   patlite_handle = libusb_open_device_with_vid_pid(NULL, PATLITE_VID, PATLITE_PID);
   if (patlite_handle == NULL) {
-    printf("patlite device not found\n");
+    std::cout << "patlite device not found\n" << std::endl;
     return -1;
   }
 
@@ -92,22 +92,22 @@ int patlite_init() {
 
   r = libusb_claim_interface(patlite_handle, 0);
   if (r != LIBUSB_SUCCESS) {
-    printf("libusb claim failed\n");
+    std::cout << "libusb claim failed\n" << std::endl;
   }
 
-  uint8_t patlite_buf[8] = {0x00, 0x00, 0x08, 0xff, 0x00, 0x00, 0x00, 0x00};
+  std::uint8_t patlite_buf[8] = {0x00, 0x00, 0x08, 0xff, 0x00, 0x00, 0x00, 0x00};
 
   int rs=0;
   r = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, patlite_buf, sizeof(patlite_buf), &rs, 1000);
 
   if (r != 0) {
-    printf("Patlite reset failed, return %d, transferred %d\n", r, rs);
+    std::cout << "Patlite reset failed, return " << r << ", transferred " << rs << "\n" << std::endl;
     libusb_close(patlite_handle);
     patlite_handle=0;
     return -1;
   }
 
-  printf("Patlite USB device opened and claimed\n");
+  std::cout << "Patlite USB device opened and claimed\n" << std::endl;
 
   return 0;
-}
+};

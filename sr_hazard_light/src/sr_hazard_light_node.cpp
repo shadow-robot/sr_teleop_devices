@@ -1,5 +1,4 @@
-#include <stdint.h>
-#include <stdio.h>
+// #include <cstdlib>
 #include "sr_hazard_light/sr_hazard_light_driver.h"
 
 // you will need to create a "patlite.h"
@@ -8,9 +7,11 @@
 
 int main (void) {
 
-  patlite_init();
+  SrHazardLights sr_hazard_lights;
 
-  patlite_lights(1, 1, 1, 1, 1);
+  sr_hazard_lights.patlite_init();
+
+  sr_hazard_lights.patlite_lights(1, 1, 1, 1, 1);
 
   return 0;
 
