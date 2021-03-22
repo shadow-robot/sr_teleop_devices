@@ -88,10 +88,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(sr_hazard_light_node src/sr_hazard_light_node.cpp)
-
 add_library(sr_hazard_light_driver src/sr_hazard_light_driver.cpp)
-
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -104,6 +101,8 @@ target_link_libraries(sr_hazard_light_driver
   hidapi-libusb
   usb-1.0
 )
+
+add_executable(sr_hazard_light_node src/sr_hazard_light_node.cpp)
 
 #############
 ## Install ##
