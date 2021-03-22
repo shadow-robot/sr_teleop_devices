@@ -10,7 +10,6 @@ project(sr_hazard_light)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslint
-  message_generation
   std_msgs
 )
 
@@ -69,7 +68,7 @@ roslint_cpp()
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp rospy message_runtime std_msgs
+  CATKIN_DEPENDS roscpp std_msgs
 )
 
 ###########
