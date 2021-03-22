@@ -5,7 +5,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstdint>
-// #include <ros/ros.h>
+#include <ros/ros.h>
 
 
 #define PATLITE_VID 0x191A
@@ -42,6 +42,7 @@ class SrHazardLights
     public:
         SrHazardLights() {};
         ~SrHazardLights() {};
+        ros::NodeHandle nh_ = ros::NodeHandle();
         int patlite_lights(int red, int yellow, int green, int blue, int clear);
         int patlite_buzzer(int type, int tonea, int toneb);
         int patlite_set(std::uint8_t *buf);
