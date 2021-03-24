@@ -20,7 +20,7 @@ int main (int argc, char** argv) {
 
   // sr_hazard_lights.open_device();
 
-  // sr_hazard_lights.patlite_lights(1, 1, 1, 1, 1);
+  sr_hazard_lights.patlite_lights(1, 2, "red", false);
 
   // // sr_hazard_lights.patlite_buzzer(4, 2, 5);
 

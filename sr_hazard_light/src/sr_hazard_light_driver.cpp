@@ -48,6 +48,8 @@ SrHazardLights::~SrHazardLights()
 void SrHazardLights::start(int publishing_rate)
 {
   publishing_rate_ = publishing_rate;
+  buffer_ = {0x00, 0x00, 0x08, 0xff, 0x00, 0x00, 0x00, 0x00};
+
   if (!started_)
   {
     int ret;
@@ -83,8 +85,6 @@ void SrHazardLights::start(int publishing_rate)
 void SrHazardLights::stop()
 {
   libusb_hotplug_deregister_callback(context_, hotplug_callback_handle_);
-  // hid_close(device_handle_);
-  // hid_exit();
   started_ = false;
   hotplug_loop_thread_.join();
   libusb_exit(context_);
@@ -126,10 +126,9 @@ int SrHazardLights::open_device(){
     return -1;
   }
 
-  std::uint8_t patlite_buf[8] = {0x00, 0x00, 0x08, 0xff, 0x00, 0x00, 0x00, 0x00};
-
   int rs=0;
-  r = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, patlite_buf, sizeof(patlite_buf), &rs, 1000);
+  std::uint8_t* buf = &buffer_[0];
+  r = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, buf, sizeof(buf), &rs, 1000);
 
   if (r != 0) {
     std::cout << "Patlite reset failed, return " << r << ", transferred " << rs << "\n" << std::endl;
@@ -144,25 +143,86 @@ int SrHazardLights::open_device(){
   return 0;
 };
 
-int SrHazardLights::patlite_lights(int red, int orange, int green, int blue, int clear) {
-  std::uint8_t buf[8] = {0x00, 0x00, 0x08, 0xff, (red<<4) + orange, (green<<4) + blue, (clear<<4), 0x00};
+// void SrHazardLights::read_data_from_device()
+// {
+//   int res = hid_read(device_handle_, buffer_, sizeof(buffer_));
 
-  if (red > 9 || orange > 9 || green > 9 || blue > 9 || clear > 9)
-    return 1;
+//   if (res < 0)
+//   {
+//     ROS_WARN("Unable to read data from pedal");
+//   }
+//   else
+//   {
+//     int raw_data_received = static_cast<int>(buffer_[0]);
+//     map_command_received(raw_data_received);
+//   }
+// }
+
+// int SrHazardLights::patlite_lights(int red, int orange, int green, int blue, int clear) {
+//   std::uint8_t buf[8] = {0x00, 0x00, 0x08, 0xff, (red<<4) + orange, (green<<4) + blue, (clear<<4), 0x00};
+
+//   if (red > 9 || orange > 9 || green > 9 || blue > 9 || clear > 9)
+//     return 1;
   
-  return SrHazardLights::patlite_set(buf);
+//   return SrHazardLights::patlite_set(buf);
+// }
+
+int SrHazardLights::patlite_lights(int duration, int pattern, std::string colour, bool reset) {
+
+  if (reset == true) {
+      buffer_ = {0x00, 0x00, 0x08, 0xff, 0x00, 0x00, 0x00, 0x00};
+  }
+
+  if (pattern > 9)
+    return 1; //ERROR
+
+  std::list<std::string> light_colours = {"red", "orange", "green"}; // {"red", "orange", "green", "blue", "clear"};
+
+  std::vector<uint8_t> changed_buffer_ = buffer_;
+  // buffer_ = changed_buffer_
+  if (std::find(std::begin(light_colours), std::end(light_colours), colour) != std::end(light_colours)) {
+    if (colour == "red") {
+      changed_buffer_[4] = pattern<<4;
+      red_light_ = true;
+    }
+    else if (colour == "orange") {
+      changed_buffer_[4] = pattern;
+      orange_light_ = true;
+    }
+    else if (colour == "green") {
+      changed_buffer_[5] = pattern<<4;
+      green_light_ = true;
+    }
+    // Add this if we chose to buy these colours
+    // else if (colour == "blue") {
+    //   changed_buffer_[5] = pattern;
+    // }
+    // else if (colour == "clear") {
+    //   changed_buffer_[6] = pattern<<4;
+    // }
+  }
+  else {
+    ROS_ERROR("Colour sent is not a colour on the hazard light");
+  }
+  
+  std::uint8_t* buf = &changed_buffer_[0];
+  return SrHazardLights::patlite_set(duration, buf);
 }
 
-int SrHazardLights::patlite_buzzer(int type, int tonea, int toneb) {
-  std::uint8_t buf[8] = {0x00, 0x00, type, (tonea<<4) + toneb, 0x88, 0x88, 0x80, 0x00};
+int SrHazardLights::patlite_buzzer(int type, int tonea, int toneb, int duration) {
 
   if (tonea > 15 || toneb > 15)
     return 1;
   
-  return SrHazardLights::patlite_set(buf);
+  std::vector<uint8_t> changed_buffer_ = buffer_;
+  changed_buffer_ = {0x00, 0x00, type, (tonea<<4) + toneb, 0x88, 0x88, 0x80, 0x00};
+  buzzer_on_ = true;
+
+  std::uint8_t* buf = &changed_buffer_[0];
+  return SrHazardLights::patlite_set(duration, buf);
 }
 
-int SrHazardLights::patlite_set(uint8_t *buf) {
+int SrHazardLights::patlite_set(int duration, std::uint8_t buf[8]) {
   int r;
 
   if (!patlite_handle) {
@@ -180,6 +240,13 @@ int SrHazardLights::patlite_set(uint8_t *buf) {
     patlite_handle=0;
     return 2;
   }
+
+  if (duration > 0) {
+    ros::Rate(duration).sleep();
+  }
+
+  std::uint8_t* reset_buf = &buffer_[0];
+  r = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, reset_buf, 8, &rs, 1000);
 
   return 0;
 }
@@ -234,9 +301,9 @@ void SrHazardLights::publish_hazard_light_data()
   sr_hazard_light::Status sr_hazard_light_status;
   sr_hazard_light_status.header.stamp = ros::Time::now();
   sr_hazard_light_status.connected = connected_;
-  sr_hazard_light_status.red_light = red_light_;
-  sr_hazard_light_status.orange_light = orange_light_;
-  sr_hazard_light_status.green_light = green_light_;
+  sr_hazard_light_status.red_light_on = red_light_;
+  sr_hazard_light_status.orange_light_on = orange_light_;
+  sr_hazard_light_status.green_light_on = green_light_;
   sr_hazard_light_status.buzzer_on = buzzer_on_;
   hazard_light_publisher_.publish(sr_hazard_light_status);
 }

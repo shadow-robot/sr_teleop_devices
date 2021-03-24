@@ -18,11 +18,11 @@ class SrHazardLights
         ~SrHazardLights();
         void start(int publishing_rate);
         void stop();
-        hid_device *device_handle_;
+        // hid_device *device_handle_;
         ros::NodeHandle nh_ = ros::NodeHandle();
-        int patlite_lights(int red, int yellow, int green, int blue, int clear);
-        int patlite_buzzer(int type, int tonea, int toneb);
-        int patlite_set(std::uint8_t *buf);
+        int patlite_lights(int duration, int pattern, std::string colour, bool reset);
+        int patlite_buzzer(int type, int tonea, int toneb, int duration);
+        int patlite_set(int duration, std::uint8_t buf[8]);
 
         libusb_context *context_;
         bool started_;
@@ -37,11 +37,12 @@ class SrHazardLights
         bool buzzer_on_;
 
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
-        unsigned char buffer_[8];
+        std::vector<uint8_t> buffer_ = std::vector<uint8_t>(8);
 
         int open_device();
         void close_device();
         void detect_device_event(libusb_hotplug_event event);
+        // void read_data_from_device();
         int on_usb_hotplug(struct libusb_context *ctx,
                             struct libusb_device *device,
                             libusb_hotplug_event event);

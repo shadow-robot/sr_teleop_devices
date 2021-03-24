@@ -5,7 +5,7 @@ Header header
 bool connected
 
 # Light Options
-bool red_light
-bool orange_light
-bool green_light
+bool red_light_on
+bool orange_light_on
+bool green_light_on
 bool buzzer_on
