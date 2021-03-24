@@ -6,6 +6,9 @@
 #include <cstdlib>
 #include <cstdint>
 #include <ros/ros.h>
+#include <atomic>
+#include <thread>  // NOLINT(build/c++11)
+// #include <sr_hazard_light/Status.h>
 
 
 #define PATLITE_VID 0x191A
@@ -40,14 +43,36 @@
 class SrHazardLights
 {
     public:
-        SrHazardLights() {};
-        ~SrHazardLights() {};
+        SrHazardLights();
+        ~SrHazardLights();
+        void start(int publishing_rate);
+        void stop();
         ros::NodeHandle nh_ = ros::NodeHandle();
-        int patlite_lights(int red, int yellow, int green, int blue, int clear);
-        int patlite_buzzer(int type, int tonea, int toneb);
-        int patlite_set(std::uint8_t *buf);
-        int patlite_init();
+        // int patlite_lights(int red, int yellow, int green, int blue, int clear);
+        // int patlite_buzzer(int type, int tonea, int toneb);
+        // int patlite_set(std::uint8_t *buf);
 
+        libusb_context *context_;
+        bool started_;
+        int publishing_rate_;
+        bool connected_;
+        std::atomic<bool> detected_;
+        libusb_hotplug_callback_handle hotplug_callback_handle_;
+        std::thread hotplug_loop_thread_;
+
+        // ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
+        unsigned char buffer_[8];
+
+        int open_device();
+        void close_device();
+        int on_usb_hotplug(struct libusb_context *ctx,
+                            struct libusb_device *device,
+                            libusb_hotplug_event event);
+        static int on_usb_hotplug_callback(struct libusb_context *ctx,
+                                    struct libusb_device *device,
+                                    libusb_hotplug_event event,
+                                    void* discovery);
+        void hotplug_loop();
 };
 
 #endif //  SR_HAZARD_LIGHTS_SR_HAZARD_LIGHTS_H
