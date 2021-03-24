@@ -34,9 +34,8 @@ static libusb_device_handle *patlite_handle = 0;
  */
 
 SrHazardLights::SrHazardLights()
-  :started_(false), context_(nullptr), connected_(false), detected_(true)
-  // , light_pattern_(1), 
-  // light_colours_([1, 1, 1, 1, 1]), buzzer_pattern_(0),  buzzer_tone_a_(0), buzzer_tone_b_(0)
+  :started_(false), context_(nullptr), connected_(false), detected_(true), 
+  red_light_(false), orange_light_(false), green_light_(false),  buzzer_on_(false)
 {
   libusb_init(&context_);
 }
@@ -60,7 +59,7 @@ void SrHazardLights::start(int publishing_rate)
     if (LIBUSB_SUCCESS == ret)
       started_ = true;
 
-    start separate thread to detect hotplug events
+    // start separate thread to detect hotplug events
     hotplug_loop_thread_ = std::thread(&SrHazardLights::hotplug_loop, this);
 
     while (ros::ok() && started_)
@@ -74,7 +73,7 @@ void SrHazardLights::start(int publishing_rate)
       else
         close_device();
 
-      // publish_pedal_data();
+      publish_hazard_light_data();
       ros::Rate(publishing_rate_).sleep();
       ros::spinOnce();
     }
@@ -88,30 +87,39 @@ void SrHazardLights::stop()
   // hid_exit();
   started_ = false;
   hotplug_loop_thread_.join();
-  libusb_exit(NULL);
+  libusb_exit(context_);
   ROS_INFO("EXITING");
   exit(0);
 }
 
+void SrHazardLights::detect_device_event(libusb_hotplug_event event)
+{
+  switch (event)
+  {
+    case LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED:
+      ROS_INFO("Hazard light device detected");
+      detected_ = true;
+      break;
+    case LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT:
+      ROS_INFO("Hazard light disconnected");
+      detected_ = false;
+      break;
+    default:
+      ROS_WARN("Unknown event detected");
+      break;
+  }
+}
 
 int SrHazardLights::open_device(){
-  int r;
-  r = libusb_init(NULL);
-  if (r < 0) {
-    std::cout << "libusb init failed, err " << r << "\n" << std::endl;
-    return r;
-  }
-
-  patlite_handle = libusb_open_device_with_vid_pid(NULL, PATLITE_VID, PATLITE_PID);
+  patlite_handle = libusb_open_device_with_vid_pid(NULL, LIGHT_VID, LIGHT_PID);
   if (patlite_handle == NULL) {
     ROS_ERROR("Hazard Light device not found\n");
     return -1;
   }
 
-  std::cout << patlite_handle << std::endl;
-
   libusb_set_auto_detach_kernel_driver(patlite_handle, 1);
 
+  int r;
   r = libusb_claim_interface(patlite_handle, 0);
   if (r != LIBUSB_SUCCESS) {
     ROS_ERROR("libusb claim failed\n");
@@ -130,51 +138,60 @@ int SrHazardLights::open_device(){
     return -1;
   }
 
+  connected_ = true;
   ROS_INFO("Patlite USB device opened and claimed\n");
 
   return 0;
 };
 
-// int SrHazardLights::patlite_lights(int red, int yellow, int green, int blue, int clear) {
-//   std::uint8_t buf[8] = {0x00, 0x00, 0x08, 0xff, (red<<4) + yellow, (green<<4) + blue, (clear<<4), 0x00};
+int SrHazardLights::patlite_lights(int red, int orange, int green, int blue, int clear) {
+  std::uint8_t buf[8] = {0x00, 0x00, 0x08, 0xff, (red<<4) + orange, (green<<4) + blue, (clear<<4), 0x00};
 
-//   if (red > 9 || yellow > 9 || green > 9 || blue > 9 || clear > 9)
-//     return 1;
+  if (red > 9 || orange > 9 || green > 9 || blue > 9 || clear > 9)
+    return 1;
   
-//   return SrHazardLights::patlite_set(buf);
-// }
+  return SrHazardLights::patlite_set(buf);
+}
 
-// int SrHazardLights::patlite_buzzer(int type, int tonea, int toneb) {
-//   std::uint8_t buf[8] = {0x00, 0x00, type, (tonea<<4) + toneb, 0x88, 0x88, 0x80, 0x00};
+int SrHazardLights::patlite_buzzer(int type, int tonea, int toneb) {
+  std::uint8_t buf[8] = {0x00, 0x00, type, (tonea<<4) + toneb, 0x88, 0x88, 0x80, 0x00};
 
-//   if (tonea > 15 || toneb > 15)
-//     return 1;
+  if (tonea > 15 || toneb > 15)
+    return 1;
   
-//   return SrHazardLights::patlite_set(buf);
-// }
+  return SrHazardLights::patlite_set(buf);
+}
 
-// int SrHazardLights::patlite_set(uint8_t *buf) {
-//   int r;
+int SrHazardLights::patlite_set(uint8_t *buf) {
+  int r;
 
-//   //Do we have valid handle?
-//   if (!patlite_handle) {
-//     r = SrHazardLights::open_device();
-//     if (r)
-//       return r;
-//   }
+  if (!patlite_handle) {
+    r = SrHazardLights::open_device();
+    if (r)
+      return r;
+  }
 
-//   int rs=0;
-//   r = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, buf, 8, &rs, 1000);
+  int rs=0;
+  r = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, buf, 8, &rs, 1000);
 
-//   if (r) {
-//     std::cout << "Patlite set failed, return " << r << "\n" << std::endl;
-//     libusb_close(patlite_handle);
-//     patlite_handle=0;
-//     return 2;
-//   }
+  if (r) {
+    std::cout << "Patlite set failed, return " << r << "\n" << std::endl;
+    libusb_close(patlite_handle);
+    patlite_handle=0;
+    return 2;
+  }
 
-//   return 0;
-// }
+  return 0;
+}
+
+void SrHazardLights::close_device()
+{
+  connected_ = false;
+  red_light_ = false;
+  orange_light_ = false;
+  green_light_ = false;
+  buzzer_on_ = false;
+}
 
 int SrHazardLights::on_usb_hotplug(struct libusb_context *ctx, struct libusb_device *device, libusb_hotplug_event event)
 {
@@ -210,4 +227,16 @@ void SrHazardLights::hotplug_loop()
     libusb_handle_events_completed(context_, nullptr);
     ros::Rate(publishing_rate_).sleep();
   }
+}
+
+void SrHazardLights::publish_hazard_light_data()
+{
+  sr_hazard_light::Status sr_hazard_light_status;
+  sr_hazard_light_status.header.stamp = ros::Time::now();
+  sr_hazard_light_status.connected = connected_;
+  sr_hazard_light_status.red_light = red_light_;
+  sr_hazard_light_status.orange_light = orange_light_;
+  sr_hazard_light_status.green_light = green_light_;
+  sr_hazard_light_status.buzzer_on = buzzer_on_;
+  hazard_light_publisher_.publish(sr_hazard_light_status);
 }

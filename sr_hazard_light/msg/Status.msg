@@ -5,8 +5,7 @@ Header header
 bool connected
 
 # Light Options
-int8 light_pattern
-uint8[] light_colours
-int8 buzzer_pattern
-int8 buzzer_tone_a
-int8 buzzer_tone_b
+bool red_light
+bool orange_light
+bool green_light
+bool buzzer_on
