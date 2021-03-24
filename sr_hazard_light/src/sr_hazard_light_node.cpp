@@ -20,7 +20,7 @@ int main (int argc, char** argv) {
 
   // sr_hazard_lights.open_device();
 
-  sr_hazard_lights.patlite_lights(1, 2, "red", false);
+  sr_hazard_lights.set_light(0, 2, "red", false);
 
   // // sr_hazard_lights.patlite_buzzer(4, 2, 5);
 
@@ -35,6 +35,7 @@ int main (int argc, char** argv) {
   // ros::Duration(2, 0).sleep();
   
   // sr_hazard_lights.patlite_lights(0, 1, 1, 0, 0);
+
 
   return 0;
 

@@ -34,10 +34,14 @@ static libusb_device_handle *patlite_handle = 0;
  */
 
 SrHazardLights::SrHazardLights()
-  :started_(false), context_(nullptr), connected_(false), detected_(true), 
+  :started_(false), context_(nullptr), connected_(false), detected_(false), 
   red_light_(false), orange_light_(false), green_light_(false),  buzzer_on_(false)
 {
   libusb_init(&context_);
+
+  // NOT CORRECT
+  // this->hazard_light_service = nh_.advertiseService("sr_hazard_light/set_light", &SrHazardLights::set_light, this);
+  // this->hazard_buzzer_service = nh_.advertiseService("sr_hazard_light/set_buzzer", &SrHazardLights::set_buzzer, this);
 }
 
 SrHazardLights::~SrHazardLights()
@@ -70,7 +74,9 @@ void SrHazardLights::start(int publishing_rate)
       {
         if (!connected_)
           open_device();
-        // read_data_from_device();
+          ROS_ERROR("HERE");
+          // Wait for service
+          // read_data_from_device();
       }
       else
         close_device();
@@ -167,8 +173,7 @@ int SrHazardLights::open_device(){
 //   return SrHazardLights::patlite_set(buf);
 // }
 
-int SrHazardLights::patlite_lights(int duration, int pattern, std::string colour, bool reset) {
-
+int SrHazardLights::set_light(int duration, int pattern, std::string colour, bool reset) {
   if (reset == true) {
       buffer_ = {0x00, 0x00, 0x08, 0xff, 0x00, 0x00, 0x00, 0x00};
   }
@@ -205,11 +210,14 @@ int SrHazardLights::patlite_lights(int duration, int pattern, std::string colour
     ROS_ERROR("Colour sent is not a colour on the hazard light");
   }
   
+  if (duration == 0) {
+    buffer_ = changed_buffer_;
+  }
   std::uint8_t* buf = &changed_buffer_[0];
-  return SrHazardLights::patlite_set(duration, buf);
+  return SrHazardLights::set(duration, buf);
 }
 
-int SrHazardLights::patlite_buzzer(int type, int tonea, int toneb, int duration) {
+int SrHazardLights::set_buzzer(int type, int tonea, int toneb, int duration) {
 
   if (tonea > 15 || toneb > 15)
     return 1;
@@ -219,10 +227,10 @@ int SrHazardLights::patlite_buzzer(int type, int tonea, int toneb, int duration)
   buzzer_on_ = true;
 
   std::uint8_t* buf = &changed_buffer_[0];
-  return SrHazardLights::patlite_set(duration, buf);
+  return SrHazardLights::set(duration, buf);
 }
 
-int SrHazardLights::patlite_set(int duration, std::uint8_t buf[8]) {
+int SrHazardLights::set(int duration, std::uint8_t buf[8]) {
   int r;
 
   if (!patlite_handle) {
@@ -247,6 +255,12 @@ int SrHazardLights::patlite_set(int duration, std::uint8_t buf[8]) {
 
   std::uint8_t* reset_buf = &buffer_[0];
   r = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, reset_buf, 8, &rs, 1000);
+  if (r) {
+    std::cout << "Patlite set failed, return " << r << "\n" << std::endl;
+    libusb_close(patlite_handle);
+    patlite_handle=0;
+    return 2;
+  }
 
   return 0;
 }

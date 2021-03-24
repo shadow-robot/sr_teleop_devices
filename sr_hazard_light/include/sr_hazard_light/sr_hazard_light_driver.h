@@ -20,9 +20,9 @@ class SrHazardLights
         void stop();
         // hid_device *device_handle_;
         ros::NodeHandle nh_ = ros::NodeHandle();
-        int patlite_lights(int duration, int pattern, std::string colour, bool reset);
-        int patlite_buzzer(int type, int tonea, int toneb, int duration);
-        int patlite_set(int duration, std::uint8_t buf[8]);
+        int set_light(int duration, int pattern, std::string colour, bool reset);
+        int set_buzzer(int type, int tonea, int toneb, int duration);
+        int set(int duration, std::uint8_t buf[8]);
 
         libusb_context *context_;
         bool started_;
@@ -38,6 +38,9 @@ class SrHazardLights
 
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
         std::vector<uint8_t> buffer_ = std::vector<uint8_t>(8);
+
+        ros::ServiceServer hazard_light_service;
+        ros::ServiceServer hazard_buzzer_service;
 
         int open_device();
         void close_device();
