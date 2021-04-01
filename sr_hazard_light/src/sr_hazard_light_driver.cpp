@@ -138,13 +138,13 @@ int SrHazardLights::open_device(){
     std::cout << "Patlite reset failed, return " << r << ", transferred " << rs << "\n" << std::endl;
     libusb_close(patlite_handle);
     patlite_handle=0;
-    return -1;
+    return false;
   }
 
   connected_ = true;
   ROS_INFO("Patlite USB device opened and claimed\n");
 
-  return 0;
+  return true;
 };
 
 // void SrHazardLights::read_data_from_device()
