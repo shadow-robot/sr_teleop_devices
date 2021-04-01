@@ -1,7 +1,6 @@
 #include <libusb-1.0/libusb.h>
 #include "sr_hazard_light/sr_hazard_light_driver.h"
 
-
 #define LIGHT_VID 0x191A
 #define LIGHT_PID 0x8003
 #define PATLITE_ENDPOINT 1
@@ -33,15 +32,16 @@ static libusb_device_handle *patlite_handle = 0;
  * tone Hz increases by 5.9463%
  */
 
-SrHazardLights::SrHazardLights()
-  :started_(false), context_(nullptr), connected_(false), detected_(false), 
+SrHazardLights::SrHazardLights(ros::NodeHandle* nodehandle)
+  :node_handler_(*nodehandler), started_(false), context_(nullptr), connected_(false), detected_(false), 
   red_light_(false), orange_light_(false), green_light_(false),  buzzer_on_(false)
 {
   libusb_init(&context_);
 
-  // NOT CORRECT
-  // this->hazard_light_service = nh_.advertiseService("sr_hazard_light/set_light", &SrHazardLights::set_light, this);
-  // this->hazard_buzzer_service = nh_.advertiseService("sr_hazard_light/set_buzzer", &SrHazardLights::set_buzzer, this);
+  this->hazard_light_service = 
+    node_handler_.advertiseService("sr_hazard_light/set_light", &SrHazardLights::set_light, this);
+  this->hazard_buzzer_service = 
+    node_handler_.advertiseService("sr_hazard_light/set_buzzer", &SrHazardLights::set_buzzer, this);
 }
 
 SrHazardLights::~SrHazardLights()
@@ -120,7 +120,7 @@ int SrHazardLights::open_device(){
   patlite_handle = libusb_open_device_with_vid_pid(NULL, LIGHT_VID, LIGHT_PID);
   if (patlite_handle == NULL) {
     ROS_ERROR("Hazard Light device not found\n");
-    return -1;
+    return false;
   }
 
   libusb_set_auto_detach_kernel_driver(patlite_handle, 1);
@@ -129,7 +129,7 @@ int SrHazardLights::open_device(){
   r = libusb_claim_interface(patlite_handle, 0);
   if (r != LIBUSB_SUCCESS) {
     ROS_ERROR("libusb claim failed\n");
-    return -1;
+    return false;
   }
 
   int rs=0;
@@ -173,13 +173,19 @@ int SrHazardLights::open_device(){
 //   return SrHazardLights::patlite_set(buf);
 // }
 
-int SrHazardLights::set_light(int duration, int pattern, std::string colour, bool reset) {
+int SrHazardLights::set_light(sr_hazard_light::SetLight::Request &request, 
+                              sr_hazard_light::SetLight::Response &response) {
+  int duration = request.duration;
+  int pattern = request.pattern;
+  std::string colour = request.colour;
+  bool reset = request.reset;
+
   if (reset == true) {
       buffer_ = {0x00, 0x00, 0x08, 0xff, 0x00, 0x00, 0x00, 0x00};
   }
 
   if (pattern > 9)
-    return 1; //ERROR
+    response.confirmation = false;
 
   std::list<std::string> light_colours = {"red", "orange", "green"}; // {"red", "orange", "green", "blue", "clear"};
 
@@ -208,26 +214,33 @@ int SrHazardLights::set_light(int duration, int pattern, std::string colour, boo
   }
   else {
     ROS_ERROR("Colour sent is not a colour on the hazard light");
+    response.confirmation = false;
   }
   
   if (duration == 0) {
     buffer_ = changed_buffer_;
   }
   std::uint8_t* buf = &changed_buffer_[0];
-  return SrHazardLights::set(duration, buf);
+  response.confirmation = SrHazardLights::set(duration, buf);
 }
 
-int SrHazardLights::set_buzzer(int type, int tonea, int toneb, int duration) {
+int SrHazardLights::set_buzzer(sr_hazard_light::SetBuzzer::Request &request, 
+                               sr_hazard_light::SetBuzzer::Response &response) {
+  int type = request.type;
+  int tonea = request.tonea;
+  int toneb = request.toneb;
+  int duration = request.duration;
 
   if (tonea > 15 || toneb > 15)
-    return 1;
+    response.confirmation = false;
   
   std::vector<uint8_t> changed_buffer_ = buffer_;
-  changed_buffer_ = {0x00, 0x00, type, (tonea<<4) + toneb, 0x88, 0x88, 0x80, 0x00};
+  changed_buffer_[2] = type;
+  changed_buffer_[3] = (tonea<<4) + toneb;
   buzzer_on_ = true;
 
   std::uint8_t* buf = &changed_buffer_[0];
-  return SrHazardLights::set(duration, buf);
+  response.confirmation =  SrHazardLights::set(duration, buf);
 }
 
 int SrHazardLights::set(int duration, std::uint8_t buf[8]) {
@@ -246,7 +259,7 @@ int SrHazardLights::set(int duration, std::uint8_t buf[8]) {
     std::cout << "Patlite set failed, return " << r << "\n" << std::endl;
     libusb_close(patlite_handle);
     patlite_handle=0;
-    return 2;
+    return false;
   }
 
   if (duration > 0) {
@@ -259,10 +272,10 @@ int SrHazardLights::set(int duration, std::uint8_t buf[8]) {
     std::cout << "Patlite set failed, return " << r << "\n" << std::endl;
     libusb_close(patlite_handle);
     patlite_handle=0;
-    return 2;
+    return false;
   }
 
-  return 0;
+  return true;
 }
 
 void SrHazardLights::close_device()

@@ -52,6 +52,12 @@ add_message_files(
   Status.msg
 )
 
+add_service_files(
+  FILES
+  SetLight.srv
+  SetBuzzer.srv
+)
+
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES

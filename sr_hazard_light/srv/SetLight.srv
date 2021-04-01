@@ -1,0 +1,6 @@
+int8 duration
+int8 pattern
+string colour
+bool reset
+---
+bool confirmation

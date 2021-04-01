@@ -10,18 +10,26 @@
 #include <thread>  // NOLINT(build/c++11)
 #include <sr_hazard_light/Status.h>
 #include <hidapi/hidapi.h>
+#include <sr_hazard_light/SetLight.h>
+#include <sr_hazard_light/SetBuzzer.h>
 
 class SrHazardLights
 {
     public:
-        SrHazardLights();
+        SrHazardLights(ros::NodeHandle* nodehandle);
         ~SrHazardLights();
         void start(int publishing_rate);
         void stop();
         // hid_device *device_handle_;
-        ros::NodeHandle nh_ = ros::NodeHandle();
-        int set_light(int duration, int pattern, std::string colour, bool reset);
-        int set_buzzer(int type, int tonea, int toneb, int duration);
+        ros::NodeHandle node_handler_;
+
+        ros::ServiceServer hazard_light_service;
+        ros::ServiceServer hazard_buzzer_service;
+
+        int set_light(sr_hazard_light::SetLight::Request &request, 
+                      sr_hazard_light::SetLight::Response &response);
+        int set_buzzer(sr_hazard_light::SetBuzzer::Request &request, 
+                       sr_hazard_light::SetBuzzer::Response &response);
         int set(int duration, std::uint8_t buf[8]);
 
         libusb_context *context_;
@@ -39,9 +47,6 @@ class SrHazardLights
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
         std::vector<uint8_t> buffer_ = std::vector<uint8_t>(8);
 
-        ros::ServiceServer hazard_light_service;
-        ros::ServiceServer hazard_buzzer_service;
-
         int open_device();
         void close_device();
         void detect_device_event(libusb_hotplug_event event);
@@ -55,6 +60,7 @@ class SrHazardLights
                                     void* discovery);
         void hotplug_loop();
         void publish_hazard_light_data();
+        void initServer();
 };
 
 #endif //  SR_HAZARD_LIGHTS_SR_HAZARD_LIGHTS_H
