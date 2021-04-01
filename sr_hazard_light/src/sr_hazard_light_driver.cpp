@@ -114,7 +114,7 @@ void SrHazardLights::detect_device_event(libusb_hotplug_event event)
   }
 }
 
-int SrHazardLights::open_device(){
+bool SrHazardLights::open_device(){
   patlite_handle = libusb_open_device_with_vid_pid(NULL, LIGHT_VID, LIGHT_PID);
   if (patlite_handle == NULL) {
     ROS_ERROR("Hazard Light device not found\n");
@@ -171,7 +171,7 @@ int SrHazardLights::open_device(){
 //   return SrHazardLights::patlite_set(buf);
 // }
 
-int SrHazardLights::set_light(sr_hazard_light::SetLight::Request &request, 
+bool SrHazardLights::set_light(sr_hazard_light::SetLight::Request &request, 
                               sr_hazard_light::SetLight::Response &response) {
   int duration = request.duration;
   int pattern = request.pattern;
@@ -222,7 +222,7 @@ int SrHazardLights::set_light(sr_hazard_light::SetLight::Request &request,
   response.confirmation = SrHazardLights::set(duration, buf);
 }
 
-int SrHazardLights::set_buzzer(sr_hazard_light::SetBuzzer::Request &request, 
+bool SrHazardLights::set_buzzer(sr_hazard_light::SetBuzzer::Request &request, 
                                sr_hazard_light::SetBuzzer::Response &response) {
   int type = request.type;
   int tonea = request.tonea;
@@ -241,7 +241,7 @@ int SrHazardLights::set_buzzer(sr_hazard_light::SetBuzzer::Request &request,
   response.confirmation =  SrHazardLights::set(duration, buf);
 }
 
-int SrHazardLights::set(int duration, std::uint8_t buf[8]) {
+bool SrHazardLights::set(int duration, std::uint8_t buf[8]) {
   int r;
 
   if (!patlite_handle) {

@@ -26,11 +26,11 @@ class SrHazardLights
         ros::ServiceServer hazard_light_service;
         ros::ServiceServer hazard_buzzer_service;
 
-        int set_light(sr_hazard_light::SetLight::Request &request, 
+        bool set_light(sr_hazard_light::SetLight::Request &request, 
                       sr_hazard_light::SetLight::Response &response);
-        int set_buzzer(sr_hazard_light::SetBuzzer::Request &request, 
+        bool set_buzzer(sr_hazard_light::SetBuzzer::Request &request, 
                        sr_hazard_light::SetBuzzer::Response &response);
-        int set(int duration, std::uint8_t buf[8]);
+        bool set(int duration, std::uint8_t buf[8]);
 
         libusb_context *context_;
         bool started_;
@@ -47,7 +47,7 @@ class SrHazardLights
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
         std::vector<uint8_t> buffer_ = std::vector<uint8_t>(8);
 
-        int open_device();
+        bool open_device();
         void close_device();
         void detect_device_event(libusb_hotplug_event event);
         // void read_data_from_device();
