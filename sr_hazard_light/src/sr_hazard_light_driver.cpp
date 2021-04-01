@@ -32,16 +32,14 @@ static libusb_device_handle *patlite_handle = 0;
  * tone Hz increases by 5.9463%
  */
 
-SrHazardLights::SrHazardLights(ros::NodeHandle* nodehandle)
-  :node_handler_(*nodehandler), started_(false), context_(nullptr), connected_(false), detected_(false), 
+SrHazardLights::SrHazardLights()
+  :started_(false), context_(nullptr), connected_(false), detected_(false), 
   red_light_(false), orange_light_(false), green_light_(false),  buzzer_on_(false)
 {
   libusb_init(&context_);
 
-  this->hazard_light_service = 
-    node_handler_.advertiseService("sr_hazard_light/set_light", &SrHazardLights::set_light, this);
-  this->hazard_buzzer_service = 
-    node_handler_.advertiseService("sr_hazard_light/set_buzzer", &SrHazardLights::set_buzzer, this);
+  hazard_light_service = nh_.advertiseService("sr_hazard_light/set_light", &SrHazardLights::set_light, this);
+  hazard_buzzer_service = nh_.advertiseService("sr_hazard_light/set_buzzer", &SrHazardLights::set_buzzer, this);
 }
 
 SrHazardLights::~SrHazardLights()

@@ -16,12 +16,12 @@
 class SrHazardLights
 {
     public:
-        SrHazardLights(ros::NodeHandle* nodehandle);
+        SrHazardLights();
         ~SrHazardLights();
         void start(int publishing_rate);
         void stop();
         // hid_device *device_handle_;
-        ros::NodeHandle node_handler_;
+        ros::NodeHandle nh_ = ros::NodeHandle();
 
         ros::ServiceServer hazard_light_service;
         ros::ServiceServer hazard_buzzer_service;
