@@ -20,16 +20,12 @@ class SrHazardLights
         ~SrHazardLights();
         void start(int publishing_rate);
         void stop();
-        // hid_device *device_handle_;
+
         ros::NodeHandle nh_ = ros::NodeHandle();
-
         ros::ServiceServer hazard_light_service;
-        ros::ServiceServer hazard_buzzer_service;
 
-        bool set_light(sr_hazard_light::SetLight::Request &request, 
+        bool set_hazard_light(sr_hazard_light::SetLight::Request &request, 
                       sr_hazard_light::SetLight::Response &response);
-        bool set_buzzer(sr_hazard_light::SetBuzzer::Request &request, 
-                       sr_hazard_light::SetBuzzer::Response &response);
         bool set(int duration, std::uint8_t buf[8]);
 
         libusb_context *context_;
@@ -43,6 +39,8 @@ class SrHazardLights
         bool orange_light_;
         bool green_light_;
         bool buzzer_on_;
+        int light_pattern_;
+        int buzzer_type_;
 
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
         std::vector<uint8_t> buffer_ = std::vector<uint8_t>(8);
@@ -50,7 +48,7 @@ class SrHazardLights
         bool open_device();
         void close_device();
         void detect_device_event(libusb_hotplug_event event);
-        // void read_data_from_device();
+        void read_data_from_device();
         int on_usb_hotplug(struct libusb_context *ctx,
                             struct libusb_device *device,
                             libusb_hotplug_event event);
