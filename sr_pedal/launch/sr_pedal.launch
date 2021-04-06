@@ -4,23 +4,14 @@
     <!-- The goal publish rate. Publishing will be much slower when the pedal is disconnected (1-2Hz) due to the
          relatively slow hardware searching. Default is 20 to allow heartbeat clients to use a 10Hz/0.1s timeout,
          ensuring a <0.1s response to pedal data being lost for whatever reason. -->
-    <arg name="rate" default="20"/>
+    <arg name="publishing_rate" default="20"/>
 
     <!-- If true, a mock pedal status is published.-->
     <arg name="mock" default="false"/>
     
-    <!-- This flag allows to launch the driver compatible with the outdated version of VEC Infinity pedal. 
-         This pedal has USB HID v1.00 and it is now outdated. New pedals run with USB HID v.1.11 
-         Normally, this flag should be set to false. 
-         If there are doubts about which driver to run email software@shadowrobot.com -->
-    <arg name="old_pedal_driver" default="false"/>
-
     <group unless="$(arg mock)">
-        <node if="$(arg old_pedal_driver)" name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal.py" output="screen">
-            <param name="rate" value="$(arg rate)"/>
-        </node>
-        <node unless="$(arg old_pedal_driver)" name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal_pyusb.py" output="screen">
-            <param name="rate" value="$(arg rate)"/>
+        <node name="sr_pedal" pkg="sr_pedal" type="sr_pedal_node" output="screen">
+            <param name="publishing_rate" value="$(arg publishing_rate)"/>
         </node>
     </group>
 
