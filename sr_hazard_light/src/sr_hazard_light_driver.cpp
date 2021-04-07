@@ -1,3 +1,19 @@
+/*
+* Copyright 2021 Shadow Robot Company Ltd.
+*
+* This program is free software: you can redistribute it and/or modify it
+* under the terms of the GNU General Public License as published by the Free
+* Software Foundation version 2 of the License.
+*
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+* FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+* more details.
+*
+* You should have received a copy of the GNU General Public License along
+* with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <libusb-1.0/libusb.h>
 #include "sr_hazard_light/sr_hazard_light_driver.h"
 
@@ -34,7 +50,8 @@ static libusb_device_handle *patlite_handle = 0;
 
 SrHazardLights::SrHazardLights()
   :started_(false), context_(nullptr), connected_(false), detected_(false), 
-  red_light_(false), orange_light_(false), green_light_(false),  buzzer_on_(false)
+  red_light_(false), orange_light_(false), green_light_(false), light_pattern_(0), 
+  buzzer_on_(false), buzzer_type_(0)
 {
   libusb_init(&context_);
 
@@ -71,7 +88,6 @@ void SrHazardLights::start(int publishing_rate)
       {
         if (!connected_)
           open_device();
-          read_data_from_device();
       }
       else
         close_device();
@@ -92,7 +108,7 @@ void SrHazardLights::stop()
   std::uint8_t* buf = &buffer_[0];
   SrHazardLights::set(0, buf);
   libusb_exit(context_);
-  ROS_INFO("EXITING");
+  ROS_INFO("Closing hazard light device");
   exit(0);
 }
 
@@ -135,38 +151,38 @@ bool SrHazardLights::open_device(){
   r = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, buf, sizeof(buf), &rs, 1000);
 
   if (r != 0) {
-    std::cout << "Patlite reset failed, return " << r << ", transferred " << rs << "\n" << std::endl;
+    ROS_ERROR("Hazard light reset failed, return %s , transferred %i\n", libusb_error_name(r), rs);
     libusb_close(patlite_handle);
     patlite_handle=0;
     return false;
   }
 
   connected_ = true;
-  ROS_INFO("Patlite USB device opened and claimed\n");
+  ROS_INFO("Hazard light USB device opened and claimed\n");
 
   return true;
 };
 
 
-void SrHazardLights::read_data_from_device()
+void SrHazardLights::read_data_from_device(std::uint8_t* buffer)
 {
-  if (buffer_[2] == buzzer_type_) {
+  if (buffer[2] == buzzer_type_) {
     buzzer_on_ = true;
   } else {
     buzzer_on_ = false;
   }
 
-  if (buffer_[4] == light_pattern_<<4) {
+  if (buffer[4] == light_pattern_<<4) {
     red_light_ = true;
   } else red_light_ = false;
 
-  if (buffer_[4] == light_pattern_) {
+  if (buffer[4] == light_pattern_) {
     orange_light_ = true;
   } else {
     orange_light_ = false;
   }
   
-  if (buffer_[5]== light_pattern_<<4) {
+  if (buffer[5]= light_pattern_<<4) {
     green_light_ = true;
   } else {
     green_light_ = false;
@@ -236,16 +252,18 @@ bool SrHazardLights::set(int duration, std::uint8_t buf[8]) {
 
   if (!patlite_handle) {
     if (!SrHazardLights::open_device()) {
-      ROS_ERROR("Patlite set failed, return false\n");
+      ROS_ERROR("Hazard light set failed, return false\n");
       return false;
     }
   }
 
   int r, rs=0;
   r = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, buf, 8, &rs, 1000);
+  read_data_from_device(buf);
 
   if (r) {
-    ROS_ERROR("Light failed to set with error: %s\n", libusb_error_name(r));    libusb_close(patlite_handle);
+    ROS_ERROR("Hazard light failed to set with error: %s\n", libusb_error_name(r));    
+    libusb_close(patlite_handle);
     patlite_handle=0;
     return false;
   }
@@ -254,13 +272,13 @@ bool SrHazardLights::set(int duration, std::uint8_t buf[8]) {
     ros::Duration(duration).sleep();
     std::uint8_t* reset_buf = &buffer_[0];
     r = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, reset_buf, 8, &rs, 1000);
-  }
-
-  if (r) {
-    ROS_ERROR("Light failed to set with error: %s\n", libusb_error_name(r));
-    libusb_close(patlite_handle);
-    patlite_handle=0;
-    return false;
+    read_data_from_device(reset_buf);
+    if (r) {
+      ROS_ERROR("Hazard light failed to set with error: %s\n", libusb_error_name(r));
+      libusb_close(patlite_handle);
+      patlite_handle=0;
+      return false;
+    }
   }
 
   return true;
