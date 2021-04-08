@@ -18,10 +18,6 @@
 #include <ros/ros.h>
 #include <ros/time.h>
 
-// you will need to create a "patlite.h"
-// to be able to call the following functions from outside.
-// patlite_lights(), patlite_buzzer(), patlite_init()
-
 int main (int argc, char** argv) {
 
   ros::init(argc, argv, "sr_teleop_hazard_light");

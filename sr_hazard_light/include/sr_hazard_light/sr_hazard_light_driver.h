@@ -29,6 +29,13 @@
 #include <sr_hazard_light/SetLight.h>
 #include <sr_hazard_light/SetBuzzer.h>
 
+
+#define LIGHT_VID 0x191A
+#define LIGHT_PID 0x8003
+#define PATLITE_ENDPOINT 1
+
+static libusb_device_handle *patlite_handle = 0;
+
 class SrHazardLights
 {
     public:
@@ -64,7 +71,7 @@ class SrHazardLights
         bool open_device();
         void close_device();
         void detect_device_event(libusb_hotplug_event event);
-        void read_data_from_device(std::uint8_t* buffer);
+        void read_data_from_device(); // std::uint8_t* buffer
         int on_usb_hotplug(struct libusb_context *ctx,
                             struct libusb_device *device,
                             libusb_hotplug_event event);
