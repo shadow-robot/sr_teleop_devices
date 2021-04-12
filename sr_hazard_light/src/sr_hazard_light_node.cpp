@@ -27,7 +27,7 @@ int main (int argc, char** argv) {
   SrHazardLights sr_hazard_lights;
 
   int publishing_rate;
-  ros::param::param<int>("~publishing_rate", publishing_rate, 20);
+  ros::param::param<int>("~publishing_rate", publishing_rate, 1);
 
   sr_hazard_lights.start(publishing_rate);
 

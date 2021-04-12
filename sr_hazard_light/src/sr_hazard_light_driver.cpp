@@ -14,14 +14,19 @@
 * with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libusb-1.0/libusb.h>
 #include "sr_hazard_light/sr_hazard_light_driver.h"
 
+#define LIGHT_VID 0x191A
+#define LIGHT_PID 0x8003
+#define PATLITE_ENDPOINT_OUT 1
+#define PATLITE_ENDPOINT_IN 0x81
+#define TIMEOUT 1000
+
+static libusb_device_handle *patlite_handle = 0;
 
 SrHazardLights::SrHazardLights()
-  :started_(false), context_(nullptr), connected_(false), detected_(false), 
-  red_light_(false), orange_light_(false), green_light_(false), light_pattern_(0), 
-  buzzer_on_(false), buzzer_type_(0) {
+  :started_(false), context_(nullptr), connected_(false), detected_(false),
+  red_light_(false), orange_light_(false), green_light_(false), buzzer_on_(false){
   libusb_init(&context_);
 
   hazard_light_service = nh_.advertiseService("sr_hazard_light/set_hazard_light", &SrHazardLights::set_hazard_light, this);
@@ -55,7 +60,6 @@ void SrHazardLights::start(int publishing_rate) {
       {
         if (!connected_)
           open_device();
-          // read_data_from_device();
       }
       else
         close_device();
@@ -73,7 +77,7 @@ void SrHazardLights::stop() {
   hotplug_loop_thread_.join();
   buffer_ = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   std::uint8_t* buf = &buffer_[0];
-  SrHazardLights::set(0, buf);
+  SrHazardLights::set(0, buf, 0, "none");
   libusb_exit(context_);
   ROS_INFO("Closing hazard light device");
   exit(0);
@@ -105,19 +109,19 @@ bool SrHazardLights::open_device() {
 
   libusb_set_auto_detach_kernel_driver(patlite_handle, 1);
 
-  int r;
-  r = libusb_claim_interface(patlite_handle, 0);
-  if (r != LIBUSB_SUCCESS) {
+  int retval;
+  retval = libusb_claim_interface(patlite_handle, 0);
+  if (retval != LIBUSB_SUCCESS) {
     ROS_ERROR("libusb claim failed\n");
     return false;
   }
 
   int rs=0;
   std::uint8_t* buf = &buffer_[0];
-  r = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, buf, sizeof(buf), &rs, 1000);
+  retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, buf, sizeof(buf), &rs, TIMEOUT);
 
-  if (r != 0) {
-    ROS_ERROR("Hazard light reset failed, return %s , transferred %i\n", libusb_error_name(r), rs);
+  if (retval != 0) {
+    ROS_ERROR("Hazard light reset failed, return %s , transferred %i\n", libusb_error_name(retval), rs);
     libusb_close(patlite_handle);
     patlite_handle=0;
     return false;
@@ -130,41 +134,11 @@ bool SrHazardLights::open_device() {
 };
 
 
-void SrHazardLights::read_data_from_device() { //std::uint8_t* buf
-  int retval, rs=0;
-  uint8_t buf[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  retval = libusb_bulk_transfer(patlite_handle, PATLITE_ENDPOINT, buf, 8, &rs, 1000);
-
-  if (buf[2] == buzzer_type_ && !0x00) {
-    buzzer_on_ = true;
-  } else {
-    buzzer_on_ = false;
-  }
-
-  if (buf[4] == ((light_pattern_<<4) + buf[4]) && !0x00) {
-    red_light_ = true;
-  } else red_light_ = false;
-
-  if (buf[4] == (buf[4] + light_pattern_) && !0x00) {
-    orange_light_ = true;
-  } else {
-    orange_light_ = false;
-  }
-  
-  if (buf[5] == ((light_pattern_<<4) + buf[4]) && !0x00) {
-    green_light_ = true;
-  } else {
-    green_light_ = false;
-  }
-
-}
-
-
-bool SrHazardLights::set_hazard_light(sr_hazard_light::SetLight::Request &request, 
+bool SrHazardLights::set_hazard_light(sr_hazard_light::SetLight::Request &request,
                                       sr_hazard_light::SetLight::Response &response) {
-  light_pattern_ = request.light_pattern;
+  int light_pattern = request.light_pattern;
   std::string light_colour = request.light_colour;
-  buzzer_type_ = request.buzzer_type;
+  int buzzer_type = request.buzzer_type;
   int buzzer_tonea = request.buzzer_tonea;
   int buzzer_toneb = request.buzzer_toneb;
   int duration = request.duration;
@@ -172,35 +146,39 @@ bool SrHazardLights::set_hazard_light(sr_hazard_light::SetLight::Request &reques
 
   if (reset == true) {
       buffer_ = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+      red_light_ = false;
+      orange_light_ = false;
+      green_light_ = false;
+      buzzer_on_ = false;
   }
 
-  if (light_pattern_ > 9 || buzzer_type_ > 9 || buzzer_tonea > 15 || buzzer_toneb > 15) {
+  if (light_pattern > 9 || buzzer_type > 9 || buzzer_tonea > 15 || buzzer_toneb > 15) {
     ROS_ERROR("Number chosen for light or buzzer is out of range");
     response.confirmation = false;
   }
 
   std::list<std::string> light_colours = {"red", "orange", "green"}; // {"red", "orange", "green", "blue", "clear"};
   std::vector<uint8_t> changed_buffer_ = buffer_;
-  if (light_pattern_ > 0) {
+  if (light_pattern > 0) {
     if (std::find(std::begin(light_colours), std::end(light_colours), light_colour) != std::end(light_colours)) {
       if (light_colour == "red") {
-        changed_buffer_[4] = (light_pattern_<<4) + changed_buffer_[4];
-        // red_light_ = true;
+        changed_buffer_[4] = (light_pattern<<4) + changed_buffer_[4];
+        red_light_ = true;
       }
       else if (light_colour == "orange") {
-        changed_buffer_[4] = changed_buffer_[4] + light_pattern_;
-        // orange_light_ = true;
+        changed_buffer_[4] = changed_buffer_[4] + light_pattern;
+        orange_light_ = true;
       }
       else if (light_colour == "green") {
-        changed_buffer_[5] = ((light_pattern_<<4) + changed_buffer_[4]);
-        // green_light_ = true;
+        changed_buffer_[5] = ((light_pattern<<4) + changed_buffer_[5]);
+        green_light_ = true;
       }
       // Add this if we chose to buy these colours
       // else if (colour == "blue") {
-      //   changed_buffer_[5] = changed_buffer_[4] + light_pattern_;
+      //   changed_buffer_[5] = changed_buffer_[4] + light_pattern;
       // }
       // else if (colour == "clear") {
-      //   changed_buffer_[6] = light_pattern_<<4;
+      //   changed_buffer_[6] = light_pattern<<4;
       // }
     }
     else {
@@ -209,21 +187,20 @@ bool SrHazardLights::set_hazard_light(sr_hazard_light::SetLight::Request &reques
     }
   }
 
-  if (buzzer_type_ > 0) {
-      changed_buffer_[2] = buzzer_type_;
+  if (buzzer_type > 0) {
+      changed_buffer_[2] = buzzer_type;
       changed_buffer_[3] = (buzzer_tonea<<4) + buzzer_toneb;
-      // buzzer_on_ = true;
-  }
-  
-  if (duration == 0) {
-    buffer_ = changed_buffer_;
+      buzzer_on_ = true;
   }
 
+  if (duration == 0)
+    buffer_ = changed_buffer_;
+  
   std::uint8_t* buf = &changed_buffer_[0];
-  response.confirmation = SrHazardLights::set(duration, buf);
+  response.confirmation = SrHazardLights::set(duration, buf, buzzer_type, light_colour);
 }
 
-bool SrHazardLights::set(int duration, std::uint8_t buf[8]) {
+bool SrHazardLights::set(int duration, std::uint8_t buf[8], int buzzer_type, std::string light_colour) {
 
   if (!patlite_handle) {
     if (!SrHazardLights::open_device()) {
@@ -233,11 +210,10 @@ bool SrHazardLights::set(int duration, std::uint8_t buf[8]) {
   }
 
   int retval, rs=0;
-  retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, buf, 8, &rs, 1000);
-  // read_data_from_device(buf);
+  retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, buf, sizeof(buf), &rs, TIMEOUT);
 
   if (retval) {
-    ROS_ERROR("Hazard light failed to set with error: %s\n", libusb_error_name(retval));    
+    ROS_ERROR("Hazard light failed to set with error: %s\n", libusb_error_name(retval));
     libusb_close(patlite_handle);
     patlite_handle=0;
     return false;
@@ -246,8 +222,18 @@ bool SrHazardLights::set(int duration, std::uint8_t buf[8]) {
   if (duration > 0) {
     ros::Duration(duration).sleep();
     std::uint8_t* reset_buf = &buffer_[0];
-    retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT, reset_buf, 8, &rs, 1000);
-    // read_data_from_device(reset_buf);
+    retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, reset_buf, sizeof(reset_buf), &rs, 1000);
+    std::list<std::string> light_colours = {"red", "orange", "green"};
+    if (std::find(std::begin(light_colours), std::end(light_colours), light_colour) != std::end(light_colours)) {
+      if (light_colour == "red")
+        red_light_ = false;
+      else if (light_colour == "orange")
+        orange_light_ = false;
+      else if (light_colour == "green")
+        green_light_ = false;
+      if (buzzer_type > 0)
+        buzzer_on_ = false;
+    }
     if (retval) {
       ROS_ERROR("Hazard light failed to set with error: %s\n", libusb_error_name(retval));
       libusb_close(patlite_handle);
