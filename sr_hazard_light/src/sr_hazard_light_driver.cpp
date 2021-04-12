@@ -29,7 +29,7 @@ SrHazardLights::SrHazardLights()
   red_light_(false), orange_light_(false), green_light_(false), buzzer_on_(false){
   libusb_init(&context_);
 
-  hazard_light_service = nh_.advertiseService("sr_hazard_light/set_hazard_light", &SrHazardLights::set_hazard_light, this);
+  hazard_light_service = nh_.advertiseService("sr_hazard_light/set_hazard_light", &SrHazardLights::change_hazard_light, this);
 }
 
 SrHazardLights::~SrHazardLights() {
@@ -77,7 +77,7 @@ void SrHazardLights::stop() {
   hotplug_loop_thread_.join();
   buffer_ = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   std::uint8_t* buf = &buffer_[0];
-  SrHazardLights::set(0, buf, 0, "none");
+  SrHazardLights::set_device(0, buf, 0, "none");
   libusb_exit(context_);
   ROS_INFO("Closing hazard light device");
   exit(0);
@@ -134,7 +134,7 @@ bool SrHazardLights::open_device() {
 };
 
 
-bool SrHazardLights::set_hazard_light(sr_hazard_light::SetHazardLight::Request &request,
+bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Request &request,
                                       sr_hazard_light::SetHazardLight::Response &response) {
   int light_pattern = request.light_pattern;
   std::string light_colour = request.light_colour;
@@ -197,10 +197,10 @@ bool SrHazardLights::set_hazard_light(sr_hazard_light::SetHazardLight::Request &
     buffer_ = changed_buffer_;
   
   std::uint8_t* buf = &changed_buffer_[0];
-  response.confirmation = SrHazardLights::set(duration, buf, buzzer_type, light_colour);
+  response.confirmation = SrHazardLights::set_device(duration, buf, buzzer_type, light_colour);
 }
 
-bool SrHazardLights::set(int duration, std::uint8_t buf[8], int buzzer_type, std::string light_colour) {
+bool SrHazardLights::set_device(int duration, std::uint8_t buf[8], int buzzer_type, std::string light_colour) {
 
   if (!patlite_handle) {
     if (!SrHazardLights::open_device()) {

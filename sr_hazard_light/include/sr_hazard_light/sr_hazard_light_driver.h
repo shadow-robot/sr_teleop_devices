@@ -53,9 +53,9 @@ class SrHazardLights
 
         bool open_device();
         void close_device();
-        bool set_hazard_light(sr_hazard_light::SetHazardLight::Request &request, 
+        bool change_hazard_light(sr_hazard_light::SetHazardLight::Request &request, 
                     sr_hazard_light::SetHazardLight::Response &response);
-        bool set(int duration, std::uint8_t buf[8], int buzzer_type, std::string light_colour);
+        bool set_device(int duration, std::uint8_t buf[8], int buzzer_type, std::string light_colour);
         void detect_device_event(libusb_hotplug_event event);
         int on_usb_hotplug(struct libusb_context *ctx,
                             struct libusb_device *device,
