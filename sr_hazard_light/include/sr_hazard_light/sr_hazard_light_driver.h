@@ -38,39 +38,39 @@ class SrHazardLights
         void stop();
         ros::ServiceServer hazard_light_service;
 
-        private:
-            ros::NodeHandle nh_ = ros::NodeHandle();
+    private:
+        ros::NodeHandle nh_ = ros::NodeHandle();
 
-            libusb_context *context_;
-            bool started_;
-            int publishing_rate_;
-            bool connected_;
-            std::atomic<bool> detected_;
-            libusb_hotplug_callback_handle hotplug_callback_handle_;
-            std::thread hotplug_loop_thread_;
-            bool red_light_;
-            bool orange_light_;
-            bool green_light_;
-            bool buzzer_on_;
+        libusb_context *context_;
+        bool started_;
+        int publishing_rate_;
+        bool connected_;
+        std::atomic<bool> detected_;
+        libusb_hotplug_callback_handle hotplug_callback_handle_;
+        std::thread hotplug_loop_thread_;
+        bool red_light_;
+        bool orange_light_;
+        bool green_light_;
+        bool buzzer_on_;
 
-            ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
-            std::vector<uint8_t> buffer_ = std::vector<uint8_t>(8);
+        ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
+        std::vector<uint8_t> buffer_ = std::vector<uint8_t>(8);
 
-            bool open_device();
-            void close_device();
-            bool set_hazard_light(sr_hazard_light::SetLight::Request &request, 
-                        sr_hazard_light::SetLight::Response &response);
-            bool set(int duration, std::uint8_t buf[8], int buzzer_type, std::string light_colour);
-            void detect_device_event(libusb_hotplug_event event);
-            int on_usb_hotplug(struct libusb_context *ctx,
-                                struct libusb_device *device,
-                                libusb_hotplug_event event);
-            static int on_usb_hotplug_callback(struct libusb_context *ctx,
-                                        struct libusb_device *device,
-                                        libusb_hotplug_event event,
-                                        void* discovery);
-            void hotplug_loop();
-            void publish_hazard_light_data();
+        bool open_device();
+        void close_device();
+        bool set_hazard_light(sr_hazard_light::SetLight::Request &request, 
+                    sr_hazard_light::SetLight::Response &response);
+        bool set(int duration, std::uint8_t buf[8], int buzzer_type, std::string light_colour);
+        void detect_device_event(libusb_hotplug_event event);
+        int on_usb_hotplug(struct libusb_context *ctx,
+                            struct libusb_device *device,
+                            libusb_hotplug_event event);
+        static int on_usb_hotplug_callback(struct libusb_context *ctx,
+                                    struct libusb_device *device,
+                                    libusb_hotplug_event event,
+                                    void* discovery);
+        void hotplug_loop();
+        void publish_hazard_light_data();
 };
 
 #endif //  SR_HAZARD_LIGHTS_SR_HAZARD_LIGHTS_H
