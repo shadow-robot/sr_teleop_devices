@@ -18,16 +18,11 @@
 #define SR_HAZARD_LIGHTS_SR_HAZARD_LIGHTS_H
 
 #include <libusb-1.0/libusb.h>
-#include <iostream>
-#include <cstdlib>
-#include <cstdint>
 #include <ros/ros.h>
 #include <atomic>
 #include <thread>  // NOLINT(build/c++11)
 #include <sr_hazard_light/Status.h>
-#include <hidapi/hidapi.h>
-#include <sr_hazard_light/SetLight.h>
-#include <sr_hazard_light/SetBuzzer.h>
+#include <sr_hazard_light/SetHazardLight.h>
 
 class SrHazardLights
 {
@@ -58,8 +53,8 @@ class SrHazardLights
 
         bool open_device();
         void close_device();
-        bool set_hazard_light(sr_hazard_light::SetLight::Request &request, 
-                    sr_hazard_light::SetLight::Response &response);
+        bool set_hazard_light(sr_hazard_light::SetHazardLight::Request &request, 
+                    sr_hazard_light::SetHazardLight::Response &response);
         bool set(int duration, std::uint8_t buf[8], int buzzer_type, std::string light_colour);
         void detect_device_event(libusb_hotplug_event event);
         int on_usb_hotplug(struct libusb_context *ctx,

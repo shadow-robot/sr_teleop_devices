@@ -1,6 +1,0 @@
-int8 type
-int8 tonea
-int8 toneb
-int8 duration
----
-bool confirmation

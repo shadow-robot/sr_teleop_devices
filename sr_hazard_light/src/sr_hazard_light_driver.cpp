@@ -134,8 +134,8 @@ bool SrHazardLights::open_device() {
 };
 
 
-bool SrHazardLights::set_hazard_light(sr_hazard_light::SetLight::Request &request,
-                                      sr_hazard_light::SetLight::Response &response) {
+bool SrHazardLights::set_hazard_light(sr_hazard_light::SetHazardLight::Request &request,
+                                      sr_hazard_light::SetHazardLight::Response &response) {
   int light_pattern = request.light_pattern;
   std::string light_colour = request.light_colour;
   int buzzer_type = request.buzzer_type;
