@@ -231,9 +231,9 @@ bool SrHazardLights::set(int duration, std::uint8_t buf[8], int buzzer_type, std
         orange_light_ = false;
       else if (light_colour == "green")
         green_light_ = false;
-      if (buzzer_type > 0)
-        buzzer_on_ = false;
     }
+    if (buzzer_type > 0)
+      buzzer_on_ = false;
     if (retval) {
       ROS_ERROR("Hazard light failed to set with error: %s\n", libusb_error_name(retval));
       libusb_close(patlite_handle);
