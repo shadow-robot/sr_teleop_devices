@@ -1,6 +1,6 @@
 # sr_hazard_light
 
-This package allows the use of [Patlite LR6-USB USB Signal Tower](https://www.patlite.com/product/detail0000000689.html), a USB Controlled Modular Signal Light Tower, as a ROS Node. 
+This package allows the use of [Patlite LR6-USB USB Signal Tower](https://www.patlite.com/product/detail0000000689.html), a USB Controlled Modular Signal Light Tower, as a ROS Node.
 
 Launch with:
 ```bash
@@ -9,7 +9,7 @@ roslaunch sr_hazard_light sr_hazard_light.launch
 
 A topic will be published at `rostopic echo /sr_hazard_light/status` with the format shown [here](msg/Status.msg). The topic is published at 1Hz by default; this can be changed with the `rate` argument.
 
-A service will be advertised called `/sr_hazard_light/set_hazard_light` which the format shown [here](srv/SetHazardLight.msg).
+A service will be advertised called `/sr_hazard_light/set_hazard_light` which the format shown [here](srv/SetHazardLight.srv).
 
 This service can be called on the terminal by: 
 
@@ -32,7 +32,7 @@ The service can also be called within a node using a ROS Service Client in [Pyth
 
 ## Udev Rules
 
-Udev rules are required to allow any user to read data from the pedal device. Place [990-hazard-light.rules](90-hazard-light.rules) in `/etc/udev/rules.d` and run:
+Udev rules are required to allow any user to read data from the pedal device. Place [90-hazard-light.rules](90-hazard-light.rules) in `/etc/udev/rules.d` and run:
 
 ```bash
 sudo udevadm control --reload && sudo udevadm trigger
