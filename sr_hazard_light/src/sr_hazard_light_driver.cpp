@@ -16,6 +16,8 @@
 
 #include "sr_hazard_light/sr_hazard_light_driver.h"
 #include <list>
+#include <vector>
+#include <string>
 
 #define LIGHT_VID 0x191A
 #define LIGHT_PID 0x8003
@@ -32,7 +34,8 @@ SrHazardLights::SrHazardLights()
 {
   libusb_init(&context_);
 
-  hazard_light_service = nh_.advertiseService("sr_hazard_light/set_hazard_light", &SrHazardLights::change_hazard_light, this);
+  hazard_light_service = nh_.advertiseService("sr_hazard_light/set_hazard_light",
+                         &SrHazardLights::change_hazard_light, this);
 }
 
 SrHazardLights::~SrHazardLights()
@@ -173,7 +176,8 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
 
   std::list<std::string> light_colours = {"red", "orange", "green"};  // {"red", "orange", "green", "blue", "clear"};
   std::vector<uint8_t> changed_buffer_ = buffer_;
-  if (light_pattern > 0) {
+  if (light_pattern > 0)
+  {
     if (std::find(std::begin(light_colours), std::end(light_colours), light_colour) != std::end(light_colours))
     {
       if (light_colour == "red")
