@@ -15,7 +15,7 @@
 */
 
 #ifndef SR_HAZARD_LIGHT_SR_HAZARD_LIGHT_DRIVER_H
-#define SR_HAZARD_LIGHTS_SR_HAZARD_LIGHTS_DRIVER_H
+#define SR_HAZARD_LIGHT_SR_HAZARD_LIGHT_DRIVER_H
 
 #include <libusb-1.0/libusb.h>
 #include <ros/ros.h>
