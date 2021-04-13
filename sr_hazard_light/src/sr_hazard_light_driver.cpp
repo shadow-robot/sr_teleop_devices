@@ -15,6 +15,7 @@
 */
 
 #include "sr_hazard_light/sr_hazard_light_driver.h"
+#include <list>
 
 #define LIGHT_VID 0x191A
 #define LIGHT_PID 0x8003
@@ -27,17 +28,20 @@ static libusb_device_handle *patlite_handle = 0;
 
 SrHazardLights::SrHazardLights()
   :started_(false), context_(nullptr), connected_(false), detected_(false),
-  red_light_(false), orange_light_(false), green_light_(false), buzzer_on_(false){
+  red_light_(false), orange_light_(false), green_light_(false), buzzer_on_(false)
+{
   libusb_init(&context_);
 
   hazard_light_service = nh_.advertiseService("sr_hazard_light/set_hazard_light", &SrHazardLights::change_hazard_light, this);
 }
 
-SrHazardLights::~SrHazardLights() {
+SrHazardLights::~SrHazardLights()
+{
   stop();
 }
 
-void SrHazardLights::start(int publishing_rate) {
+void SrHazardLights::start(int publishing_rate)
+{
   publishing_rate_ = publishing_rate;
   buffer_ = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
@@ -72,7 +76,8 @@ void SrHazardLights::start(int publishing_rate) {
   }
 }
 
-void SrHazardLights::stop() {
+void SrHazardLights::stop()
+{
   libusb_hotplug_deregister_callback(context_, hotplug_callback_handle_);
   started_ = false;
   hotplug_loop_thread_.join();
@@ -84,7 +89,8 @@ void SrHazardLights::stop() {
   exit(0);
 }
 
-void SrHazardLights::detect_device_event(libusb_hotplug_event event) {
+void SrHazardLights::detect_device_event(libusb_hotplug_event event)
+{
   switch (event)
   {
     case LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED:
@@ -101,7 +107,8 @@ void SrHazardLights::detect_device_event(libusb_hotplug_event event) {
   }
 }
 
-bool SrHazardLights::open_device() {
+bool SrHazardLights::open_device()
+{
   patlite_handle = libusb_open_device_with_vid_pid(NULL, LIGHT_VID, LIGHT_PID);
   if (patlite_handle == NULL) {
     ROS_ERROR("Hazard Light device not found\n");
@@ -136,7 +143,8 @@ bool SrHazardLights::open_device() {
 
 
 bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Request &request,
-                                      sr_hazard_light::SetHazardLight::Response &response) {
+                                      sr_hazard_light::SetHazardLight::Response &response)
+                                      {
   int light_pattern = request.light_pattern;
   std::string light_colour = request.light_colour;
   int buzzer_type = request.buzzer_type;
@@ -201,10 +209,13 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
   response.confirmation = SrHazardLights::set_device(duration, buf, buzzer_type, light_colour);
 }
 
-bool SrHazardLights::set_device(int duration, std::uint8_t buf[8], int buzzer_type, std::string light_colour) {
+bool SrHazardLights::set_device(int duration, std::uint8_t buf[8], int buzzer_type, std::string light_colour)
+{
 
-  if (!patlite_handle) {
-    if (!SrHazardLights::open_device()) {
+  if (!patlite_handle)
+  {
+    if (!SrHazardLights::open_device())
+    {
       ROS_ERROR("Hazard light set failed, return false\n");
       return false;
     }
@@ -213,14 +224,16 @@ bool SrHazardLights::set_device(int duration, std::uint8_t buf[8], int buzzer_ty
   int retval, rs=0;
   retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, buf, BUFFER_SIZE, &rs, TIMEOUT);
 
-  if (retval) {
+  if (retval)
+  {
     ROS_ERROR("Hazard light failed to set with error: %s\n", libusb_error_name(retval));
     libusb_close(patlite_handle);
-    patlite_handle=0;
+    patlite_handle = 0;
     return false;
   }
 
-  if (duration > 0) {
+  if (duration > 0)
+  {
     ros::Duration(duration).sleep();
     std::uint8_t* reset_buf = &buffer_[0];
     retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, reset_buf, BUFFER_SIZE, &rs, 1000);
@@ -235,10 +248,11 @@ bool SrHazardLights::set_device(int duration, std::uint8_t buf[8], int buzzer_ty
     }
     if (buzzer_type > 0)
       buzzer_on_ = false;
-    if (retval) {
+    if (retval)
+    {
       ROS_ERROR("Hazard light failed to set with error: %s\n", libusb_error_name(retval));
       libusb_close(patlite_handle);
-      patlite_handle=0;
+      patlite_handle = 0;
       return false;
     }
   }
@@ -246,7 +260,8 @@ bool SrHazardLights::set_device(int duration, std::uint8_t buf[8], int buzzer_ty
   return true;
 }
 
-void SrHazardLights::close_device() {
+void SrHazardLights::close_device()
+{
   connected_ = false;
   red_light_ = false;
   orange_light_ = false;
@@ -254,7 +269,10 @@ void SrHazardLights::close_device() {
   buzzer_on_ = false;
 }
 
-int SrHazardLights::on_usb_hotplug(struct libusb_context *ctx, struct libusb_device *device, libusb_hotplug_event event) {
+int SrHazardLights::on_usb_hotplug(struct libusb_context *ctx,
+                                   struct libusb_device *device,
+                                   libusb_hotplug_event event) 
+{
   struct libusb_device_descriptor descriptor;
 
   int ret = libusb_get_device_descriptor(device, &descriptor);
@@ -275,11 +293,13 @@ int SrHazardLights::on_usb_hotplug(struct libusb_context *ctx, struct libusb_dev
 int SrHazardLights::on_usb_hotplug_callback(struct libusb_context *ctx,
                                            struct libusb_device *device,
                                            libusb_hotplug_event event,
-                                           void* light_discovery) {
+                                           void* light_discovery)
+                                           {
   return (reinterpret_cast<SrHazardLights*>(light_discovery))->on_usb_hotplug(ctx, device, event);
 }
 
-void SrHazardLights::hotplug_loop() {
+void SrHazardLights::hotplug_loop()
+{
   while (started_)
   {
     libusb_handle_events_completed(context_, nullptr);

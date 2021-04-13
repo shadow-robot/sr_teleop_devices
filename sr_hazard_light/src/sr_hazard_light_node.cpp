@@ -18,12 +18,12 @@
 #include <ros/ros.h>
 #include <ros/time.h>
 
-int main (int argc, char** argv) {
-
+int main (int argc, char** argv)
+{
   ros::init(argc, argv, "sr_teleop_hazard_light");
   ros::AsyncSpinner spinner(1);
   spinner.start();
-  
+
   SrHazardLights sr_hazard_lights;
 
   int publishing_rate;

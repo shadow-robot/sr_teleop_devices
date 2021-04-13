@@ -14,13 +14,15 @@
 * with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SR_HAZARD_LIGHTS_SR_HAZARD_LIGHTS_H
-#define SR_HAZARD_LIGHTS_SR_HAZARD_LIGHTS_H
+#ifndef SR_HAZARD_LIGHT_SR_HAZARD_LIGHT_DRIVER_H
+#define SR_HAZARD_LIGHTS_SR_HAZARD_LIGHTS_DRIVER_H
 
 #include <libusb-1.0/libusb.h>
 #include <ros/ros.h>
 #include <atomic>
 #include <thread>  // NOLINT(build/c++11)
+#include <vector>
+#include <string>
 #include <sr_hazard_light/Status.h>
 #include <sr_hazard_light/SetHazardLight.h>
 
@@ -53,19 +55,20 @@ class SrHazardLights
 
         bool open_device();
         void close_device();
-        bool change_hazard_light(sr_hazard_light::SetHazardLight::Request &request, 
-                    sr_hazard_light::SetHazardLight::Response &response);
+        bool change_hazard_light(sr_hazard_light::SetHazardLight::Request &request,
+                                 sr_hazard_light::SetHazardLight::Response &response);
         bool set_device(int duration, std::uint8_t buf[8], int buzzer_type, std::string light_colour);
         void detect_device_event(libusb_hotplug_event event);
         int on_usb_hotplug(struct libusb_context *ctx,
-                            struct libusb_device *device,
-                            libusb_hotplug_event event);
+                           struct libusb_device *device,
+                           libusb_hotplug_event event);
         static int on_usb_hotplug_callback(struct libusb_context *ctx,
-                                    struct libusb_device *device,
-                                    libusb_hotplug_event event,
-                                    void* discovery);
+                                           struct libusb_device *device,
+                                           libusb_hotplug_event event,
+                                           void* discovery);
         void hotplug_loop();
         void publish_hazard_light_data();
 };
 
-#endif //  SR_HAZARD_LIGHTS_SR_HAZARD_LIGHTS_H
+
+#endif  // SR_HAZARD_LIGHT_SR_HAZARD_LIGHT_DRIVER_H
