@@ -1,0 +1,9 @@
+int8 light_pattern
+string light_colour
+int8 buzzer_type
+int8 buzzer_tonea
+int8 buzzer_toneb
+int8 duration
+bool reset
+---
+bool confirmation
