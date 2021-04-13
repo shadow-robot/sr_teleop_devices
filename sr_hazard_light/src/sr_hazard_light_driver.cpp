@@ -21,6 +21,7 @@
 #define PATLITE_ENDPOINT_OUT 1
 #define PATLITE_ENDPOINT_IN 0x81
 #define TIMEOUT 1000
+#define BUFFER_SIZE 8
 
 static libusb_device_handle *patlite_handle = 0;
 
@@ -118,7 +119,7 @@ bool SrHazardLights::open_device() {
 
   int rs=0;
   std::uint8_t* buf = &buffer_[0];
-  retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, buf, sizeof(buf), &rs, TIMEOUT);
+  retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, buf, BUFFER_SIZE, &rs, TIMEOUT);
 
   if (retval != 0) {
     ROS_ERROR("Hazard light reset failed, return %s , transferred %i\n", libusb_error_name(retval), rs);
@@ -210,7 +211,7 @@ bool SrHazardLights::set_device(int duration, std::uint8_t buf[8], int buzzer_ty
   }
 
   int retval, rs=0;
-  retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, buf, sizeof(buf), &rs, TIMEOUT);
+  retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, buf, BUFFER_SIZE, &rs, TIMEOUT);
 
   if (retval) {
     ROS_ERROR("Hazard light failed to set with error: %s\n", libusb_error_name(retval));
@@ -222,7 +223,7 @@ bool SrHazardLights::set_device(int duration, std::uint8_t buf[8], int buzzer_ty
   if (duration > 0) {
     ros::Duration(duration).sleep();
     std::uint8_t* reset_buf = &buffer_[0];
-    retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, reset_buf, sizeof(reset_buf), &rs, 1000);
+    retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, reset_buf, BUFFER_SIZE, &rs, 1000);
     std::list<std::string> light_colours = {"red", "orange", "green"};
     if (std::find(std::begin(light_colours), std::end(light_colours), light_colour) != std::end(light_colours)) {
       if (light_colour == "red")
