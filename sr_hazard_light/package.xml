@@ -6,7 +6,7 @@
 
   <maintainer email="software@shadowrobot.com">Shadow Robot's software team</maintainer>
 
-  <license>Private</license>
+  <license>Public</license>
 
   <url type="website">http://www.shadowrobot.com</url>
   <url type="repository">https://github.com/shadow-robot/sr_teleop_internal</url>
