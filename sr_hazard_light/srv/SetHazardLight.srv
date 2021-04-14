@@ -1,4 +1,4 @@
-SetLight[] light
-SetBuzzer[] buzzer
+sr_hazard_light/SetLight[] light
+sr_hazard_light/SetBuzzer[] buzzer
 ---
 bool confirmation
