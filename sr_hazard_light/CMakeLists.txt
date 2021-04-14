@@ -54,6 +54,8 @@ add_message_files(
 
 add_service_files(
   FILES
+  SetLight.srv
+  SetBuzzer.srv
   SetHazardLight.srv
 )
 
@@ -61,6 +63,7 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  sr_hazard_light
 )
 
 ###################################
