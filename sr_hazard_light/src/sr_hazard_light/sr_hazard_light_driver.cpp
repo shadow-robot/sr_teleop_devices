@@ -18,6 +18,8 @@
 #include <list>
 #include <vector>
 #include <string>
+#include <sr_hazard_light/SetLight.h>
+#include <sr_hazard_light/SetBuzzer.h>
 
 #define LIGHT_VID 0x191A
 #define LIGHT_PID 0x8003
@@ -151,85 +153,121 @@ bool SrHazardLights::open_device()
 bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Request &request,
                                       sr_hazard_light::SetHazardLight::Response &response)
 {
-  int light_pattern = request.light.pattern;
-  std::string light_colour = request.light.colour;
-  int duration = request.light.duration;
-  bool reset = request.light.reset;
-  int buzzer_type = request.buzzer.pattern;
-  int buzzer_tonea = request.buzzer.tonea;
-  int buzzer_toneb = request.buzzer.toneb;
-  int duration = request.buzzer.duration;
-  bool reset = request.buzzer.reset;
+  std::vector<sr_hazard_light::SetLight> light = request.light;
+  std::vector<sr_hazard_light::SetBuzzer> buzzer = request.buzzer;
+  std::vector<uint8_t> changed_buffer_ = buffer_;
 
-  // if (reset == true)
-  // {
-  //     buffer_ = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  //     red_light_ = false;
-  //     orange_light_ = false;
-  //     green_light_ = false;
-  //     buzzer_on_ = false;
-  // }
+  for (size_t light_cmd = 0; light_cmd < light.size(); light_cmd++) 
+  {
+    if (light[light_cmd].reset == true)
+    {
+        buffer_[4] = 0;
+        buffer_[5] = 0;
+        red_light_ = false;
+        orange_light_ = false;
+        green_light_ = false;
+    }
 
-  // if (light_pattern > 9 || buzzer_type > 9 || buzzer_tonea > 15 || buzzer_toneb > 15)
-  // {
-  //   ROS_ERROR("Number chosen for light or buzzer is out of range");
-  //   response.confirmation = false;
-  // }
+    if (light[light_cmd].pattern > 9)
+    {
+      ROS_ERROR("Number chosen for light or buzzer is out of range");
+      response.confirmation = false;
+    }
 
-  // std::list<std::string> light_colours = {"red", "orange", "green"};  // {"red", "orange", "green", "blue", "clear"};
-  // std::vector<uint8_t> changed_buffer_ = buffer_;
-  // if (light_pattern > 0)
-  // {
-  //   if (std::find(std::begin(light_colours), std::end(light_colours), light_colour) != std::end(light_colours))
-  //   {
-  //     if (light_colour == "red")
-  //     {
-  //       changed_buffer_[4] = (light_pattern << 4) + changed_buffer_[4];
-  //       red_light_ = true;
-  //     }
-  //     else if (light_colour == "orange")
-  //     {
-  //       changed_buffer_[4] = changed_buffer_[4] + light_pattern;
-  //       orange_light_ = true;
-  //     }
-  //     else if (light_colour == "green")
-  //     {
-  //       changed_buffer_[5] = ((light_pattern << 4) + changed_buffer_[5]);
-  //       green_light_ = true;
-  //     }
-  //     // Add this if we chose to buy these colours
-  //     // else if (colour == "blue") {
-  //     //   changed_buffer_[5] = changed_buffer_[4] + light_pattern;
-  //     // }
-  //     // else if (colour == "clear") {
-  //     //   changed_buffer_[6] = light_pattern<<4;
-  //     // }
-  //   }
-  //   else
-  //   {
-  //     ROS_ERROR("Colour sent is not a colour on the hazard light");
-  //     response.confirmation = false;
-  //   }
-  // }
+    std::list<std::string> colours = {"red", "orange", "green"};
+    if (light[light_cmd].pattern > 0)
+    {
+      if (std::find(std::begin(colours), std::end(colours), light[light_cmd].colour) != std::end(colours))
+      {
+        if (light[light_cmd].colour == "red")
+        {
+          if (light[light_cmd].pattern > 0)
+          {
+            changed_buffer_[4] = (light[light_cmd].pattern << 4) + changed_buffer_[4];
+            red_light_ = true;
+          }
+          else if (light[light_cmd].pattern == 0)
+          {
+            changed_buffer_[4] = 0;
+            red_light_ = false;
+          }
 
-  // if (buzzer_type > 0)
-  // {
-  //     changed_buffer_[2] = buzzer_type;
-  //     changed_buffer_[3] = (buzzer_tonea << 4) + buzzer_toneb;
-  //     buzzer_on_ = true;
-  // }
+        }
+        else if (light[light_cmd].colour == "orange")
+        {
+          if (light[light_cmd].pattern > 0)
+          {
+            changed_buffer_[4] = changed_buffer_[4] + light[light_cmd].pattern;
+            orange_light_ = true;
+          }
+          else if (light[light_cmd].pattern == 0)
+          {
+            changed_buffer_[4] = 0;
+            orange_light_ = false;
+          }
+        }
+        else if (light[light_cmd].colour == "green")
+        {
+          if (light[light_cmd].pattern > 0)
+          {
+            changed_buffer_[5] = ((light[light_cmd].pattern << 4) + changed_buffer_[5]);
+            green_light_ = true;
+          }
+          else if (light[light_cmd].pattern == 0)
+          {
+            changed_buffer_[5] = 0;
+            green_light_ = false;
+          }
+        }
+      }
+      else
+      {
+        ROS_ERROR("Colour sent is not a colour on the hazard light");
+        response.confirmation = false;
+      }
+    }
+    if (light[light_cmd].duration == 0)
+      buffer_ = changed_buffer_;
+  }
 
-  // if (duration == 0)
-  //   buffer_ = changed_buffer_;
+  for(size_t buzzer_cmd = 0; buzzer_cmd < buzzer.size(); buzzer_cmd++)
+  {
+    
+    if (buzzer[buzzer_cmd].reset == true)
+    {
+      buffer_[2] = 0;
+      buffer_[3] = 0;
+      buzzer_on_ = false;
+    }
 
-  // std::uint8_t* buf = &changed_buffer_[0];
-  // response.confirmation = SrHazardLights::set_device(duration, buf, buzzer_type, light_colour);
-  ROS_INFO("IT WORKS");
+    if (buzzer[buzzer_cmd].pattern > 9 || buzzer[buzzer_cmd].tonea > 15 || buzzer[buzzer_cmd].toneb > 15)
+    {
+      ROS_ERROR("Number chosen for light or buzzer is out of range");
+      response.confirmation = false;
+    }
 
-  response.confirmation = true;
+    if (buzzer[buzzer_cmd].pattern > 0)
+    {
+        changed_buffer_[2] = buzzer[buzzer_cmd].pattern;
+        changed_buffer_[3] = (buzzer[buzzer_cmd].tonea << 4) + buzzer[buzzer_cmd].toneb;
+        buzzer_on_ = true;
+    }
+    else if (buzzer[buzzer_cmd].pattern == 0)
+    {
+      changed_buffer_[2] = 0;
+      changed_buffer_[3] = 0;
+      buzzer_on_ = false;
+    }
+
+    if (buzzer[buzzer_cmd].duration == 0)
+      buffer_ = changed_buffer_;
+  }
+
+  std::uint8_t* buf = &changed_buffer_[0];
+  response.confirmation = SrHazardLights::set_device(duration, buf, buzzer[buzzer_cmd].pattern, light[light_cmd].colour);
 }
 
-bool SrHazardLights::set_device(int duration, std::uint8_t buf[8], int buzzer_type, std::string light_colour)
+bool SrHazardLights::set_device(int duration, std::uint8_t buf[8], int buzzer_pattern, std::string light_colour)
 {
   if (!patlite_handle)
   {
@@ -256,8 +294,8 @@ bool SrHazardLights::set_device(int duration, std::uint8_t buf[8], int buzzer_ty
     ros::Duration(duration).sleep();
     std::uint8_t* reset_buf = &buffer_[0];
     retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, reset_buf, BUFFER_SIZE, &rs, 1000);
-    std::list<std::string> light_colours = {"red", "orange", "green"};
-    if (std::find(std::begin(light_colours), std::end(light_colours), light_colour) != std::end(light_colours))
+    std::list<std::string> colours = {"red", "orange", "green"};
+    if (std::find(std::begin(colours), std::end(colours), light_colour) != std::end(colours))
     {
       if (light_colour == "red")
         red_light_ = false;
@@ -266,7 +304,7 @@ bool SrHazardLights::set_device(int duration, std::uint8_t buf[8], int buzzer_ty
       else if (light_colour == "green")
         green_light_ = false;
     }
-    if (buzzer_type > 0)
+    if (buzzer_pattern > 0)
       buzzer_on_ = false;
     if (retval)
     {
