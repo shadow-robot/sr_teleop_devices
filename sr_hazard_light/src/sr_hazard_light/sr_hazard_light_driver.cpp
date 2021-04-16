@@ -156,6 +156,7 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
   std::vector<sr_hazard_light::SetLight> light = request.light;
   std::vector<sr_hazard_light::SetBuzzer> buzzer = request.buzzer;
   std::vector<uint8_t> changed_buffer_ = buffer_;
+  bool set_light_result, set_buzzer_result;
 
   for (size_t light_cmd = 0; light_cmd < light.size(); light_cmd++) 
   {
@@ -170,7 +171,7 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
 
     if (light[light_cmd].pattern > 9)
     {
-      ROS_ERROR("Number chosen for light or buzzer is out of range");
+      ROS_ERROR("Number chosen for light pattern is out of range");
       response.confirmation = false;
     }
 
@@ -228,6 +229,9 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
     }
     if (light[light_cmd].duration == 0)
       buffer_ = changed_buffer_;
+
+    std::uint8_t* buf = &changed_buffer_[0];
+    set_light_result = SrHazardLights::set_device(light[light_cmd].duration, buf, 0, light[light_cmd].colour);
   }
 
   for(size_t buzzer_cmd = 0; buzzer_cmd < buzzer.size(); buzzer_cmd++)
@@ -242,7 +246,7 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
 
     if (buzzer[buzzer_cmd].pattern > 9 || buzzer[buzzer_cmd].tonea > 15 || buzzer[buzzer_cmd].toneb > 15)
     {
-      ROS_ERROR("Number chosen for light or buzzer is out of range");
+      ROS_ERROR("Number chosen for buzzer is out of range");
       response.confirmation = false;
     }
 
@@ -261,10 +265,15 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
 
     if (buzzer[buzzer_cmd].duration == 0)
       buffer_ = changed_buffer_;
+
+    std::uint8_t* buf = &changed_buffer_[0];
+    set_buzzer_result = SrHazardLights::set_device(buzzer[buzzer_cmd].duration, buf, buzzer[buzzer_cmd].pattern, "none");
   }
 
-  std::uint8_t* buf = &changed_buffer_[0];
-  response.confirmation = SrHazardLights::set_device(duration, buf, buzzer[buzzer_cmd].pattern, light[light_cmd].colour);
+    if (set_light_result && set_buzzer_result)
+      response.confirmation = true;
+    else 
+      response.confirmation = false;
 }
 
 bool SrHazardLights::set_device(int duration, std::uint8_t buf[8], int buzzer_pattern, std::string light_colour)
