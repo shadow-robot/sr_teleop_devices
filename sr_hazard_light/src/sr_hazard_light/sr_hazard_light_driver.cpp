@@ -279,7 +279,8 @@ bool SrHazardLights::set_light(int pattern, std::string colour, int duration, bo
     buffer_[5] = changed_buffer_[5];
     std::uint8_t* sent_buffer = &buffer_[0];
     return send_buffer(sent_buffer);
-  } else
+  }
+  else
   {
     std::uint8_t* sent_buffer = &changed_buffer_[0];
     send_buffer(sent_buffer);
@@ -336,7 +337,8 @@ bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration,
     int retval, rs = 0;
     std::uint8_t* sent_buffer = &buffer_[0];
     return send_buffer(sent_buffer);
-  } else
+  }
+  else
   {
     std::uint8_t* sent_buffer = &changed_buffer_[0];
     send_buffer(sent_buffer);
