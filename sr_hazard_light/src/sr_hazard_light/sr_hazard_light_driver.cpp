@@ -277,7 +277,6 @@ bool SrHazardLights::set_light(int pattern, std::string colour, int duration, bo
     std::uint8_t* sent_buffer = &changed_buffer_[0];
     send_buffer(sent_buffer);
     light_timer.setPeriod(ros::Duration(duration), true);
-    light_timer.start();
     if (std::find(std::begin(colours), std::end(colours), colour) != std::end(colours))
     {
       if (colour == "red")
@@ -336,7 +335,6 @@ bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration,
     std::uint8_t* sent_buffer = &changed_buffer_[0];
     send_buffer(sent_buffer);
     buzzer_timer.setPeriod(ros::Duration(duration), true);
-    buzzer_timer.start();
     if (pattern > 0)
       buzzer_on_ = false;
     // buzzer_timer.stop();
@@ -364,6 +362,7 @@ bool SrHazardLights::send_buffer(std::uint8_t sent_buffer[8])
 
 void SrHazardLights::light_timer_cb(const ros::TimerEvent& event)
 {
+  light_timer.start();
   int retval, rs = 0;
   std::uint8_t* reset_buf = &buffer_[0];
   retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, reset_buf, BUFFER_SIZE, &rs, 1000);
@@ -373,10 +372,12 @@ void SrHazardLights::light_timer_cb(const ros::TimerEvent& event)
     libusb_close(patlite_handle);
     patlite_handle = 0;
   }
+  light_timer.stop();
 }
 
 void SrHazardLights::buzzer_timer_cb(const ros::TimerEvent& event)
 {
+  buzzer_timer.start();
   int retval, rs = 0;
   std::uint8_t* reset_buf = &buffer_[0];
   retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, reset_buf, BUFFER_SIZE, &rs, 1000);
@@ -387,6 +388,7 @@ void SrHazardLights::buzzer_timer_cb(const ros::TimerEvent& event)
     libusb_close(patlite_handle);
     patlite_handle = 0;
   }
+  buzzer_timer.stop();
 }
 
 void SrHazardLights::close_device()
