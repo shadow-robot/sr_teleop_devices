@@ -202,8 +202,6 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
 
 bool SrHazardLights::set_light(int pattern, std::string colour, int duration, bool reset)
 {
-  
-  
   if (reset == true)
   {
       buffer_[4] = 0;
