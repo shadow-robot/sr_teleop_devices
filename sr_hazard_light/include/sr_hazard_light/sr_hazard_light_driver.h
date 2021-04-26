@@ -49,8 +49,8 @@ class SrHazardLights
         bool orange_light_;
         bool green_light_;
         bool buzzer_on_;
-        ros::Timer buzzer_timer;
         ros::Timer light_timer;
+        ros::Timer buzzer_timer;
 
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
         std::vector<uint8_t> buffer_ = std::vector<uint8_t>(8);
