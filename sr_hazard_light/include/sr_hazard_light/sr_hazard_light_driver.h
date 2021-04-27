@@ -53,7 +53,8 @@ class SrHazardLights
         ros::Timer buzzer_timer;
 
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
-        std::vector<uint8_t> buffer_ = std::vector<uint8_t>(8);
+        std::vector<uint8_t> default_buffer = std::vector<uint8_t>(8);
+        std::vector<uint8_t> current_buffer = std::vector<uint8_t>(8);
 
         bool open_device();
         void close_device();

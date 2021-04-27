@@ -50,7 +50,8 @@ SrHazardLights::~SrHazardLights()
 void SrHazardLights::start(int publishing_rate)
 {
   publishing_rate_ = publishing_rate;
-  buffer_ = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  default_buffer = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  current_buffer = {0x6, 0x00, 0x6, 0x6, 0x6, 0x6, 0x6, 0x6};
 
   if (!started_)
   {
@@ -88,10 +89,11 @@ void SrHazardLights::stop()
   libusb_hotplug_deregister_callback(context_, hotplug_callback_handle_);
   started_ = false;
   hotplug_loop_thread_.join();
-  buffer_ = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  std::uint8_t* buf = &buffer_[0];
+  default_buffer = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  current_buffer = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  std::uint8_t* buffer = &default_buffer[0];
   int retval, rs = 0;
-  retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, buf, BUFFER_SIZE, &rs, TIMEOUT);
+  retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, buffer, BUFFER_SIZE, &rs, TIMEOUT);
   if (retval)
   {
     ROS_ERROR("Hazard light failed to set with error: %s\n", libusb_error_name(retval));
@@ -141,8 +143,8 @@ bool SrHazardLights::open_device()
   }
 
   int rs = 0;
-  std::uint8_t* buf = &buffer_[0];
-  retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, buf, BUFFER_SIZE, &rs, TIMEOUT);
+  std::uint8_t* buffer = &default_buffer[0];
+  retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, buffer, BUFFER_SIZE, &rs, TIMEOUT);
 
   if (retval != 0)
   {
@@ -204,8 +206,8 @@ bool SrHazardLights::set_light(int pattern, std::string colour, int duration, bo
 {
   if (reset == true)
   {
-      buffer_[4] = 0;
-      buffer_[5] = 0;
+      default_buffer[4] = 0x00;
+      default_buffer[5] = 0x00;
       red_light_ = false;
       orange_light_ = false;
       green_light_ = false;
@@ -218,7 +220,6 @@ bool SrHazardLights::set_light(int pattern, std::string colour, int duration, bo
   }
 
   std::list<std::string> colours = {"red", "orange", "green"};
-  std::vector<uint8_t> changed_buffer_ = buffer_;
   if (pattern > 0)
   {
     if (std::find(std::begin(colours), std::end(colours), colour) != std::end(colours))
@@ -227,41 +228,44 @@ bool SrHazardLights::set_light(int pattern, std::string colour, int duration, bo
       {
         if (pattern > 0)
         {
-          changed_buffer_[4] = (pattern << 4) + changed_buffer_[4];
+          // current_buffer[4] = 0x00;
+          current_buffer[4] = (pattern << 4) + current_buffer[4];
           red_light_ = true;
         }
-        else if (pattern == 0)
-        {
-          changed_buffer_[4] = 0;
-          red_light_ = false;
-        }
+        // else if (pattern == 0)
+        // {
+        //   current_buffer[4] = 0;
+        //   red_light_ = false;
+        // }
 
       }
       else if (colour == "orange")
       {
         if (pattern > 0)
         {
-          changed_buffer_[4] = changed_buffer_[4] + pattern;
+          // current_buffer[4] = 0x00;
+          current_buffer[4] = current_buffer[4] + pattern;
           orange_light_ = true;
         }
-        else if (pattern == 0)
-        {
-          changed_buffer_[4] = 0;
-          orange_light_ = false;
-        }
+        // else if (pattern == 0)
+        // {
+        //   current_buffer[4] = 0;
+        //   orange_light_ = false;
+        // }
       }
       else if (colour == "green")
       {
         if (pattern > 0)
         {
-          changed_buffer_[5] = ((pattern << 4) + changed_buffer_[5]);
+          // current_buffer[4] = 0x00;
+          current_buffer[5] = ((pattern << 4) + current_buffer[5]);
           green_light_ = true;
         }
-        else if (pattern == 0)
-        {
-          changed_buffer_[5] = 0;
-          green_light_ = false;
-        }
+        // else if (pattern == 0)
+        // {
+        //   current_buffer[5] = 0;
+        //   green_light_ = false;
+        // }
       }
     }
     else
@@ -271,29 +275,36 @@ bool SrHazardLights::set_light(int pattern, std::string colour, int duration, bo
     }
   }
 
-  if (duration == 0)
+  if (duration == 0 && pattern!=0)
   {
-    buffer_[4] = changed_buffer_[4];
-    buffer_[5] = changed_buffer_[5];
-    std::uint8_t* sent_buffer = &buffer_[0];
+    default_buffer[4] = current_buffer[4];
+    default_buffer[5] = current_buffer[5];
+    std::uint8_t* sent_buffer = &default_buffer[0];
+    ROS_ERROR("stuck");
     return send_buffer(sent_buffer);
   }
-  else
+  else if (duration > 0 && pattern!=0)
   {
-    std::uint8_t* sent_buffer = &changed_buffer_[0];
-    send_buffer(sent_buffer);
-    light_timer.setPeriod(ros::Duration(duration), true);
-    light_timer.start();
-    ROS_ERROR("Here light 2");
-    // if (std::find(std::begin(colours), std::end(colours), colour) != std::end(colours))
-    // {
-    //   if (colour == "red")
-    //     red_light_ = false;
-    //   else if (colour == "orange")
-    //     orange_light_ = false;
-    //   else if (colour == "green")
-    //     green_light_ = false;
-    // }
+    std::uint8_t* sent_buffer = &current_buffer[0];
+    int retval;
+    retval = send_buffer(sent_buffer);
+    if (retval)
+    {
+      ROS_ERROR("retval true");
+      light_timer.setPeriod(ros::Duration(duration), true);
+      light_timer.start();
+      // if (std::find(std::begin(colours), std::end(colours), colour) != std::end(colours))
+      // {
+      //   if (colour == "red")
+      //     red_light_ = false;
+      //   else if (colour == "orange")
+      //     orange_light_ = false;
+      //   else if (colour == "green")
+      //     green_light_ = false;
+      // }
+    }
+    else
+      return retval;
   }
 
   return true;
@@ -303,8 +314,8 @@ bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration,
 {
     if (reset == true)
   {
-    buffer_[2] = 0;
-    buffer_[3] = 0;
+    default_buffer[2] = 0x00;
+    default_buffer[3] = 0x00;
     buzzer_on_ = false;
   }
 
@@ -314,36 +325,42 @@ bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration,
     return false;
   }
 
-  std::vector<uint8_t> changed_buffer_ = buffer_;
   if (pattern > 0)
   {
-      changed_buffer_[2] = pattern;
-      changed_buffer_[3] = (tonea << 4) + toneb;
+      current_buffer[2] = pattern;
+      current_buffer[3] = (tonea << 4) + toneb;
       buzzer_on_ = true;
   }
   else if (pattern == 0)
   {
-    changed_buffer_[2] = 0;
-    changed_buffer_[3] = 0;
+    current_buffer[2] = 0;
+    current_buffer[3] = 0;
     buzzer_on_ = false;
   }
 
-  if (duration == 0)
+  if (duration == 0 && pattern!=0)
   {
-    buffer_[2] = changed_buffer_[2];
-    buffer_[3] = changed_buffer_[3];
+    default_buffer[2] = current_buffer[2];
+    default_buffer[3] = current_buffer[3];
     int retval, rs = 0;
-    std::uint8_t* sent_buffer = &buffer_[0];
+    std::uint8_t* sent_buffer = &default_buffer[0];
+    ROS_ERROR("stuck 1");
     return send_buffer(sent_buffer);
   }
-  else
+  else if (duration > 0 && pattern!=0)
   {
-    std::uint8_t* sent_buffer = &changed_buffer_[0];
-    send_buffer(sent_buffer);
-    buzzer_timer.setPeriod(ros::Duration(duration), true);
-    buzzer_timer.start();
-    if (pattern > 0)
-      buzzer_on_ = false;
+    std::uint8_t* sent_buffer = &current_buffer[0];
+    int retval;
+    retval = send_buffer(sent_buffer);
+    if (retval)
+    {
+      buzzer_timer.setPeriod(ros::Duration(duration), true);
+      buzzer_timer.start();
+      if (pattern > 0)
+        buzzer_on_ = false;
+    }
+    else
+      return retval;
   }
 
   return true;
@@ -353,7 +370,7 @@ bool SrHazardLights::send_buffer(std::uint8_t sent_buffer[8])
 {
   int retval, rs = 0;
   retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, sent_buffer, BUFFER_SIZE, &rs, TIMEOUT);
-  ROS_ERROR("sent ya buffer");
+    ROS_ERROR("Here buzzer 1");
   if (retval)
   {
     ROS_ERROR("Hazard light failed to set with error: %s\n", libusb_error_name(retval));
@@ -361,14 +378,16 @@ bool SrHazardLights::send_buffer(std::uint8_t sent_buffer[8])
     patlite_handle = 0;
     return false;
   }
-
   return true;
 }
 
 void SrHazardLights::light_timer_cb(const ros::TimerEvent& event)
 {
   int retval, rs = 0;
-  std::uint8_t* reset_buf = &buffer_[0];
+  std::vector<uint8_t> reset_buffer = current_buffer;
+  reset_buffer[4] = default_buffer[4];
+  reset_buffer[5] = default_buffer[5];
+  std::uint8_t* reset_buf = &reset_buffer[0];
   retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, reset_buf, BUFFER_SIZE, &rs, 1000);
   ROS_ERROR("Here light 1");
   if (retval)
@@ -383,7 +402,10 @@ void SrHazardLights::light_timer_cb(const ros::TimerEvent& event)
 void SrHazardLights::buzzer_timer_cb(const ros::TimerEvent& event)
 {
   int retval, rs = 0;
-  std::uint8_t* reset_buf = &buffer_[0];
+  std::vector<uint8_t> reset_buffer = current_buffer;
+  reset_buffer[2] = default_buffer[2];
+  reset_buffer[3] = default_buffer[3];
+  std::uint8_t* reset_buf = &reset_buffer[0];
   retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, reset_buf, BUFFER_SIZE, &rs, 1000);
   if (retval)
   {
