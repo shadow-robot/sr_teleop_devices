@@ -1,4 +1,3 @@
-SetLight[] light
-SetBuzzer[] buzzer
+SetLight light
 ---
 bool confirmation
