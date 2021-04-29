@@ -1,3 +1,4 @@
 SetLight light
+SetBuzzer buzzer
 ---
 bool confirmation
