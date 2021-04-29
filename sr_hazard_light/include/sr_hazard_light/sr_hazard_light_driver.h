@@ -52,6 +52,14 @@ class SrHazardLights
         ros::Timer light_timer;
         ros::Timer buzzer_timer;
 
+        struct hazard_light_ongoing_settings
+        {
+            bool red;
+            bool orange;
+            bool green;
+            bool buzzer;
+        };
+
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
         std::vector<uint8_t> default_buffer = std::vector<uint8_t>(8);
         std::vector<uint8_t> current_buffer = std::vector<uint8_t>(8);
@@ -74,6 +82,7 @@ class SrHazardLights
                                            libusb_hotplug_event event,
                                            void* discovery);
         void hotplug_loop();
+        void read_buffer();
         void publish_hazard_light_data();
 };
 
