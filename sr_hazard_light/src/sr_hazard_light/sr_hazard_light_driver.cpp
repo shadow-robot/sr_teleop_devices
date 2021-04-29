@@ -38,6 +38,9 @@ SrHazardLights::SrHazardLights()
 
   hazard_light_service = nh_.advertiseService("sr_hazard_light/set_hazard_light",
                          &SrHazardLights::change_hazard_light, this);
+  reset_hazard_light_service = nh_.advertiseService("sr_hazard_light/reset_hazard_light",
+                         &SrHazardLights::reset_hazard_light, this);
+
   light_timer = nh_.createTimer(ros::Duration(10), &SrHazardLights::light_timer_cb, this, true, false);
   buzzer_timer = nh_.createTimer(ros::Duration(10), &SrHazardLights::buzzer_timer_cb, this, true, false);
 
@@ -476,6 +479,15 @@ void SrHazardLights::buzzer_timer_cb(const ros::TimerEvent& event)
 
   current_buffer[2] = default_buffer[2];
   current_buffer[3] = default_buffer[3];
+}
+
+bool SrHazardLights::reset_hazard_light(sr_hazard_light::ResetHazardLight::Request &request,
+                                        sr_hazard_light::ResetHazardLight::Response &response)
+{
+  ROS_INFO("Resetting hazard light.");
+  uint8_t reset_buffer[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  response.confirmation = send_buffer(reset_buffer);
+  return response.confirmation;
 }
 
 void SrHazardLights::close_device()

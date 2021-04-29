@@ -25,6 +25,7 @@
 #include <string>
 #include <sr_hazard_light/Status.h>
 #include <sr_hazard_light/SetHazardLight.h>
+#include <sr_hazard_light/ResetHazardLight.h>
 
 class SrHazardLights
 {
@@ -34,6 +35,7 @@ class SrHazardLights
         void start(int publishing_rate);
         void stop();
         ros::ServiceServer hazard_light_service;
+        ros::ServiceServer reset_hazard_light_service;
 
     private:
         ros::NodeHandle nh_ = ros::NodeHandle();
@@ -68,6 +70,8 @@ class SrHazardLights
         void close_device();
         bool change_hazard_light(sr_hazard_light::SetHazardLight::Request &request,
                                  sr_hazard_light::SetHazardLight::Response &response);
+        bool reset_hazard_light(sr_hazard_light::ResetHazardLight::Request &request,
+                                 sr_hazard_light::ResetHazardLight::Response &response);
         bool set_light(int pattern, std::string colour, int duration, bool reset);
         bool set_buzzer(int pattern, int tonea, int toneb, int duration, int reset);
         bool send_buffer(std::uint8_t sent_buffer[8]);
