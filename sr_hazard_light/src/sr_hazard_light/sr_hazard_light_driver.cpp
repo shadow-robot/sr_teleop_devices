@@ -41,11 +41,9 @@ SrHazardLights::SrHazardLights()
   reset_hazard_light_service = nh_.advertiseService("sr_hazard_light/reset_hazard_light",
                          &SrHazardLights::reset_hazard_light, this);
 
-  light_timer = nh_.createTimer(ros::Duration(10), &SrHazardLights::light_timer_cb, this, true, false);
-  buzzer_timer = nh_.createTimer(ros::Duration(10), &SrHazardLights::buzzer_timer_cb, this, true, false);
-
   default_buffer = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   current_buffer = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  timer_key = 0;
 }
 
 SrHazardLights::~SrHazardLights()
@@ -164,12 +162,11 @@ bool SrHazardLights::open_device()
   return true;
 };
 
-
 bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Request &request,
                                       sr_hazard_light::SetHazardLight::Response &response)
 {
-  sr_hazard_light::SetLight light = request.light;
-  sr_hazard_light::SetBuzzer buzzer = request.buzzer;
+  std::vector<sr_hazard_light::SetLight> light = request.light;
+  std::vector<sr_hazard_light::SetBuzzer> buzzer = request.buzzer;
 
   if (!patlite_handle)
   {
@@ -180,69 +177,31 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
     }
   }
 
-  bool set_light_result, set_buzzer_result;
-
-  set_light_result = set_light(light.pattern, light.colour,
-                                 light.duration, light.reset);
-
-  // set_buzzer_result = true;
-  set_buzzer_result = set_buzzer(buzzer.pattern, buzzer.tonea, 
-                                   buzzer.toneb, buzzer.duration,
-                                   buzzer.reset);
-
-
-  if (set_light_result && set_buzzer_result)
+  bool complete_commands = true;
+  for (size_t light_cmd = 0; light_cmd < light.size(); light_cmd++) 
   {
-    response.confirmation = true;
-    return true;
+    bool set_light_result = set_light(light[light_cmd].pattern,
+                                      light[light_cmd].colour,
+                                      light[light_cmd].duration,
+                                      light[light_cmd].reset);
+    if (set_light_result && !complete_commands)
+      complete_commands = false;
   }
-  else
+
+  for(size_t buzzer_cmd = 0; buzzer_cmd < buzzer.size(); buzzer_cmd++)
   {
-    response.confirmation = false;
-    return false;
+    bool set_buzzer_result = set_buzzer(buzzer[buzzer_cmd].pattern,
+                                        buzzer[buzzer_cmd].tonea,
+                                        buzzer[buzzer_cmd].toneb,
+                                        buzzer[buzzer_cmd].duration,
+                                        buzzer[buzzer_cmd].reset);
+    if (set_buzzer_result && !complete_commands)
+      complete_commands = false;
   }
+
+  response.confirmation = complete_commands;
+  return response.confirmation;
 }
-
-// bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Request &request,
-//                                       sr_hazard_light::SetHazardLight::Response &response)
-// {
-//   std::vector<sr_hazard_light::SetLight> light = request.light;
-//   std::vector<sr_hazard_light::SetBuzzer> buzzer = request.buzzer;
-
-//   if (!patlite_handle)
-//   {
-//     if (!SrHazardLights::open_device())
-//     {
-//       ROS_ERROR("Hazard light set failed, return false\n");
-//       return false;
-//     }
-//   }
-
-//   bool set_light_result, set_buzzer_result;
-//   for (size_t light_cmd = 0; light_cmd < light.size(); light_cmd++) 
-//   {
-//     set_light_result = set_light(light[light_cmd].pattern, light[light_cmd].colour,
-//                                  light[light_cmd].duration, light[light_cmd].reset);
-//   }
-
-//   for(size_t buzzer_cmd = 0; buzzer_cmd < buzzer.size(); buzzer_cmd++)
-//   {
-//     set_buzzer_result = set_buzzer(buzzer[buzzer_cmd].pattern, buzzer[buzzer_cmd].tonea, 
-//                                    buzzer[buzzer_cmd].toneb, buzzer[buzzer_cmd].duration,
-//                                    buzzer[buzzer_cmd].reset);
-//   }
-
-//     if (set_light_result && set_buzzer_result)
-//     {
-//       response.confirmation = true;
-//       return true;
-//     }
-//     else
-//     {
-//       response.confirmation = false;
-//       return false;
-//     }
-// }
 
 
 bool SrHazardLights::set_light(int pattern, std::string colour, int duration, bool reset)
@@ -256,33 +215,23 @@ bool SrHazardLights::set_light(int pattern, std::string colour, int duration, bo
       green_light_ = false;
   }
   
-  if (pattern > 9 || pattern < 0)
+  if (pattern > 9 || pattern < 0 || duration < 0)
   {
-    ROS_ERROR("Number chosen for light pattern is out of range");
+    ROS_ERROR("Number or duration chosen for light pattern is out of range");
     return false;
   }
-
-  if (duration < 0)
-  {
-    ROS_ERROR("Duration cannot be negative");
-    return false;
-  }
-
 
   std::list<std::string> colours = {"red", "orange", "green"};
   if (std::find(std::begin(colours), std::end(colours), colour) != std::end(colours))
   {
-    // can't use a swtich statement with strings
     if (colour == "red")
     {
       current_buffer[4] = (pattern << 4) | (current_buffer[4] & 0x0F);
       red_light_ = true;
-      ROS_INFO_STREAM("RED: " << static_cast<int16_t>(current_buffer[4] >> 4) << ", ");
     }
     else if (colour == "orange")
     {
       current_buffer[4] = (current_buffer[4] & 0xF0) | pattern;
-      ROS_INFO_STREAM("ORANGE: " << static_cast<int16_t>(current_buffer[4]) << ", ");
       orange_light_ = true;
     }
     else if (colour == "green")
@@ -302,7 +251,7 @@ bool SrHazardLights::set_light(int pattern, std::string colour, int duration, bo
     default_buffer[4] = current_buffer[4];
     default_buffer[5] = current_buffer[5];
     std::uint8_t* sent_buffer = &default_buffer[0];
-    ROS_ERROR("stuck");
+    ROS_ERROR("default light");
     ROS_INFO_STREAM("light default buffer: \n");
     for (int i = 0; i < 8; i++)
     {
@@ -324,9 +273,16 @@ bool SrHazardLights::set_light(int pattern, std::string colour, int duration, bo
     retval = send_buffer(sent_buffer);
     if (retval)
     {
-      ROS_ERROR("retval true");
+      ROS_ERROR("starting light timer");
+      ++timer_key;
+      ROS_INFO_STREAM("timer key:" << timer_key);
+      ros::Timer light_timer = nh_.createTimer(ros::Duration(duration), std::bind(&SrHazardLights::light_timer_cb, this, timer_key), true, true);
       light_timer.setPeriod(ros::Duration(duration), true);
       light_timer.start();
+      light_timers.insert(std::pair<long,ros::Timer>(timer_key, light_timer));
+      std::map<long, ros::Timer>::iterator itr;
+      for (itr = light_timers.begin(); itr != light_timers.end(); ++itr) {
+        ROS_INFO_STREAM('\t' << itr->first << '\n'); }
     }
     else
       return retval;
@@ -343,15 +299,9 @@ bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration,
     buzzer_on_ = false;
   }
 
-  if (pattern < 0 || pattern > 9 || tonea > 15 || toneb > 15 || pattern < 0 || tonea < 0 || toneb < 0)
+  if (pattern < 0 || pattern > 9 || tonea > 15 || toneb > 15 || pattern < 0 || tonea < 0 || toneb < 0 || duration < 0)
   {
-    ROS_ERROR("Number chosen for buzzer is out of range");
-    return false;
-  }
-
-  if (duration < 0)
-  {
-    ROS_ERROR("Duration cannot be negative");
+    ROS_ERROR("Number or duration chosen for buzzer is out of range");
     return false;
   }
 
@@ -374,7 +324,7 @@ bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration,
     default_buffer[3] = current_buffer[3];
     int retval, rs = 0;
     std::uint8_t* sent_buffer = &default_buffer[0];
-    ROS_ERROR("stuck 1");
+    ROS_ERROR("default buzzer");
     ROS_INFO_STREAM("buzzer default buffer: \n");
     for (int i = 0; i < 8; i++)
     {
@@ -396,9 +346,12 @@ bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration,
     retval = send_buffer(sent_buffer);
     if (retval)
     {
-      ROS_ERROR("retval buzzer true");
+      ROS_ERROR("starting buzzer timer");
+      ++timer_key;
+      ros::Timer buzzer_timer = nh_.createTimer(ros::Duration(duration), std::bind(&SrHazardLights::buzzer_timer_cb, this, timer_key), true, true);
       buzzer_timer.setPeriod(ros::Duration(duration), true);
       buzzer_timer.start();
+      buzzer_timers.insert(std::pair<long,ros::Timer>(timer_key,buzzer_timer));
     }
     else
       return retval;
@@ -421,7 +374,7 @@ bool SrHazardLights::send_buffer(std::uint8_t sent_buffer[8])
   return true;
 }
 
-void SrHazardLights::light_timer_cb(const ros::TimerEvent& event)
+void SrHazardLights::light_timer_cb(long timer_key_remove)
 {
   int retval, rs = 0;
   std::vector<uint8_t> reset_buffer = {0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
@@ -451,9 +404,10 @@ void SrHazardLights::light_timer_cb(const ros::TimerEvent& event)
 
   current_buffer[4] = default_buffer[4];
   current_buffer[5] = default_buffer[5];
+  light_timers.erase(timer_key_remove);
 }
 
-void SrHazardLights::buzzer_timer_cb(const ros::TimerEvent& event)
+void SrHazardLights::buzzer_timer_cb(long timer_key_remove)
 {
   int retval, rs = 0;
   std::vector<uint8_t> reset_buffer = {0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00};
@@ -479,6 +433,7 @@ void SrHazardLights::buzzer_timer_cb(const ros::TimerEvent& event)
 
   current_buffer[2] = default_buffer[2];
   current_buffer[3] = default_buffer[3];
+  buzzer_timers.erase(timer_key_remove);
 }
 
 bool SrHazardLights::reset_hazard_light(sr_hazard_light::ResetHazardLight::Request &request,
@@ -486,6 +441,8 @@ bool SrHazardLights::reset_hazard_light(sr_hazard_light::ResetHazardLight::Reque
 {
   ROS_INFO("Resetting hazard light.");
   uint8_t reset_buffer[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  light_timers.clear();
+  buzzer_timers.clear();
   response.confirmation = send_buffer(reset_buffer);
   return response.confirmation;
 }

@@ -23,6 +23,7 @@
 #include <thread>  // NOLINT(build/c++11)
 #include <vector>
 #include <string>
+#include <map>
 #include <sr_hazard_light/Status.h>
 #include <sr_hazard_light/SetHazardLight.h>
 #include <sr_hazard_light/ResetHazardLight.h>
@@ -51,16 +52,9 @@ class SrHazardLights
         bool orange_light_;
         bool green_light_;
         bool buzzer_on_;
-        ros::Timer light_timer;
-        ros::Timer buzzer_timer;
-
-        struct hazard_light_ongoing_settings
-        {
-            bool red;
-            bool orange;
-            bool green;
-            bool buzzer;
-        };
+        std::map<long, ros::Timer> light_timers;
+        std::map<long, ros::Timer> buzzer_timers;
+        int timer_key;
 
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
         std::vector<uint8_t> default_buffer = std::vector<uint8_t>(8);
@@ -75,8 +69,8 @@ class SrHazardLights
         bool set_light(int pattern, std::string colour, int duration, bool reset);
         bool set_buzzer(int pattern, int tonea, int toneb, int duration, int reset);
         bool send_buffer(std::uint8_t sent_buffer[8]);
-        void light_timer_cb(const ros::TimerEvent& event);
-        void buzzer_timer_cb(const ros::TimerEvent& event);
+        void light_timer_cb(long timer_key_remove);
+        void buzzer_timer_cb(long timer_key_remove);
         void detect_device_event(libusb_hotplug_event event);
         int on_usb_hotplug(struct libusb_context *ctx,
                            struct libusb_device *device,
