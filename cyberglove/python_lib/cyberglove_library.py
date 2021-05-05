@@ -153,7 +153,7 @@ class Cyberglove:
 
         @return: the joints names array
         """
-        return self.joints.keys()
+        return list(self.joints.keys())
 
     def has_glove(self):
         """

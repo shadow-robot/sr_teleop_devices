@@ -84,12 +84,12 @@ class MappingMinimizer:
 
         if(self.verbose == 1):
             for conf in self.configurations:
-                print "-------"
-                print conf.description
-                print conf.glove_data
-                print conf.hand_data
-            print "-------"
-            print ""
+                print("-------")
+                print(conf.description)
+                print(conf.glove_data)
+                print(conf.hand_data)
+            print("-------")
+            print("")
 
         self.minerror = 1000000
         self.maxerror = 0
@@ -206,7 +206,7 @@ class MappingMinimizer:
                         error += (computed_hand_data-hand_data)*(computed_hand_data-hand_data)
 
         if self.verbose == 1:
-            print "error: "+str(error)
+            print("error: "+str(error))
 
         if error < self.minerror:
             self.minerror = error
@@ -222,8 +222,8 @@ class MappingMinimizer:
         """
         vector_hand = []
         index_col = 0
-        print vector_glove
-        print matrix
+        print(vector_glove)
+        print(matrix)
         for glove_data in vector_glove:
             data = 0
             for line in matrix:
@@ -239,8 +239,8 @@ class MappingMinimizer:
         """
         self.simplex_iteration_index += 1
         if self.simplex_iteration_index % 50 == 0:
-            print "-------------------------"
-            print "iteration number: " + str(self.simplex_iteration_index)
+            print("-------------------------")
+            print("iteration number: " + str(self.simplex_iteration_index))
             # print xk
 
     def minimize(self):
@@ -261,8 +261,8 @@ class MappingMinimizer:
                 line.append(xopt[i*len(self.thumb_hand)+j])
             output.append(line)
 
-        print "min error: " + str(self.minerror)
-        print "max error: " + str(self.maxerror)
+        print("min error: " + str(self.minerror))
+        print("max error: " + str(self.maxerror))
 
         return output
 
@@ -315,8 +315,8 @@ class MappingMinimizer:
         thumb_mapping = self.minimize()
 
         # fill the matrix with the thumb values computed with the simplex
-        for glove_name in self.thumb_glove.keys():
-            for hand_name in self.thumb_hand.keys():
+        for glove_name in list(self.thumb_glove.keys()):
+            for hand_name in list(self.thumb_hand.keys()):
                 # indexes in the computed thumb mapping matrix
                 tmp_index_glove = self.thumb_glove[glove_name]
                 tmp_index_hand = self.thumb_hand[hand_name]
@@ -341,16 +341,16 @@ class MappingMinimizer:
 
     def record(self, config):
         for i in range(0, 2):
-            raw_input(str(i) + ": " + config.description)
+            input(str(i) + ": " + config.description)
             vector_data = [0] * len(self.thumb_glove)
-            for sensor_name in self.thumb_glove.keys():
+            for sensor_name in list(self.thumb_glove.keys()):
                 data = self.cyberglove.read_calibrated_average_value(sensor_name)
                 vector_data[self.thumb_glove[sensor_name]] = data
             config.glove_data.append(vector_data)
 
         if(self.verbose == 1):
-            print "read values:"
-            print config.glove_data
+            print("read values:")
+            print(config.glove_data)
 
 
 ##############
