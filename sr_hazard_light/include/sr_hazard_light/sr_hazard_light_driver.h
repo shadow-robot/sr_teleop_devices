@@ -28,6 +28,11 @@
 #include <sr_hazard_light/SetHazardLight.h>
 #include <sr_hazard_light/ResetHazardLight.h>
 
+struct hazard_light_data {
+    ros::Timer timer;
+    std::vector<uint8_t> buffer = std::vector<uint8_t>(8);;
+};
+
 class SrHazardLights
 {
     public:
@@ -52,8 +57,12 @@ class SrHazardLights
         bool orange_light_;
         bool green_light_;
         bool buzzer_on_;
+        // std::map<long, hazard_light_data> red_light_timers;
+        // std::map<long, ros::Timer> orange_light_timers;
+        // std::map<long, ros::Timer> green_light_timers;
         std::map<long, ros::Timer> light_timers;
-        std::map<long, ros::Timer> buzzer_timers;
+        std::map<long, hazard_light_data> buzzer_timers;
+        int default_key = 0;
         int timer_key;
 
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
