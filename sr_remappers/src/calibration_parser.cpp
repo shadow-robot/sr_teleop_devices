@@ -33,7 +33,7 @@
 #include <string>
 #include <vector>
 
-constexpr const std::string CalibrationParser::default_path = "/etc/robot/mappings/default_mapping";
+const std::string CalibrationParser::default_path = "/etc/robot/mappings/default_mapping";
 
 CalibrationParser::CalibrationParser()
 {
