@@ -80,7 +80,7 @@ class SrHazardLights
 
         bool set_buzzer(int pattern, int tonea, int toneb, int duration, int reset);
         bool send_buffer(std::uint8_t sent_buffer[8]);
-        void light_timer_cb(long timer_key_remove, std::string colour);
+        void light_timer_cb(long timer_key_remove, std::map<long, hazard_light_data> light_timer_map);
         void buzzer_timer_cb(long timer_key_remove);
         void detect_device_event(libusb_hotplug_event event);
         int on_usb_hotplug(struct libusb_context *ctx,
