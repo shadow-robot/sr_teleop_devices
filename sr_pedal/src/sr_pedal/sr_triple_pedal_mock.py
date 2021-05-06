@@ -49,14 +49,14 @@ class SrPedalMock():
         if self._kb_listener is not None:
             self._kb_listener.start()
             rospy.loginfo("Mock pedal keyboard control enabled." + "\n" +
-                "╔════════════╦═════════════════════════╗" + "\n" +
-                "║  Control   ║         Effect          ║" + "\n" +
-                "╠════════════╬═════════════════════════╣" + "\n" +
-                "║ ctrl+alt+5 ║ Toggle pedal connection ║" + "\n" +
-                "║ ctrl+alt+6 ║ Toggle left pedal       ║" + "\n" +
-                "║ ctrl+alt+7 ║ Toggle middle pedal     ║" + "\n" +
-                "║ ctrl+alt+8 ║ Toggle right pedal      ║" + "\n" +
-                "╚════════════╩═════════════════════════╝")
+                          "╔════════════╦═════════════════════════╗" + "\n" +
+                          "║  Control   ║         Effect          ║" + "\n" +
+                          "╠════════════╬═════════════════════════╣" + "\n" +
+                          "║ ctrl+alt+5 ║ Toggle pedal connection ║" + "\n" +
+                          "║ ctrl+alt+6 ║ Toggle left pedal       ║" + "\n" +
+                          "║ ctrl+alt+7 ║ Toggle middle pedal     ║" + "\n" +
+                          "║ ctrl+alt+8 ║ Toggle right pedal      ║" + "\n" +
+                          "╚════════════╩═════════════════════════╝")
         self._thread.start()
 
     def _publish_thread(self):
