@@ -32,10 +32,10 @@
 #include <string>
 #include <vector>
 
+const char CalibrationParser::default_path[] = "/etc/robot/mappings/default_mapping";
 
 CalibrationParser::CalibrationParser()
 {
-    const char CalibrationParser::default_path[] = "/etc/robot/mappings/default_mapping";
     ROS_WARN("No calibration path was specified, using default path");
     init(default_path);
 }
