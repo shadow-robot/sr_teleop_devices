@@ -258,12 +258,6 @@ bool::SrHazardLights::update_red_light(int pattern, int duration, bool reset)
   buffer[4] = (pattern << 4) | (buffer[4] & 0x0F);
   std::uint8_t* sent_buffer = &buffer[0];
   bool retval = send_buffer(sent_buffer);
-  ROS_INFO_STREAM("red light buffer: \n");
-  for (int i = 0; i < 8; i++)
-  {
-    ROS_INFO_STREAM(static_cast<int16_t>(sent_buffer[i]) << ", ");
-  }
-  ROS_INFO_STREAM("\n");
   if (!retval)
     return false;
 
@@ -278,21 +272,11 @@ bool::SrHazardLights::update_red_light(int pattern, int duration, bool reset)
   }
   else
   {
-    ROS_ERROR("starting red light timer");
     ++timer_key;
-    ROS_INFO_STREAM("red map size:" << red_light_timers.size());
-    ROS_INFO_STREAM("red timer key:" << timer_key);
     ros::Timer light_timer = nh_.createTimer(ros::Duration(duration), std::bind(&SrHazardLights::timer_cb, this, timer_key, &red_light_timers), true, true);
     light_timer.setPeriod(ros::Duration(duration), true);
     light_timer.start();
     red_light_timers.insert(std::pair<long,hazard_light_data>(timer_key, {light_timer, buffer}));
-    ROS_INFO_STREAM("red map size:" << red_light_timers.size());
-    ROS_INFO_STREAM("red map:");
-    std::map<long, hazard_light_data>::iterator itr;
-    for (itr = red_light_timers.begin(); itr != red_light_timers.end(); ++itr)
-    {
-      ROS_INFO_STREAM('\t' << itr->first << '\n');
-    }
   }
   return true;
 }
@@ -309,12 +293,6 @@ bool::SrHazardLights::update_orange_light(int pattern, int duration, bool reset)
   buffer[4] = (buffer[4] & 0xF0) | pattern;
   std::uint8_t* sent_buffer = &buffer[0];
   bool retval = send_buffer(sent_buffer);
-  ROS_INFO_STREAM("red light buffer: \n");
-  for (int i = 0; i < 8; i++)
-  {
-    ROS_INFO_STREAM(static_cast<int16_t>(sent_buffer[i]) << ", ");
-  }
-  ROS_INFO_STREAM("\n");
   if (!retval)
     return false;
 
@@ -329,21 +307,11 @@ bool::SrHazardLights::update_orange_light(int pattern, int duration, bool reset)
   }
   else
   {
-    ROS_ERROR("starting orange light timer");
     ++timer_key;
-    ROS_INFO_STREAM("orange map size:" << orange_light_timers.size());
-    ROS_INFO_STREAM("orange timer key:" << timer_key);
     ros::Timer light_timer = nh_.createTimer(ros::Duration(duration), std::bind(&SrHazardLights::timer_cb, this, timer_key, &orange_light_timers), true, true);
     light_timer.setPeriod(ros::Duration(duration), true);
     light_timer.start();
     orange_light_timers.insert(std::pair<long,hazard_light_data>(timer_key, {light_timer, buffer}));
-    ROS_INFO_STREAM("orange map size:" << orange_light_timers.size());
-    ROS_INFO_STREAM("orange map:");
-    std::map<long, hazard_light_data>::iterator itr;
-    for (itr = orange_light_timers.begin(); itr != orange_light_timers.end(); ++itr)
-    {
-      ROS_INFO_STREAM('\t' << itr->first << '\n');
-    }
   }
   return true;
 }
@@ -360,12 +328,6 @@ bool::SrHazardLights::update_green_light(int pattern, int duration, bool reset)
   buffer[4] = (pattern << 4) | (buffer[4] & 0x0F);
   std::uint8_t* sent_buffer = &buffer[0];
   bool retval = send_buffer(sent_buffer);
-  ROS_INFO_STREAM("green light buffer: \n");
-  for (int i = 0; i < 8; i++)
-  {
-    ROS_INFO_STREAM(static_cast<int16_t>(sent_buffer[i]) << ", ");
-  }
-  ROS_INFO_STREAM("\n");
   if (!retval)
     return false;
 
@@ -380,21 +342,11 @@ bool::SrHazardLights::update_green_light(int pattern, int duration, bool reset)
   }
   else
   {
-    ROS_ERROR("starting green light timer");
     ++timer_key;
-    ROS_INFO_STREAM("green map size:" << green_light_timers.size());
-    ROS_INFO_STREAM("green timer key:" << timer_key);
     ros::Timer light_timer = nh_.createTimer(ros::Duration(duration), std::bind(&SrHazardLights::timer_cb, this, timer_key, &green_light_timers), true, true);
     light_timer.setPeriod(ros::Duration(duration), true);
     light_timer.start();
     green_light_timers.insert(std::pair<long,hazard_light_data>(timer_key, {light_timer, buffer}));
-    ROS_INFO_STREAM("green map size:" << green_light_timers.size());
-    ROS_INFO_STREAM("green map:");
-    std::map<long, hazard_light_data>::iterator itr;
-    for (itr = green_light_timers.begin(); itr != green_light_timers.end(); ++itr)
-    {
-      ROS_INFO_STREAM('\t' << itr->first << '\n');
-    }
   }
   return true;
 }
@@ -419,12 +371,6 @@ bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration,
   buffer[3] = (tonea << 4) + toneb;
   std::uint8_t* sent_buffer = &buffer[0];
   bool retval = send_buffer(sent_buffer);
-  ROS_INFO_STREAM("buzzer buffer: \n");
-  for (int i = 0; i < 8; i++)
-  {
-    ROS_INFO_STREAM(static_cast<int16_t>(sent_buffer[i]) << ", ");
-  }
-  ROS_INFO_STREAM("\n");
   if (!retval)
     return false;
 
@@ -440,20 +386,11 @@ bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration,
   }
   else
   {
-    ROS_ERROR("starting buzzer timer");
-    ROS_INFO_STREAM("map size:" << buzzer_timers.size());
     ++timer_key;
-    ROS_INFO_STREAM("timer key:" << timer_key);
     ros::Timer buzzer_timer = nh_.createTimer(ros::Duration(duration), std::bind(&SrHazardLights::timer_cb, this, timer_key, &buzzer_timers), true, true);
     buzzer_timer.setPeriod(ros::Duration(duration), true);
     buzzer_timer.start();
     buzzer_timers.insert(std::pair<long, hazard_light_data>(timer_key, {buzzer_timer, buffer}));
-    std::map<long, hazard_light_data>::iterator itr;
-    ROS_INFO_STREAM("INTERATION: ");
-    for (itr = buzzer_timers.begin(); itr != buzzer_timers.end(); ++itr) {
-      ROS_INFO_STREAM('\t' << itr->first << '\n'); 
-    }
-    ROS_INFO_STREAM("map size:" << buzzer_timers.size());
   }
   return true;
 }
@@ -474,22 +411,13 @@ bool SrHazardLights::send_buffer(std::uint8_t sent_buffer[8])
 
 void SrHazardLights::timer_cb(long timer_key_remove, std::map<long, hazard_light_data>* timer_map)
 {
-  ROS_INFO_STREAM("map size COLOUR start of cb:" << timer_map->size());
   std::pair<long, hazard_light_data> reset_data = *(std::prev(timer_map->find(timer_key_remove)));
-
   if (++timer_map->find(timer_key_remove) == timer_map->end())
   {
-    ROS_INFO_STREAM("light return: " << reset_data.first << " and ");
     std::uint8_t* reset_buf = &reset_data.second.buffer[0];
-    ROS_INFO_STREAM("light RESET buffer: \n");
-    for (int i = 0; i < 8; i++)
-    {
-      ROS_INFO_STREAM(static_cast<int16_t>(reset_buf[i]) << ", ");
-    }
-    ROS_INFO_STREAM("\n");
+
     int retval, rs = 0;
     retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, reset_buf, BUFFER_SIZE, &rs, 1000);
-    ROS_ERROR("Here light 1");
     if (retval)
     {
       ROS_ERROR("Hazard light failed to set with error: %s\n", libusb_error_name(retval));
@@ -509,50 +437,6 @@ void SrHazardLights::timer_cb(long timer_key_remove, std::map<long, hazard_light
     timer_map->erase(timer_key_remove);
   } else
       timer_map->erase(timer_key_remove);
-  ROS_INFO_STREAM("map size COLOUR cb:" << timer_map->size());
-  std::map<long, hazard_light_data>::iterator itr;
-  ROS_INFO_STREAM("INTERATION COLOUR 222: ");
-  for (itr = timer_map->begin(); itr != timer_map->end(); ++itr)
-  {
-    ROS_INFO_STREAM('\t' << itr->first << '\n'); 
-  }
-}
-
-void SrHazardLights::buzzer_timer_cb(long timer_key_remove)
-{
-  ROS_INFO_STREAM("TIMER KEY REMOVE: " << timer_key_remove);
-  if (buzzer_timers.size() < 3){
-    std::pair<long, hazard_light_data> reset_data = *(std::prev(buzzer_timers.find(timer_key_remove)));
-    ROS_INFO_STREAM("buzzer return: " << reset_data.first << " and ");
-    std::uint8_t* reset_buf = &reset_data.second.buffer[0];
-    ROS_INFO_STREAM("buzzer RESET buffer: \n");
-    for (int i = 0; i < 8; i++)
-    {
-      ROS_INFO_STREAM(static_cast<int16_t>(reset_buf[i]) << ", ");
-    }
-    ROS_INFO_STREAM("\n");
-    int retval, rs = 0;
-    retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, reset_buf, BUFFER_SIZE, &rs, 1000);
-    ROS_ERROR("Here buzzer 1");
-    if (retval)
-    {
-      ROS_ERROR("Hazard light failed to set with error: %s\n", libusb_error_name(retval));
-      libusb_close(patlite_handle);
-      patlite_handle = 0;
-    }
-    if ((reset_data.second.buffer[2] & 0x0F) == 0x00)
-      buzzer_on_ = false;
-    
-    buzzer_timers.erase(timer_key_remove);
-  } else
-      buzzer_timers.erase(timer_key_remove);
-  ROS_INFO_STREAM("map size cb:" << buzzer_timers.size());
-  std::map<long, hazard_light_data>::iterator itr;
-  ROS_INFO_STREAM("INTERATION 222: ");
-  for (itr = buzzer_timers.begin(); itr != buzzer_timers.end(); ++itr) {
-    ROS_INFO_STREAM('\t' << itr->first << '\n'); 
-  }
-
 }
 
 bool SrHazardLights::reset_hazard_light(sr_hazard_light::ResetHazardLight::Request &request,
@@ -618,11 +502,6 @@ void SrHazardLights::hotplug_loop()
     libusb_handle_events_completed(context_, nullptr);
     ros::Rate(publishing_rate_).sleep();
   }
-}
-
-void SrHazardLights::read_buffer()
-{
-  ROS_INFO("HELLO");
 }
 
 void SrHazardLights::publish_hazard_light_data()

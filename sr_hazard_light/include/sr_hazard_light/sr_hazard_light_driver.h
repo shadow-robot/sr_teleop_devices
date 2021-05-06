@@ -76,11 +76,9 @@ class SrHazardLights
         bool update_red_light(int pattern, int duration, bool reset);
         bool update_orange_light(int pattern, int duration, bool reset);
         bool update_green_light(int pattern, int duration, bool reset);
-
         bool set_buzzer(int pattern, int tonea, int toneb, int duration, int reset);
         bool send_buffer(std::uint8_t sent_buffer[8]);
         void timer_cb(long timer_key_remove, std::map<long, hazard_light_data>* timer_map);
-        void buzzer_timer_cb(long timer_key_remove);
         void detect_device_event(libusb_hotplug_event event);
         int on_usb_hotplug(struct libusb_context *ctx,
                            struct libusb_device *device,
@@ -90,7 +88,6 @@ class SrHazardLights
                                            libusb_hotplug_event event,
                                            void* discovery);
         void hotplug_loop();
-        void read_buffer();
         void publish_hazard_light_data();
 };
 
