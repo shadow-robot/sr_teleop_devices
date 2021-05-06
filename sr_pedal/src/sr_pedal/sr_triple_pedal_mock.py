@@ -139,7 +139,8 @@ if __name__ == "__main__":
     middle_pressed = rospy.get_param("~middle_pressed", False)
     right_pressed = rospy.get_param("~right_pressed", False)
     keyboard_control = rospy.get_param("~keyboard_control", False)
-    sr_pedal_mock = SrPedalMock(connected, left_pressed, middle_pressed, right_pressed, rate, keyboard_control)
+    sr_pedal_mock = SrPedalMock(
+        connected, left_pressed, middle_pressed, right_pressed, rate, keyboard_control)
     sr_pedal_mock.run()
     rospy.spin()
     sr_pedal_mock.stop()

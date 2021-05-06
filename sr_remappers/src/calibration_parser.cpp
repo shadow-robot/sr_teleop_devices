@@ -24,7 +24,6 @@
 */
 
 #include <ros/ros.h>
-
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/find_iterator.hpp>
@@ -33,10 +32,10 @@
 #include <string>
 #include <vector>
 
-const std::string CalibrationParser::default_path = "/etc/robot/mappings/default_mapping";
 
 CalibrationParser::CalibrationParser()
 {
+    std::string CalibrationParser::default_path = "/etc/robot/mappings/default_mapping";
     ROS_WARN("No calibration path was specified, using default path");
     init(default_path);
 }
