@@ -60,14 +60,11 @@ class SrHazardLights
         std::map<long, hazard_light_data> red_light_timers;
         std::map<long, hazard_light_data> orange_light_timers;
         std::map<long, hazard_light_data> green_light_timers;
-        std::map<long, ros::Timer> light_timers;
         std::map<long, hazard_light_data> buzzer_timers;
         int default_key = 0;
         int timer_key;
 
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
-        std::vector<uint8_t> default_buffer = std::vector<uint8_t>(8);
-        std::vector<uint8_t> current_buffer = std::vector<uint8_t>(8);
 
         bool open_device();
         void close_device();
@@ -77,10 +74,12 @@ class SrHazardLights
                                  sr_hazard_light::ResetHazardLight::Response &response);
         bool set_light(int pattern, std::string colour, int duration, bool reset);
         bool update_red_light(int pattern, int duration, bool reset);
+        bool update_orange_light(int pattern, int duration, bool reset);
+        bool update_green_light(int pattern, int duration, bool reset);
 
         bool set_buzzer(int pattern, int tonea, int toneb, int duration, int reset);
         bool send_buffer(std::uint8_t sent_buffer[8]);
-        void light_timer_cb(long timer_key_remove, std::map<long, hazard_light_data> light_timer_map);
+        void timer_cb(long timer_key_remove, std::map<long, hazard_light_data>* timer_map);
         void buzzer_timer_cb(long timer_key_remove);
         void detect_device_event(libusb_hotplug_event event);
         int on_usb_hotplug(struct libusb_context *ctx,
