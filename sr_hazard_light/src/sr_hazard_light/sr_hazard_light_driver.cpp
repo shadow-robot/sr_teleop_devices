@@ -257,27 +257,34 @@ bool::SrHazardLights::update_red_light(int pattern, int duration, bool reset)
   std::vector<uint8_t> buffer = {0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
   buffer[4] = (pattern << 4) | (buffer[4] & 0x0F);
   std::uint8_t* sent_buffer = &buffer[0];
-  bool retval = send_buffer(sent_buffer);
-  if (!retval)
-    return false;
-
-  if (pattern != 0)
-    red_light_ = true;
-  else
-    red_light_ = false;
 
   if (duration == 0)
   {
     red_light_timers[default_key].buffer = buffer;
+    if (red_light_timers.size() == 1)
+    {
+      bool retval = send_buffer(sent_buffer);
+      if (!retval)
+        return false;
+    }
   }
   else
   {
+    bool retval = send_buffer(sent_buffer);
+    if (!retval)
+      return false;
     ++timer_key;
     ros::Timer light_timer = nh_.createTimer(ros::Duration(duration), std::bind(&SrHazardLights::timer_cb, this, timer_key, &red_light_timers), true, true);
     light_timer.setPeriod(ros::Duration(duration), true);
     light_timer.start();
     red_light_timers.insert(std::pair<long,hazard_light_data>(timer_key, {light_timer, buffer}));
   }
+
+  if (pattern != 0)
+    red_light_ = true;
+  else
+    red_light_ = false;
+
   return true;
 }
 
@@ -292,27 +299,34 @@ bool::SrHazardLights::update_orange_light(int pattern, int duration, bool reset)
   std::vector<uint8_t> buffer = {0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
   buffer[4] = (buffer[4] & 0xF0) | pattern;
   std::uint8_t* sent_buffer = &buffer[0];
-  bool retval = send_buffer(sent_buffer);
-  if (!retval)
-    return false;
-
-  if (pattern != 0)
-    orange_light_ = true;
-  else
-    orange_light_ = false;
 
   if (duration == 0)
   {
     orange_light_timers[default_key].buffer = buffer;
+    if (orange_light_timers.size() == 1)
+    {
+      bool retval = send_buffer(sent_buffer);
+      if (!retval)
+        return false;
+    }
   }
   else
   {
+    bool retval = send_buffer(sent_buffer);
+    if (!retval)
+      return false;
     ++timer_key;
     ros::Timer light_timer = nh_.createTimer(ros::Duration(duration), std::bind(&SrHazardLights::timer_cb, this, timer_key, &orange_light_timers), true, true);
     light_timer.setPeriod(ros::Duration(duration), true);
     light_timer.start();
     orange_light_timers.insert(std::pair<long,hazard_light_data>(timer_key, {light_timer, buffer}));
   }
+
+  if (pattern != 0)
+    orange_light_ = true;
+  else
+    orange_light_ = false;
+
   return true;
 }
 
@@ -320,34 +334,41 @@ bool::SrHazardLights::update_green_light(int pattern, int duration, bool reset)
 {
   if (reset == true)
   {
-      green_light_timers[default_key].buffer[4] = (green_light_timers[default_key].buffer[4] & 0x0F) | 0;
-      red_light_ = false;
+      green_light_timers[default_key].buffer[5] = (green_light_timers[default_key].buffer[5] & 0x0F) | 0;
+      green_light_ = false;
   }
 
   std::vector<uint8_t> buffer = {0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
-  buffer[4] = (pattern << 4) | (buffer[4] & 0x0F);
+  buffer[5] = (pattern << 4) | (buffer[5] & 0x0F);
   std::uint8_t* sent_buffer = &buffer[0];
-  bool retval = send_buffer(sent_buffer);
-  if (!retval)
-    return false;
-
-  if (pattern != 0)
-    green_light_ = true;
-  else
-    green_light_ = false;
 
   if (duration == 0)
   {
     green_light_timers[default_key].buffer = buffer;
+    if (green_light_timers.size() == 1)
+    {
+      bool retval = send_buffer(sent_buffer);
+      if (!retval)
+        return false;
+    }
   }
   else
   {
+    bool retval = send_buffer(sent_buffer);
+    if (!retval)
+      return false;
     ++timer_key;
     ros::Timer light_timer = nh_.createTimer(ros::Duration(duration), std::bind(&SrHazardLights::timer_cb, this, timer_key, &green_light_timers), true, true);
     light_timer.setPeriod(ros::Duration(duration), true);
     light_timer.start();
     green_light_timers.insert(std::pair<long,hazard_light_data>(timer_key, {light_timer, buffer}));
   }
+
+  if (pattern != 0)
+    green_light_ = true;
+  else
+    green_light_ = false;
+
   return true;
 }
 
