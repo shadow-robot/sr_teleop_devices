@@ -59,7 +59,7 @@ public:
 
   ros::Publisher cyberglove_pub;
 
-  
+  typedef threadsafe::Map<boost::shared_ptr<shadow_robot::JointCalibration>> CalibrationMap;
 
 
   /*
@@ -140,7 +140,6 @@ private:
   ros::Duration trajectory_delay_;
 };  // end class CybergloveTrajectoryPublisher
 
-typedef threadsafe::Map<boost::shared_ptr<shadow_robot::JointCalibration>> CalibrationMap;
 }  // namespace cyberglove
 
 #endif  // CYBERGLOVE_TRAJECTORY_CYBERGLOVE_TRAJECTORY_PUBLISHER_H_
