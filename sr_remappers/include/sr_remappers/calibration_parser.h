@@ -63,7 +63,7 @@ public:
   std::vector<double> get_remapped_vector(std::vector<double>);
 
 private:
-  static const char default_path[];
+  static const string default_path;
 
   /*
   * Open the given file and parses it into a matrix
@@ -84,6 +84,8 @@ private:
       ROS_ERROR("Bad calibration file: %s", s.c_str());
     return x;
   }
+
+
 };  // end class
 
 
