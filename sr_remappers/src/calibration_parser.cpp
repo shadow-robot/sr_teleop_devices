@@ -35,7 +35,7 @@
 
 CalibrationParser::CalibrationParser()
 {
-    std::string CalibrationParser::default_path[] = "/etc/robot/mappings/default_mapping";
+    std::string CalibrationParser::default_path = "/etc/robot/mappings/default_mapping";
     ROS_WARN("No calibration path was specified, using default path");
     init(default_path);
 }
