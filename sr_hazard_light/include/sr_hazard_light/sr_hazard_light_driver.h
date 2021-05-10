@@ -28,7 +28,8 @@
 #include <sr_hazard_light/SetHazardLight.h>
 #include <sr_hazard_light/ResetHazardLight.h>
 
-struct hazard_light_data {
+struct hazard_light_data
+{
     ros::Timer timer;
     std::vector<uint8_t> buffer = std::vector<uint8_t>(8);;
 };
