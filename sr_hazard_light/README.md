@@ -28,7 +28,7 @@ buzzer:
 ```
 where:
 
-| Varaible | Details | Values |
+| Variable | Details | Values |
 | :-------------:|:-------------:|:-------------:|
 | `light: pattern`| sets the LED control values for LED control of R/O/G | 0 off, 1-5 patterns |
 | `light: colour` | sets the LED colour | red, orange or green         |

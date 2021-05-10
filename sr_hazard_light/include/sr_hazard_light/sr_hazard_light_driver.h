@@ -31,7 +31,7 @@
 struct hazard_light_data
 {
     ros::Timer timer;
-    std::vector<uint8_t> buffer = std::vector<uint8_t>(8);;
+    std::vector<uint8_t> buffer = std::vector<uint8_t>(8);
 };
 
 class SrHazardLights
@@ -74,12 +74,13 @@ class SrHazardLights
         bool reset_hazard_light(sr_hazard_light::ResetHazardLight::Request &request,
                                  sr_hazard_light::ResetHazardLight::Response &response);
         bool set_light(int pattern, std::string colour, int duration);
-        bool update_red_light(int pattern, int duration);
-        bool update_orange_light(int pattern, int duration);
-        bool update_green_light(int pattern, int duration);
+        bool update_light(std::map<int16_t, hazard_light_data>& timer_map,
+                          std::vector<uint8_t> buffer, int duration);
         bool set_buzzer(int pattern, int tonea, int toneb, int duration);
         bool send_buffer(std::uint8_t sent_buffer[8]);
         void timer_cb(int16_t timer_key_remove, std::map<int16_t, hazard_light_data>* timer_map);
+        void publish_hazard_light_data();
+
         void detect_device_event(libusb_hotplug_event event);
         int on_usb_hotplug(struct libusb_context *ctx,
                            struct libusb_device *device,
@@ -89,7 +90,6 @@ class SrHazardLights
                                            libusb_hotplug_event event,
                                            void* discovery);
         void hotplug_loop();
-        void publish_hazard_light_data();
 };
 
 

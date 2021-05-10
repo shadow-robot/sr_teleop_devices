@@ -9,8 +9,8 @@
   <license>Public</license>
 
   <url type="website">http://www.shadowrobot.com</url>
-  <url type="repository">https://github.com/shadow-robot/sr_teleop_internal</url>
-  <url type="bugtracker">https://github.com/shadow-robot/sr_teleop_internal/issues</url>
+  <url type="repository">https://github.com/shadow-robot/sr_teleop_devices</url>
+  <url type="bugtracker">https://github.com/shadow-robot/sr_teleop_devices/issues</url>
 
   <author>Georgia Blanco-Litchfield</author>
 
