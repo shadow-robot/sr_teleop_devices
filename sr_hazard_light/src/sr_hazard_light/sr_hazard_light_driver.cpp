@@ -33,6 +33,8 @@
 
 static libusb_device_handle *patlite_handle = 0;
 
+
+
 SrHazardLights::SrHazardLights()
   :started_(false), context_(nullptr), connected_(false), detected_(false),
   red_light_(false), orange_light_(false), green_light_(false), buzzer_on_(false),
@@ -304,10 +306,7 @@ bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration)
   if (!retval)
     return false;
 
-  if (pattern != 0)
-    buzzer_on_ = true;
-  else
-    buzzer_on_ = false;
+  buzzer_on_ = pattern != 0;
 
   if (duration == 0)
   {
@@ -366,10 +365,8 @@ void SrHazardLights::timer_cb(int16_t timer_key_remove, std::map<int16_t, hazard
     else if ((reset_data.second.buffer[2] & 0x0F) == 0x00)
       buzzer_on_ = false;
 
-    timer_map->erase(timer_key_remove);
   }
-  else
-    timer_map->erase(timer_key_remove);
+  timer_map->erase(timer_key_remove);
 }
 
 bool SrHazardLights::reset_hazard_light(sr_hazard_light::ResetHazardLight::Request &request,

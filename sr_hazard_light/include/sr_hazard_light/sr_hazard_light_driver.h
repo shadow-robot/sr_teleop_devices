@@ -34,6 +34,28 @@ struct hazard_light_data
     std::vector<uint8_t> buffer = std::vector<uint8_t>(8);
 };
 
+class HazardEvent
+{
+    bool is_on;
+    std::map<int16_t, hazard_light_data> timer;
+
+    bool send_buffer(std::uint8_t sent_buffer[8]);
+    void timer_cb(int16_t timer_key_remove, std::map<int16_t, hazard_light_data>* timer_map);
+
+}
+
+class HazardLight : public HazardEvent
+{
+    bool set_light(int pattern, std::string colour, int duration);
+    bool update_light(std::map<int16_t, hazard_light_data>& timer_map,
+                        std::vector<uint8_t> buffer, int duration);
+}
+
+class HazardBuzzer : public HazardEvent
+{
+    bool set_buzzer(int pattern, int tonea, int toneb, int duration);
+}
+
 class SrHazardLights
 {
     public:
@@ -54,16 +76,13 @@ class SrHazardLights
         std::atomic<bool> detected_;
         libusb_hotplug_callback_handle hotplug_callback_handle_;
         std::thread hotplug_loop_thread_;
-        bool red_light_;
-        bool orange_light_;
-        bool green_light_;
-        bool buzzer_on_;
-        std::map<int16_t, hazard_light_data> red_light_timers;
-        std::map<int16_t, hazard_light_data> orange_light_timers;
-        std::map<int16_t, hazard_light_data> green_light_timers;
-        std::map<int16_t, hazard_light_data> buzzer_timers;
-        int default_key;
-        int timer_key;
+        
+        HazardLight red_light;
+        HazardLight orange_light;
+        HazardLight green_light;
+        HazardBuzzer buzzer;
+        int default_setting_key;
+        int timed_setting_key;
 
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
 
@@ -73,12 +92,6 @@ class SrHazardLights
                                  sr_hazard_light::SetHazardLight::Response &response);
         bool reset_hazard_light(sr_hazard_light::ResetHazardLight::Request &request,
                                  sr_hazard_light::ResetHazardLight::Response &response);
-        bool set_light(int pattern, std::string colour, int duration);
-        bool update_light(std::map<int16_t, hazard_light_data>& timer_map,
-                          std::vector<uint8_t> buffer, int duration);
-        bool set_buzzer(int pattern, int tonea, int toneb, int duration);
-        bool send_buffer(std::uint8_t sent_buffer[8]);
-        void timer_cb(int16_t timer_key_remove, std::map<int16_t, hazard_light_data>* timer_map);
         void publish_hazard_light_data();
 
         void detect_device_event(libusb_hotplug_event event);
