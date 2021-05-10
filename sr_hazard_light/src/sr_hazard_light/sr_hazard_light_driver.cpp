@@ -19,6 +19,8 @@
 #include <vector>
 #include <string>
 #include <iterator>
+#include <map>
+#include <utility>
 #include <sr_hazard_light/SetLight.h>
 #include <sr_hazard_light/SetBuzzer.h>
 
