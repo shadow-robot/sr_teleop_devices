@@ -1,0 +1,9 @@
+#goal definition
+string[] power_on
+string[] power_off
+---
+#result definition
+sr_teleop_manager/PowerResult[] results
+---
+#feedback
+sr_teleop_manager/PowerFeedback[] feedback
