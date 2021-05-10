@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2011 Shadow Robot Company Ltd.
 #
@@ -17,33 +17,34 @@
 lapin = ['FFJ1', 'FFJ2', 'FFJ3', 'FFJ4', 'MFJ1', 'MFJ2', 'MFJ3', 'MFJ4', 'RFJ1', 'RFJ2', 'RFJ3', 'RFJ4', 'LFJ1', 'LFJ2',
          'LFJ3', 'LFJ4', 'LFJ5', 'THJ1', 'THJ2', 'THJ3', 'THJ4', 'THJ5', 'WRJ1', 'WRJ2']
 
-for el in lapin:
-    if(el == 'THJ1'):
-        print("1.0 ", end=" ")
+for lap in lapin:
+    if(lap == 'THJ1'):
+        print "1.0 ",
     else:
         print("0.0 ", end=" ")
 print("")
 
-for el in lapin:
-    if(el == 'FFJ2'):
-        print("1.0 ", end=" ")
+for lap in lapin:
+    if(lap == 'FFJ2'):
+        print "1.0 ",
     else:
         print("0.0 ", end=" ")
 print("")
 
-for el in lapin:
-    if(el == 'MFJ2'):
-        print("1.0 ", end=" ")
+for lap in lapin:
+    if(lap == 'MFJ2'):
+        print "1.0 ",
     else:
         print("0.0 ", end=" ")
 print("")
 
-for el in lapin:
-    if(el == 'RFJ2'):
-        print("1.0 ", end=" ")
+for lap in lapin:
+    if(lap == 'RFJ2'):
+        print "1.0 ",
     else:
         print("0.0 ", end=" ")
 print("")
+
 
 for el in lapin:
     if(el == 'LFJ2'):
