@@ -35,8 +35,6 @@
 
 #define TEST_EXPRESSION(a) EXPECT_EQ((a), meval::EvaluateMathExpression(#a))
 
-std::string path_to_calibration = ros::package::getPath("cyberglove") + "/test/cyberglove_test.cal";
-
 float epsilon = 0.01f;
 
 xml_calibration_parser::XmlCalibrationParser calib_parser;
@@ -152,6 +150,7 @@ TEST(LookupTable, tableNotOrdered)
 // Run all the tests that were declared with TEST()
 int main(int argc, char **argv)
 {
+  std::string path_to_calibration = ros::package::getPath("cyberglove") + "/test/cyberglove_test.cal";
   calib_parser = xml_calibration_parser::XmlCalibrationParser(path_to_calibration);
 
   testing::InitGoogleTest(&argc, argv);
