@@ -33,7 +33,7 @@ file.close()
 matrix_t = []
 
 for i in range(0, len(matrix[0])):
-    matrix_t.append(range(0, len(matrix)))
+    matrix_t.append(list(range(0, len(matrix))))
 
 for i in range(0, len(matrix)):
     for j in range(0, len(line)):

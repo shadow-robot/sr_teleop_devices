@@ -19,34 +19,34 @@ lapin = ['FFJ1', 'FFJ2', 'FFJ3', 'FFJ4', 'MFJ1', 'MFJ2', 'MFJ3', 'MFJ4', 'RFJ1',
 
 for lap in lapin:
     if(lap == 'THJ1'):
-        print "1.0 ",
+        print("1.0 ", end=' ')
     else:
-        print "0.0 ",
-print ""
+        print("0.0 ", end=' ')
+print("")
 
 for lap in lapin:
     if(lap == 'FFJ2'):
-        print "1.0 ",
+        print("1.0 ", end=' ')
     else:
-        print "0.0 ",
-print ""
+        print("0.0 ", end=' ')
+print("")
 
 for lap in lapin:
     if(lap == 'MFJ2'):
-        print "1.0 ",
+        print("1.0 ", end=' ')
     else:
-        print "0.0 ",
-print ""
+        print("0.0 ", end=' ')
+print("")
 
 for lap in lapin:
     if(lap == 'RFJ2'):
-        print "1.0 ",
+        print("1.0 ", end=' ')
     else:
-        print "0.0 ",
-print ""
+        print("0.0 ", end=' ')
+print("")
 
 for lap in lapin:
     if(lap == 'LFJ2'):
-        print "1.0 ",
+        print("1.0 ", end=' ')
     else:
-        print "0.0 ",
+        print("0.0 ", end=' ')
