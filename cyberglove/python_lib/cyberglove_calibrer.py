@@ -84,9 +84,9 @@ def default_description(step_name, max=0):
     @param max: if 0=>we're reading the min values, if 1=> max values
     """
     if max == 0:
-        print "calibrating min values for: " + str(step_name)
+        print("calibrating min values for: " + str(step_name))
     else:
-        print "calibrating max values for: " + str(step_name)
+        print("calibrating max values for: " + str(step_name))
 
 
 def do_nothing(step_name, max=0):
@@ -228,7 +228,7 @@ class CybergloveCalibrer:
 
         @return: True if all the steps were processed.
         """
-        for calib in self.joints.values():
+        for calib in list(self.joints.values()):
             if calib.is_calibrated != 1:
                 return False
 
@@ -238,7 +238,7 @@ class CybergloveCalibrer:
         """
         Reorder the calibration: set the raw_min to the min raw_value
         """
-        for name in self.joints.keys():
+        for name in list(self.joints.keys()):
             if self.joints[name].raw_min > self.joints[name].raw_max:
                 tmp_raw = self.joints[name].raw_min
                 tmp_cal = self.joints[name].calibrated_min
@@ -313,8 +313,8 @@ class CybergloveCalibrer:
             path = filename.encode("iso-8859-1")
             resp = calib(path)
             return resp.state
-        except rospy.ServiceException, e:
-            print 'Failed to call start service'
+        except rospy.ServiceException as e:
+            print('Failed to call start service')
             return -2
 
 
@@ -324,13 +324,13 @@ class CybergloveCalibrer:
 def main():
     cyber_calib = CybergloveCalibrer()
     for i in range(0, len(cyber_calib.calibration_steps)):
-        raw_input(cyber_calib.calibration_steps[i].step_description[0])
+        input(cyber_calib.calibration_steps[i].step_description[0])
         cyber_calib.do_step_min(i)
-        raw_input(cyber_calib.calibration_steps[i].step_description[1])
+        input(cyber_calib.calibration_steps[i].step_description[1])
 
         cyber_calib.do_step_max(i)
     error = cyber_calib.write_calibration_file("../../param/cyberglove.cal")
-    print error
+    print(error)
 
     return 0
 
