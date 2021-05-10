@@ -36,7 +36,7 @@ static libusb_device_handle *patlite_handle = 0;
 SrHazardLights::SrHazardLights()
   :started_(false), context_(nullptr), connected_(false), detected_(false),
   red_light_(false), orange_light_(false), green_light_(false), buzzer_on_(false),
-  default_key(0), timer_key(1)
+  default_setting_key(0), timer_setting_key(1)
 {
   libusb_init(&context_);
 
@@ -52,24 +52,24 @@ SrHazardLights::SrHazardLights()
 
   ros::Timer red_default_timer = nh_.createTimer(ros::Duration(10),
                                                  std::bind(&SrHazardLights::timer_cb, this,
-                                                 timer_key, &red_light_timers), true, false);
+                                                 timer_setting_key, &red_light_timers), true, false);
   ros::Timer orange_default_timer = nh_.createTimer(ros::Duration(10),
                                                     std::bind(&SrHazardLights::timer_cb, this,
-                                                    timer_key, &orange_light_timers), true, false);
+                                                    timer_setting_key, &orange_light_timers), true, false);
   ros::Timer green_default_timer = nh_.createTimer(ros::Duration(10),
                                                    std::bind(&SrHazardLights::timer_cb, this,
-                                                   timer_key, &green_light_timers), true, false);
+                                                   timer_setting_key, &green_light_timers), true, false);
   ros::Timer buzzer_default_timer = nh_.createTimer(ros::Duration(10),
                                                     std::bind(&SrHazardLights::timer_cb, this,
-                                                    timer_key, &buzzer_timers), true, false);
+                                                    timer_setting_key, &buzzer_timers), true, false);
 
-  red_light_timers.insert(std::pair<int16_t, hazard_light_data>(default_key,
+  red_light_timers.insert(std::pair<int16_t, hazard_light_data>(default_setting_key,
                           {red_default_timer, default_red_buffer}));
-  orange_light_timers.insert(std::pair<int16_t, hazard_light_data>(default_key,
+  orange_light_timers.insert(std::pair<int16_t, hazard_light_data>(default_setting_key,
                              {orange_default_timer, default_orange_buffer}));
-  green_light_timers.insert(std::pair<int16_t, hazard_light_data>(default_key,
+  green_light_timers.insert(std::pair<int16_t, hazard_light_data>(default_setting_key,
                             {green_default_timer, default_green_buffer}));
-  buzzer_timers.insert(std::pair<int16_t, hazard_light_data>(default_key,
+  buzzer_timers.insert(std::pair<int16_t, hazard_light_data>(default_setting_key,
                        {buzzer_default_timer, default_buzzer_buffer}));
 }
 
@@ -257,13 +257,14 @@ bool SrHazardLights::set_light(int pattern, std::string colour, int duration)
   return true;
 }
 
-bool::SrHazardLights::update_light(std::map<int16_t, hazard_light_data>& timer_map, std::vector<uint8_t> buffer, int duration)
+bool::SrHazardLights::update_light(std::map<int16_t, hazard_light_data>& timer_map,
+                                   std::vector<uint8_t> buffer, int duration)
 {
   std::uint8_t* sent_buffer = &buffer[0];
 
   if (duration == 0)
   {
-    timer_map[default_key].buffer = buffer;
+    timer_map[default_setting_key].buffer = buffer;
     if (timer_map.size() == 1)
     {
       bool retval = send_buffer(sent_buffer);
@@ -276,13 +277,13 @@ bool::SrHazardLights::update_light(std::map<int16_t, hazard_light_data>& timer_m
     bool retval = send_buffer(sent_buffer);
     if (!retval)
       return false;
-    ++timer_key;
+    ++timer_setting_key;
     ros::Timer light_timer = nh_.createTimer(ros::Duration(duration),
                                              std::bind(&SrHazardLights::timer_cb, this,
-                                             timer_key, &timer_map), true, true);
+                                             timer_setting_key, &timer_map), true, true);
     light_timer.setPeriod(ros::Duration(duration), true);
     light_timer.start();
-    timer_map.insert(std::pair<int16_t, hazard_light_data>(timer_key, {light_timer, buffer}));
+    timer_map.insert(std::pair<int16_t, hazard_light_data>(timer_setting_key, {light_timer, buffer}));
   }
   return true;
 }
@@ -319,18 +320,18 @@ bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration)
 
   if (duration == 0)
   {
-    buzzer_timers[default_key].buffer[2] = buffer[2];
-    buzzer_timers[default_key].buffer[3] = buffer[3];
+    buzzer_timers[default_setting_key].buffer[2] = buffer[2];
+    buzzer_timers[default_setting_key].buffer[3] = buffer[3];
   }
   else
   {
-    ++timer_key;
+    ++timer_setting_key;
     ros::Timer buzzer_timer = nh_.createTimer(ros::Duration(duration),
                                               std::bind(&SrHazardLights::timer_cb, this,
-                                              timer_key, &buzzer_timers), true, true);
+                                              timer_setting_key, &buzzer_timers), true, true);
     buzzer_timer.setPeriod(ros::Duration(duration), true);
     buzzer_timer.start();
-    buzzer_timers.insert(std::pair<int16_t, hazard_light_data>(timer_key, {buzzer_timer, buffer}));
+    buzzer_timers.insert(std::pair<int16_t, hazard_light_data>(timer_setting_key, {buzzer_timer, buffer}));
   }
   return true;
 }
