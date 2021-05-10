@@ -234,7 +234,6 @@ bool SrHazardLights::set_light(int pattern, std::string colour, int duration)
       buffer[4] = (pattern << 4) | (buffer[4] & 0x0F);
       red_light_ = pattern != 0;
       return update_light(red_light_timers, buffer, duration);
-
     }
     else if (colour == "orange")
     {
@@ -290,9 +289,21 @@ bool::SrHazardLights::update_light(std::map<int16_t, hazard_light_data>& timer_m
 
 bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration)
 {
-  if (pattern < 0 || pattern > 9 || tonea > 15 || toneb > 15 || pattern < 0 || tonea < 0 || toneb < 0 || duration < 0)
+  if (pattern < 0 || pattern > 9 || pattern < 0)
   {
-    ROS_ERROR("Number or duration chosen for buzzer is out of range");
+    ROS_ERROR("Number chosen for buzzer pattern is out of range");
+    return false;
+  }
+
+  if (tonea > 15 || toneb > 15 || tonea < 0 || toneb < 0)
+  {
+    ROS_ERROR("Number chosen for buzzer tone is out of range");
+    return false;
+  }
+
+  if (duration < 0)
+  {
+    ROS_ERROR("Number chosen for buzzer duration is out of range");
     return false;
   }
 
@@ -304,10 +315,7 @@ bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration)
   if (!retval)
     return false;
 
-  if (pattern != 0)
-    buzzer_on_ = true;
-  else
-    buzzer_on_ = false;
+  buzzer_on_ = pattern != 0;
 
   if (duration == 0)
   {
