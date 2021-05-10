@@ -48,15 +48,27 @@ SrHazardLights::SrHazardLights()
   std::vector<uint8_t> default_green_buffer = {0x00, 0x00, 0xFF, 0xFF, 0x0F, 0xFF, 0x00, 0x00};
   std::vector<uint8_t> default_buzzer_buffer = {0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00};
 
-  ros::Timer red_default_timer = nh_.createTimer(ros::Duration(10), std::bind(&SrHazardLights::timer_cb, this, timer_key, &red_light_timers), true, false);
-  ros::Timer orange_default_timer = nh_.createTimer(ros::Duration(10), std::bind(&SrHazardLights::timer_cb, this, timer_key, &orange_light_timers), true, false);
-  ros::Timer green_default_timer = nh_.createTimer(ros::Duration(10), std::bind(&SrHazardLights::timer_cb, this, timer_key, &green_light_timers), true, false);
-  ros::Timer buzzer_default_timer = nh_.createTimer(ros::Duration(10), std::bind(&SrHazardLights::timer_cb, this, timer_key, &buzzer_timers), true, false);
+  ros::Timer red_default_timer = nh_.createTimer(ros::Duration(10),
+                                                 std::bind(&SrHazardLights::timer_cb, this,
+                                                 timer_key, &red_light_timers), true, false);
+  ros::Timer orange_default_timer = nh_.createTimer(ros::Duration(10),
+                                                    std::bind(&SrHazardLights::timer_cb, this,
+                                                    timer_key, &orange_light_timers), true, false);
+  ros::Timer green_default_timer = nh_.createTimer(ros::Duration(10),
+                                                   std::bind(&SrHazardLights::timer_cb, this,
+                                                   timer_key, &green_light_timers), true, false);
+  ros::Timer buzzer_default_timer = nh_.createTimer(ros::Duration(10),
+                                                    std::bind(&SrHazardLights::timer_cb, this,
+                                                    timer_key, &buzzer_timers), true, false);
 
-  red_light_timers.insert(std::pair<long, hazard_light_data>(default_key, {red_default_timer, default_red_buffer}));
-  orange_light_timers.insert(std::pair<long, hazard_light_data>(default_key, {orange_default_timer, default_orange_buffer}));
-  green_light_timers.insert(std::pair<long, hazard_light_data>(default_key, {green_default_timer, default_green_buffer}));
-  buzzer_timers.insert(std::pair<long, hazard_light_data>(default_key, {buzzer_default_timer, default_buzzer_buffer}));
+  red_light_timers.insert(std::pair<int16_t, hazard_light_data>(default_key,
+                          {red_default_timer, default_red_buffer}));
+  orange_light_timers.insert(std::pair<int16_t, hazard_light_data>(default_key,
+                             {orange_default_timer, default_orange_buffer}));
+  green_light_timers.insert(std::pair<int16_t, hazard_light_data>(default_key,
+                            {green_default_timer, default_green_buffer}));
+  buzzer_timers.insert(std::pair<int16_t, hazard_light_data>(default_key,
+                       {buzzer_default_timer, default_buzzer_buffer}));
 }
 
 SrHazardLights::~SrHazardLights()
@@ -191,7 +203,7 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
   }
 
   bool complete_commands = true;
-  for (size_t light_cmd = 0; light_cmd < light.size(); light_cmd++) 
+  for (size_t light_cmd = 0; light_cmd < light.size(); light_cmd++)
   {
     bool set_light_result = set_light(light[light_cmd].pattern,
                                       light[light_cmd].colour,
@@ -200,7 +212,7 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
       complete_commands = false;
   }
 
-  for(size_t buzzer_cmd = 0; buzzer_cmd < buzzer.size(); buzzer_cmd++)
+  for (size_t buzzer_cmd = 0; buzzer_cmd < buzzer.size(); buzzer_cmd++)
   {
     bool set_buzzer_result = set_buzzer(buzzer[buzzer_cmd].pattern,
                                         buzzer[buzzer_cmd].tonea,
@@ -265,10 +277,12 @@ bool::SrHazardLights::update_red_light(int pattern, int duration)
     if (!retval)
       return false;
     ++timer_key;
-    ros::Timer light_timer = nh_.createTimer(ros::Duration(duration), std::bind(&SrHazardLights::timer_cb, this, timer_key, &red_light_timers), true, true);
+    ros::Timer light_timer = nh_.createTimer(ros::Duration(duration),
+                                             std::bind(&SrHazardLights::timer_cb, this,
+                                             timer_key, &red_light_timers), true, true);
     light_timer.setPeriod(ros::Duration(duration), true);
     light_timer.start();
-    red_light_timers.insert(std::pair<long,hazard_light_data>(timer_key, {light_timer, buffer}));
+    red_light_timers.insert(std::pair<int16_t, hazard_light_data>(timer_key, {light_timer, buffer}));
   }
 
   if (pattern != 0)
@@ -301,10 +315,12 @@ bool::SrHazardLights::update_orange_light(int pattern, int duration)
     if (!retval)
       return false;
     ++timer_key;
-    ros::Timer light_timer = nh_.createTimer(ros::Duration(duration), std::bind(&SrHazardLights::timer_cb, this, timer_key, &orange_light_timers), true, true);
+    ros::Timer light_timer = nh_.createTimer(ros::Duration(duration),
+                                             std::bind(&SrHazardLights::timer_cb, this,
+                                             timer_key, &orange_light_timers), true, true);
     light_timer.setPeriod(ros::Duration(duration), true);
     light_timer.start();
-    orange_light_timers.insert(std::pair<long,hazard_light_data>(timer_key, {light_timer, buffer}));
+    orange_light_timers.insert(std::pair<int16_t, hazard_light_data>(timer_key, {light_timer, buffer}));
   }
 
   if (pattern != 0)
@@ -337,10 +353,12 @@ bool::SrHazardLights::update_green_light(int pattern, int duration)
     if (!retval)
       return false;
     ++timer_key;
-    ros::Timer light_timer = nh_.createTimer(ros::Duration(duration), std::bind(&SrHazardLights::timer_cb, this, timer_key, &green_light_timers), true, true);
+    ros::Timer light_timer = nh_.createTimer(ros::Duration(duration),
+                                             std::bind(&SrHazardLights::timer_cb, this,
+                                             timer_key, &green_light_timers), true, true);
     light_timer.setPeriod(ros::Duration(duration), true);
     light_timer.start();
-    green_light_timers.insert(std::pair<long,hazard_light_data>(timer_key, {light_timer, buffer}));
+    green_light_timers.insert(std::pair<int16_t, hazard_light_data>(timer_key, {light_timer, buffer}));
   }
 
   if (pattern != 0)
@@ -380,10 +398,12 @@ bool SrHazardLights::set_buzzer(int pattern, int tonea, int toneb, int duration)
   else
   {
     ++timer_key;
-    ros::Timer buzzer_timer = nh_.createTimer(ros::Duration(duration), std::bind(&SrHazardLights::timer_cb, this, timer_key, &buzzer_timers), true, true);
+    ros::Timer buzzer_timer = nh_.createTimer(ros::Duration(duration),
+                                              std::bind(&SrHazardLights::timer_cb, this,
+                                              timer_key, &buzzer_timers), true, true);
     buzzer_timer.setPeriod(ros::Duration(duration), true);
     buzzer_timer.start();
-    buzzer_timers.insert(std::pair<long, hazard_light_data>(timer_key, {buzzer_timer, buffer}));
+    buzzer_timers.insert(std::pair<int16_t, hazard_light_data>(timer_key, {buzzer_timer, buffer}));
   }
   return true;
 }
@@ -402,9 +422,9 @@ bool SrHazardLights::send_buffer(std::uint8_t sent_buffer[8])
   return true;
 }
 
-void SrHazardLights::timer_cb(long timer_key_remove, std::map<long, hazard_light_data>* timer_map)
+void SrHazardLights::timer_cb(int16_t timer_key_remove, std::map<int16_t, hazard_light_data>* timer_map)
 {
-  std::pair<long, hazard_light_data> reset_data = *(std::prev(timer_map->find(timer_key_remove)));
+  std::pair<int16_t, hazard_light_data> reset_data = *(std::prev(timer_map->find(timer_key_remove)));
   if (++timer_map->find(timer_key_remove) == timer_map->end())
   {
     std::uint8_t* reset_buf = &reset_data.second.buffer[0];
@@ -426,10 +446,11 @@ void SrHazardLights::timer_cb(long timer_key_remove, std::map<long, hazard_light
       green_light_ = false;
     else if ((reset_data.second.buffer[2] & 0x0F) == 0x00)
       buzzer_on_ = false;
-    
+
     timer_map->erase(timer_key_remove);
-  } else
-      timer_map->erase(timer_key_remove);
+  }
+  else
+    timer_map->erase(timer_key_remove);
 }
 
 bool SrHazardLights::reset_hazard_light(sr_hazard_light::ResetHazardLight::Request &request,
@@ -446,7 +467,7 @@ bool SrHazardLights::reset_hazard_light(sr_hazard_light::ResetHazardLight::Reque
   green_light_ = false;
   buzzer_on_ = false;
   response.confirmation = send_buffer(reset_buffer);
-  
+
   return response.confirmation;
 }
 
