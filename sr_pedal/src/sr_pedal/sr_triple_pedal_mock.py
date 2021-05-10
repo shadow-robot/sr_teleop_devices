@@ -48,14 +48,14 @@ class SrPedalMock():
         if self._kb_listener is not None:
             self._kb_listener.start()
             rospy.loginfo("Mock pedal keyboard control enabled.\n" +
-                          "╔════════════╦═════════════════════════╗\n" +
+                          "╔============╦=========================╗\n" +
                           "║  Control   ║         Effect          ║\n" +
-                          "╠════════════╬═════════════════════════╣\n" +
+                          "╠============╬=========================╣\n" +
                           "║ ctrl+alt+5 ║ Toggle pedal connection ║\n" +
                           "║ ctrl+alt+6 ║ Toggle left pedal       ║\n" +
                           "║ ctrl+alt+7 ║ Toggle middle pedal     ║\n" +
                           "║ ctrl+alt+8 ║ Toggle right pedal      ║\n" +
-                          "╚════════════╩═════════════════════════╝")
+                          "╚============╩=========================╝")
         self._thread.start()
 
     def _publish_thread(self):
@@ -113,13 +113,13 @@ class SrPedalMock():
             self._alt_pressed = True
         elif self._ctrl_pressed and self._alt_pressed and not self._shift_pressed:
             if str(key) == "u'5'":
-                    self.set_status(connected=not self._status.connected)
+                self.set_status(connected=not self._status.connected)
             elif str(key) == "u'6'":
-                    self.set_status(left_pressed=not self._status.left_pressed)
+                self.set_status(left_pressed=not self._status.left_pressed)
             elif str(key) == "u'7'":
-                    self.set_status(middle_pressed=not self._status.middle_pressed)
+                self.set_status(middle_pressed=not self._status.middle_pressed)
             elif str(key) == "u'8'":
-                    self.set_status(right_pressed=not self._status.right_pressed)
+                self.set_status(right_pressed=not self._status.right_pressed)
 
     def _on_keyboard_release(self, key):
         if key == keyboard.Key.ctrl:

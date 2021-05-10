@@ -63,7 +63,7 @@ public:
   std::vector<double> get_remapped_vector(std::vector<double>);
 
 private:
-  static const std::string default_path;
+  static const char* default_path;
 
   /*
   * Open the given file and parses it into a matrix

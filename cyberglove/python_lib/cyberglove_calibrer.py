@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2011 Shadow Robot Company Ltd.
 #
@@ -298,7 +298,7 @@ class CybergloveCalibrer:
                 output.write(line+"\n")
 
             output.close()
-        except:
+        except Exception:
             return -2
 
         return 0
