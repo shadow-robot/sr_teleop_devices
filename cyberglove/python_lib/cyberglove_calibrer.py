@@ -298,7 +298,7 @@ class CybergloveCalibrer:
                 output.write(line+"\n")
 
             output.close()
-        except:
+        except Exception:
             return -2
 
         return 0
