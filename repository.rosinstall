@@ -22,3 +22,9 @@
     uri: https://github.com/shadow-robot/sr_cyberglove_config.git
     version: master
     local-name: sr_cyberglove_config
+
+# TODO: Remove when leap_motion released in noeatic rosdistro
+- git:
+    uri: https://github.com/ros-drivers/leap_motion.git
+    version: hydro
+    local-name: leap_motion
