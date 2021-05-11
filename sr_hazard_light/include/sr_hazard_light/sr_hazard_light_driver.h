@@ -62,8 +62,8 @@ class SrHazardLights
         std::map<int16_t, hazard_light_data> orange_light_timers;
         std::map<int16_t, hazard_light_data> green_light_timers;
         std::map<int16_t, hazard_light_data> buzzer_timers;
-        int default_setting_key;
-        int timer_setting_key;
+        const int16_t default_setting_key = 0;
+        int16_t timer_setting_key = 1;
 
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
 

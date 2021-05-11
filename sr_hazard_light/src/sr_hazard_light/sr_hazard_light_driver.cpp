@@ -35,8 +35,7 @@ static libusb_device_handle *patlite_handle = 0;
 
 SrHazardLights::SrHazardLights()
   :started_(false), context_(nullptr), connected_(false), detected_(false),
-  red_light_(false), orange_light_(false), green_light_(false), buzzer_on_(false),
-  default_setting_key(0), timer_setting_key(1)
+  red_light_(false), orange_light_(false), green_light_(false), buzzer_on_(false)
 {
   libusb_init(&context_);
 
@@ -391,6 +390,7 @@ bool SrHazardLights::reset_hazard_light(sr_hazard_light::ResetHazardLight::Reque
   orange_light_ = false;
   green_light_ = false;
   buzzer_on_ = false;
+  timer_setting_key = 1;
   response.confirmation = send_buffer(reset_buffer);
 
   return response.confirmation;
