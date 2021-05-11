@@ -2,6 +2,36 @@
 
 Contains packages relating to hardware devices used in teleoperation.
 
+## Mocking hardware devices for unittesting
+
+[Umockdev](https://github.com/martinpitt/umockdev) mocks Linux devices for creating integration tests for hardware related libraries and programs.
+
+```bash
+sudo apt-get update
+sudo apt-get install umockdev
+```
+
+Unfortunately, for input devices, there is a [known issue](https://github.com/martinpitt/umockdev/issues/96) which prevents being able to record events. To fix this:
+
+1. Clone [evtest](https://github.com/freedesktop-unofficial-mirror/evtest)
+```bash
+git clone https://github.com/freedesktop-unofficial-mirror/evtest.git
+```
+2. Comment out line 1163 in [evtest.c](https://github.com/freedesktop-unofficial-mirror/evtest/blob/master/evtest.c#L1163)
+3. Remove and locally make and install evtest:
+```bash
+sudo apt remove evtest
+cd evtest
+make
+sudo make install
+```
+4. Check which event the input device is:
+```bash
+sudo ./evtest
+```
+You can then use umock dev to [record and replay input devices](https://github.com/martinpitt/umockdev#record-and-replay-input-devices).
+
+
 ## CI Statuses
 
 Check | Status
