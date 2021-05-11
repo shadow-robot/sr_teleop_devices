@@ -374,11 +374,8 @@ void SrHazardLights::timer_cb(int16_t timer_key_remove, std::map<int16_t, hazard
       green_light_ = false;
     else if ((reset_data.second.buffer[2] & 0x0F) == 0x00)
       buzzer_on_ = false;
-
-    timer_map->erase(timer_key_remove);
   }
-  else
-    timer_map->erase(timer_key_remove);
+  timer_map->erase(timer_key_remove);
 }
 
 bool SrHazardLights::reset_hazard_light(sr_hazard_light::ResetHazardLight::Request &request,
