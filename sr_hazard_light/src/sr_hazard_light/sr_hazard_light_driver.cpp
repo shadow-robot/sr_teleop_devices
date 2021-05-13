@@ -33,7 +33,7 @@
 
 static libusb_device_handle *patlite_handle = 0;
 
-HazardEvent::HazardEvent(ros::NodeHandle node_handle_, std::vector<uint8_t> buffer) 
+HazardEvent::HazardEvent(ros::NodeHandle node_handle_, std::vector<uint8_t> buffer)
             :nh_(node_handle_), buffer_default(buffer)
 {
   default_timer = nh_.createTimer(ros::Duration(10), std::bind(&HazardEvent::timer_cb, this,
