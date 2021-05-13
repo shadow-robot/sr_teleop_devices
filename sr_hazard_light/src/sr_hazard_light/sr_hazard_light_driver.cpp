@@ -44,8 +44,8 @@ HazardEvent::HazardEvent(ros::NodeHandle node_handle_, std::vector<uint8_t> buff
 
 bool HazardEvent::send_buffer(std::uint8_t sent_buffer[8])
 {
-  int retval, rs = 0;
-  retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, sent_buffer, BUFFER_SIZE, &rs, TIMEOUT);
+  int rs = 0;
+  int retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, sent_buffer, BUFFER_SIZE, &rs, TIMEOUT);
   if (retval)
   {
     ROS_ERROR("Hazard light failed to set with error: %s", libusb_error_name(retval));
@@ -63,8 +63,8 @@ void HazardEvent::timer_cb(int16_t timer_key_remove, std::map<int16_t, hazard_li
   {
     std::uint8_t* reset_buf = &reset_data.second.buffer[0];
 
-    int retval, rs = 0;
-    retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, reset_buf, BUFFER_SIZE, &rs, 1000);
+    int rs = 0;
+    int retval = libusb_interrupt_transfer(patlite_handle, PATLITE_ENDPOINT_OUT, reset_buf, BUFFER_SIZE, &rs, 1000);
     if (retval)
     {
       ROS_ERROR("Hazard light failed to set with error: %s", libusb_error_name(retval));
@@ -94,16 +94,12 @@ bool HazardLight::update_light(std::vector<uint8_t> buffer, int duration)
     timer_map[default_setting_key].buffer = buffer;
     if (timer_map.size() == 1)
     {
-      bool retval = send_buffer(sent_buffer);
-      if (!retval)
-        return false;
+      if (!send_buffer(sent_buffer)) return false;
     }
   }
   else
   {
-    bool retval = send_buffer(sent_buffer);
-    if (!retval)
-      return false;
+    if (!send_buffer(sent_buffer)) return false;
     ++timed_setting_key;
     ros::Timer light_timer = nh_.createTimer(ros::Duration(duration),
                                              std::bind(&HazardEvent::timer_cb, this,
@@ -117,31 +113,11 @@ bool HazardLight::update_light(std::vector<uint8_t> buffer, int duration)
 
 bool HazardBuzzer::set_buzzer(int pattern, int tonea, int toneb, int duration)
 {
-  if (pattern < 0 || pattern > 9 || pattern < 0)
-  {
-    ROS_ERROR("Number chosen for buzzer pattern is out of range");
-    return false;
-  }
-
-  if (tonea > 15 || toneb > 15 || tonea < 0 || toneb < 0)
-  {
-    ROS_ERROR("Number chosen for buzzer tone is out of range");
-    return false;
-  }
-
-  if (duration < 0)
-  {
-    ROS_ERROR("Number chosen for buzzer duration is out of range");
-    return false;
-  }
-
   std::vector<uint8_t> buffer = {0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
   buffer[2] = (buffer[2] & 0xF0) | pattern;
   buffer[3] = (tonea << 4) + toneb;
   std::uint8_t* sent_buffer = &buffer[0];
-  bool retval = send_buffer(sent_buffer);
-  if (!retval)
-    return false;
+  if (!send_buffer(sent_buffer)) return false;
 
   is_on = pattern != 0;
 
@@ -169,47 +145,21 @@ void HazardBuzzer::change_topic_bool(std::vector<uint8_t> buffer)
     is_on = false;
 }
 
+bool HazardLightRed::set_light(int pattern, int duration, std::vector<uint8_t> buffer)
+{
+  buffer[4] = (pattern << 4) | (buffer[4] & 0x0F);
+  is_on = pattern != 0;
+  return update_light(buffer, duration);
+}
+
 void HazardLightRed::change_topic_bool(std::vector<uint8_t> buffer)
 {
   if ((buffer[4] & 0xF0) == 0x00)
     is_on = false;
 }
 
-bool HazardLightRed::set_light(int pattern, int duration)
+bool HazardLightOrange::set_light(int pattern, int duration, std::vector<uint8_t> buffer)
 {
-  if (pattern > 9 || pattern < 0)
-  {
-    ROS_ERROR("Number chosen for light pattern is out of range");
-    return false;
-  }
-
-  if (duration < 0)
-  {
-    ROS_ERROR("Duration chosen for light pattern is out of range");
-    return false;
-  }
-
-  std::vector<uint8_t> buffer = {0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
-  buffer[4] = (pattern << 4) | (buffer[4] & 0x0F);
-  is_on = pattern != 0;
-  return update_light(buffer, duration);
-}
-
-bool HazardLightOrange::set_light(int pattern, int duration)
-{
-  if (pattern > 9 || pattern < 0)
-  {
-    ROS_ERROR("Number chosen for light pattern is out of range");
-    return false;
-  }
-
-  if (duration < 0)
-  {
-    ROS_ERROR("Duration chosen for light pattern is out of range");
-    return false;
-  }
-
-  std::vector<uint8_t> buffer = {0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
   buffer[4] = (buffer[4] & 0xF0) | pattern;
   is_on = pattern != 0;
   return update_light(buffer, duration);
@@ -221,30 +171,17 @@ void HazardLightOrange::change_topic_bool(std::vector<uint8_t> buffer)
     is_on = false;
 }
 
+bool HazardLightGreen::set_light(int pattern, int duration, std::vector<uint8_t> buffer)
+{
+  buffer[5] = (pattern << 4) | (buffer[5] & 0x0F);
+  is_on = pattern != 0;
+  return update_light(buffer, duration);
+}
+
 void HazardLightGreen::change_topic_bool(std::vector<uint8_t> buffer)
 {
   if ((buffer[5] & 0xF0) == 0x00)
     is_on = false;
-}
-
-bool HazardLightGreen::set_light(int pattern, int duration)
-{
-  if (pattern > 9 || pattern < 0)
-  {
-    ROS_ERROR("Number chosen for light pattern is out of range");
-    return false;
-  }
-
-  if (duration < 0)
-  {
-    ROS_ERROR("Duration chosen for light pattern is out of range");
-    return false;
-  }
-
-  std::vector<uint8_t> buffer = {0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
-  buffer[5] = (pattern << 4) | (buffer[5] & 0x0F);
-  is_on = pattern != 0;
-  return update_light(buffer, duration);
 }
 
 SrHazardLights::SrHazardLights()
@@ -299,31 +236,13 @@ void SrHazardLights::start(int publishing_rate)
 
 void SrHazardLights::stop()
 {
+  ROS_INFO("Closing hazard light device");
   libusb_hotplug_deregister_callback(context_, hotplug_callback_handle_);
   started_ = false;
   hotplug_loop_thread_.join();
   uint8_t stop_buffer[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   bool retval = HazardEvent::send_buffer(stop_buffer);
   libusb_exit(context_);
-  ROS_INFO("Closing hazard light device");
-}
-
-void SrHazardLights::detect_device_event(libusb_hotplug_event event)
-{
-  switch (event)
-  {
-    case LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED:
-      ROS_INFO("Hazard light device detected");
-      detected_ = true;
-      break;
-    case LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT:
-      ROS_INFO("Hazard light disconnected");
-      detected_ = false;
-      break;
-    default:
-      ROS_WARN("Unknown event detected");
-      break;
-  }
 }
 
 bool SrHazardLights::open_device()
@@ -345,16 +264,28 @@ bool SrHazardLights::open_device()
   }
 
   uint8_t start_buffer[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  bool return_val = HazardEvent::send_buffer(start_buffer);
-
-  if (!return_val)
-    return return_val;
+  if (!HazardEvent::send_buffer(start_buffer)) return false;
 
   connected_ = true;
+  red_lights.is_on = false;
+  orange_lights.is_on = false;
+  green_lights.is_on = false;
+  buzzers.is_on = false;
+
   ROS_INFO("Hazard light USB device opened and claimed");
 
   return true;
 };
+
+
+void SrHazardLights::close_device()
+{
+  connected_ = false;
+  red_lights.is_on = false;
+  orange_lights.is_on = false;
+  green_lights.is_on = false;
+  buzzers.is_on = false;
+}
 
 bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Request &request,
                                       sr_hazard_light::SetHazardLight::Response &response)
@@ -374,19 +305,35 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
   bool complete_commands = true;
   for (size_t light_cmd = 0; light_cmd < light.size(); light_cmd++)
   {
+    if (light[light_cmd].pattern < 0 || light[light_cmd].pattern > 9 || light[light_cmd].pattern < 0)
+    {
+      ROS_ERROR("Number chosen for buzzer pattern is out of range");
+      return false;
+    }
+
+    if (light[light_cmd].duration < 0)
+    {
+      ROS_ERROR("Number chosen for buzzer duration is out of range");
+      return false;
+    }
+
     bool set_light_result;
+    std::vector<uint8_t> buffer = {0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
     std::list<std::string> colours = {"red", "orange", "green"};
     if (std::find(std::begin(colours), std::end(colours), light[light_cmd].colour) != std::end(colours))
     {
       if (light[light_cmd].colour == "red")
         set_light_result = red_lights.set_light(light[light_cmd].pattern,
-                                              light[light_cmd].duration);
+                                                light[light_cmd].duration,
+                                                buffer);
       else if (light[light_cmd].colour == "orange")
         set_light_result = orange_lights.set_light(light[light_cmd].pattern,
-                                                light[light_cmd].duration);
+                                                   light[light_cmd].duration,
+                                                   buffer);
       else if (light[light_cmd].colour == "green")
         set_light_result = green_lights.set_light(light[light_cmd].pattern,
-                                                light[light_cmd].duration);
+                                                  light[light_cmd].duration,
+                                                  buffer);
     }
     else
     {
@@ -399,6 +346,25 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
 
   for (size_t buzzer_cmd = 0; buzzer_cmd < buzzer.size(); buzzer_cmd++)
   {
+    if (buzzer[buzzer_cmd].pattern < 0 || buzzer[buzzer_cmd].pattern > 9
+        || buzzer[buzzer_cmd].pattern < 0)
+    {
+      ROS_ERROR("Number chosen for buzzer pattern is out of range");
+      return false;
+    }
+
+    if (buzzer[buzzer_cmd].tonea > 15 || buzzer[buzzer_cmd].toneb > 15
+        || buzzer[buzzer_cmd].tonea < 0 || buzzer[buzzer_cmd].toneb < 0)
+    {
+      ROS_ERROR("Number chosen for buzzer tone is out of range");
+      return false;
+    }
+
+    if (buzzer[buzzer_cmd].duration < 0)
+    {
+      ROS_ERROR("Number chosen for buzzer duration is out of range");
+      return false;
+    }
     bool set_buzzer_result = buzzers.set_buzzer(buzzer[buzzer_cmd].pattern,
                                         buzzer[buzzer_cmd].tonea,
                                         buzzer[buzzer_cmd].toneb,
@@ -424,13 +390,34 @@ bool SrHazardLights::reset_hazard_light(sr_hazard_light::ResetHazardLight::Reque
   return response.confirmation;
 }
 
-void SrHazardLights::close_device()
+void SrHazardLights::publish_hazard_light_data()
 {
-  connected_ = false;
-  red_lights.is_on = false;
-  orange_lights.is_on = false;
-  green_lights.is_on = false;
-  buzzers.is_on = false;
+  sr_hazard_light::Status sr_hazard_light_status;
+  sr_hazard_light_status.header.stamp = ros::Time::now();
+  sr_hazard_light_status.connected = connected_;
+  sr_hazard_light_status.red_light_on = red_lights.is_on;
+  sr_hazard_light_status.orange_light_on = orange_lights.is_on;
+  sr_hazard_light_status.green_light_on = green_lights.is_on;
+  sr_hazard_light_status.buzzer_on = buzzers.is_on;
+  hazard_light_publisher_.publish(sr_hazard_light_status);
+}
+
+void SrHazardLights::detect_device_event(libusb_hotplug_event event)
+{
+  switch (event)
+  {
+    case LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED:
+      ROS_INFO("Hazard light device detected");
+      detected_ = true;
+      break;
+    case LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT:
+      ROS_INFO("Hazard light disconnected");
+      detected_ = false;
+      break;
+    default:
+      ROS_WARN("Unknown event detected");
+      break;
+  }
 }
 
 int SrHazardLights::on_usb_hotplug(struct libusb_context *ctx,
@@ -469,16 +456,4 @@ void SrHazardLights::hotplug_loop()
     libusb_handle_events_completed(context_, nullptr);
     ros::Rate(publishing_rate_).sleep();
   }
-}
-
-void SrHazardLights::publish_hazard_light_data()
-{
-  sr_hazard_light::Status sr_hazard_light_status;
-  sr_hazard_light_status.header.stamp = ros::Time::now();
-  sr_hazard_light_status.connected = connected_;
-  sr_hazard_light_status.red_light_on = red_lights.is_on;
-  sr_hazard_light_status.orange_light_on = orange_lights.is_on;
-  sr_hazard_light_status.green_light_on = green_lights.is_on;
-  sr_hazard_light_status.buzzer_on = buzzers.is_on;
-  hazard_light_publisher_.publish(sr_hazard_light_status);
 }
