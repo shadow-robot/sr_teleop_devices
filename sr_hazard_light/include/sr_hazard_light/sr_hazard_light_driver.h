@@ -50,8 +50,8 @@ class HazardEvent
 
         static bool send_buffer(std::uint8_t sent_buffer[8]);
         void timer_cb(int16_t timer_key_remove, std::map<int16_t, hazard_light_data>* timer_map);
-        virtual void change_topic_bool(std::vector<uint8_t> buffer) {};
         void clear();
+        virtual void change_topic_bool(std::vector<uint8_t> buffer) {};
 };
 
 class HazardLight : public HazardEvent
@@ -84,6 +84,26 @@ class HazardLightRed : public HazardLight
         void change_topic_bool(std::vector<uint8_t> buffer);
 };
 
+class HazardLightOrange : public HazardLight
+{
+    public:
+        HazardLightOrange(ros::NodeHandle node_handle_, std::vector<uint8_t> buffer) :
+                       HazardLight(node_handle_, buffer) {};
+        ~HazardLightOrange() {};
+        bool set_light(int pattern, int duration);
+        void change_topic_bool(std::vector<uint8_t> buffer);
+};
+
+class HazardLightGreen : public HazardLight
+{
+    public:
+        HazardLightGreen(ros::NodeHandle node_handle_, std::vector<uint8_t> buffer) :
+                       HazardLight(node_handle_, buffer) {};
+        ~HazardLightGreen() {};
+        bool set_light(int pattern, int duration);
+        void change_topic_bool(std::vector<uint8_t> buffer);
+};
+
 class SrHazardLights
 {
     public:
@@ -105,11 +125,14 @@ class SrHazardLights
         libusb_hotplug_callback_handle hotplug_callback_handle_;
         std::thread hotplug_loop_thread_;
         
-        std::vector<uint8_t> buf = {0x00, 0x00, 0xFF, 0xFF, 0x0F, 0xFF, 0x00, 0x00};
-        HazardLightRed red_lights = HazardLightRed(nh_, buf);
-        // HazardLight orange_light({0x00, 0x00, 0xFF, 0xFF, 0xF0, 0xFF, 0x00, 0x00});
-        // HazardLight green_light({0x00, 0x00, 0xFF, 0xFF, 0x0F, 0xFF, 0x00, 0x00});
-        HazardBuzzer buzzers = HazardBuzzer(nh_, {0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00});
+        HazardLightRed red_lights = HazardLightRed(nh_,
+                                    {0x00, 0x00, 0xFF, 0xFF, 0x0F, 0xFF, 0x00, 0x00});
+        HazardLightOrange orange_lights = HazardLightOrange(nh_,
+                                           {0x00, 0x00, 0xFF, 0xFF, 0xF0, 0xFF, 0x00, 0x00});
+        HazardLightGreen green_lights = HazardLightGreen(nh_,
+                                         {0x00, 0x00, 0xFF, 0xFF, 0x0F, 0xFF, 0x00, 0x00});
+        HazardBuzzer buzzers = HazardBuzzer(nh_,
+                                {0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00});
 
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
 
