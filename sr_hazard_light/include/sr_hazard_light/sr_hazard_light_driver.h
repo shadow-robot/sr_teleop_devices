@@ -67,7 +67,7 @@ class HazardLight : public HazardEvent
 class HazardBuzzer : public HazardEvent
 {
     public:
-        HazardBuzzer(ros::NodeHandle node_handle_) :
+        explicit HazardBuzzer(ros::NodeHandle node_handle_) :
                        HazardEvent(node_handle_,
                                    {0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00}) {}
         ~HazardBuzzer() {}
@@ -78,7 +78,7 @@ class HazardBuzzer : public HazardEvent
 class HazardLightRed : public HazardLight
 {
     public:
-        HazardLightRed(ros::NodeHandle node_handle_) :
+        explicit HazardLightRed(ros::NodeHandle node_handle_) :
                        HazardLight(node_handle_, {0x00, 0x00, 0xFF, 0xFF, 0x0F, 0xFF, 0x00, 0x00}) {}
         ~HazardLightRed() {}
         bool set_light(int pattern, int duration, std::vector<uint8_t> buffer);
@@ -88,8 +88,8 @@ class HazardLightRed : public HazardLight
 class HazardLightOrange : public HazardLight
 {
     public:
-        HazardLightOrange(ros::NodeHandle node_handle_) :
-                       HazardLight(node_handle_, 
+        explicit HazardLightOrange(ros::NodeHandle node_handle_) :
+                       HazardLight(node_handle_,
                                    {0x00, 0x00, 0xFF, 0xFF, 0xF0, 0xFF, 0x00, 0x00}) {}
         ~HazardLightOrange() {}
         bool set_light(int pattern, int duration, std::vector<uint8_t> buffer);
@@ -99,8 +99,8 @@ class HazardLightOrange : public HazardLight
 class HazardLightGreen : public HazardLight
 {
     public:
-        HazardLightGreen(ros::NodeHandle node_handle_) :
-                       HazardLight(node_handle_, 
+        explicit HazardLightGreen(ros::NodeHandle node_handle_) :
+                       HazardLight(node_handle_,
                                    {0x00, 0x00, 0xFF, 0xFF, 0x0F, 0xFF, 0x00, 0x00}) {}
         ~HazardLightGreen() {}
         bool set_light(int pattern, int duration, std::vector<uint8_t> buffer);
