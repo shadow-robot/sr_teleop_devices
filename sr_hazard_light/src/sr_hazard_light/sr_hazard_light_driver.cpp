@@ -256,8 +256,7 @@ bool SrHazardLights::open_device()
 
   libusb_set_auto_detach_kernel_driver(patlite_handle, 1);
 
-  int retval = libusb_claim_interface(patlite_handle, 0);
-  if (retval != LIBUSB_SUCCESS)
+  if (libusb_claim_interface(patlite_handle, 0) != LIBUSB_SUCCESS)
   {
     ROS_ERROR("libusb claim failed");
     return false;
