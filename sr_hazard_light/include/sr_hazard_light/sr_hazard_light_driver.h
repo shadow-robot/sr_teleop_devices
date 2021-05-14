@@ -97,8 +97,7 @@ class HazardLightOrange : public HazardLight
 {
     public:
         explicit HazardLightOrange(ros::NodeHandle node_handle_) :
-                       HazardLight(node_handle_,
-                                   {0x00, 0x00, 0xFF, 0xFF, 0xF0, 0xFF, 0x00, 0x00}) {}
+                       HazardLight(node_handle_, {0x00, 0x00, 0xFF, 0xFF, 0xF0, 0xFF, 0x00, 0x00}) {}
         ~HazardLightOrange() {}
         bool set_light(int pattern, int duration, std::vector<uint8_t> buffer);
 
@@ -110,8 +109,7 @@ class HazardLightGreen : public HazardLight
 {
     public:
         explicit HazardLightGreen(ros::NodeHandle node_handle_) :
-                       HazardLight(node_handle_,
-                                   {0x00, 0x00, 0xFF, 0xFF, 0x0F, 0xFF, 0x00, 0x00}) {}
+                       HazardLight(node_handle_, {0x00, 0x00, 0xFF, 0xFF, 0x0F, 0xFF, 0x00, 0x00}) {}
         ~HazardLightGreen() {}
         bool set_light(int pattern, int duration, std::vector<uint8_t> buffer);
 
@@ -123,13 +121,9 @@ class SrHazardLights
 {
     public:
         SrHazardLights();
+        ~SrHazardLights();
         void start(int publishing_rate);
         void stop();
-        ros::ServiceServer hazard_light_service_;
-        ros::ServiceServer reset_hazard_light_service_;
-
-    protected:
-        ~SrHazardLights();
 
     private:
         ros::NodeHandle nh_ = ros::NodeHandle();
@@ -148,6 +142,10 @@ class SrHazardLights
         HazardBuzzer buzzers = HazardBuzzer(nh_);
 
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
+        ros::ServiceServer hazard_light_service_  = nh_.advertiseService("sr_hazard_light/set_hazard_light",
+                                                                         &SrHazardLights::change_hazard_light, this);
+        ros::ServiceServer reset_hazard_light_service_  = nh_.advertiseService("sr_hazard_light/reset_hazard_light",
+                                                                               &SrHazardLights::reset_hazard_light, this);
 
         bool open_device();
         void close_device();

@@ -184,11 +184,6 @@ SrHazardLights::SrHazardLights()
   :started_(false), context_(nullptr), connected_(false), detected_(false)
 {
   libusb_init(&context_);
-
-  hazard_light_service_ = nh_.advertiseService("sr_hazard_light/set_hazard_light",
-                         &SrHazardLights::change_hazard_light, this);
-  reset_hazard_light_service_ = nh_.advertiseService("sr_hazard_light/reset_hazard_light",
-                         &SrHazardLights::reset_hazard_light, this);
 }
 
 SrHazardLights::~SrHazardLights()
@@ -318,7 +313,7 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
       return false;
     }
 
-    bool set_light_result;
+    bool set_light_result = true;
     std::vector<uint8_t> buffer = {0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00};
     std::list<std::string> colours = {"red", "orange", "green"};
     if (std::find(std::begin(colours), std::end(colours), light[light_cmd].colour) != std::end(colours))
@@ -343,7 +338,9 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
     {
       ROS_ERROR("Colour sent is not a colour on the hazard light");
       set_light_result = false;
+      complete_commands = false;
     }
+
     if (set_light_result && !complete_commands)
       complete_commands = false;
   }
