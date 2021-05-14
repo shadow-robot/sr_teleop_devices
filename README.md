@@ -22,6 +22,7 @@ git clone https://github.com/freedesktop-unofficial-mirror/evtest.git
 ```bash
 sudo apt remove evtest
 cd evtest
+./autogen.sh
 make
 sudo make install
 ```
@@ -29,7 +30,7 @@ sudo make install
 ```bash
 sudo ./evtest
 ```
-You can then use umock dev to [record and replay input devices](https://github.com/martinpitt/umockdev#record-and-replay-input-devices).
+You can then use umock dev to [record and replay input devices](https://github.com/martinpitt/umockdev#record-and-replay-input-devices) such as the pedal.
 
 
 ## CI Statuses
