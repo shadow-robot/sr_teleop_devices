@@ -39,13 +39,14 @@ class HazardEvent
     public:
         HazardEvent(ros::NodeHandle node_handle_, std::vector<uint8_t> buffer);
         ~HazardEvent() {}
-        bool is_on_;
 
         static bool send_buffer(std::uint8_t sent_buffer[8]);
+        bool return_status();
         void timer_cb(int16_t timer_key_remove, std::map<int16_t, hazard_light_data>* timer_map_);
         void clear();
 
     protected:
+        bool is_on_;
         std::map<int16_t, hazard_light_data> timer_map_;
         std::vector<uint8_t> buffer_default_;
         ros::Timer default_timer_;
@@ -136,16 +137,16 @@ class SrHazardLights
         libusb_hotplug_callback_handle hotplug_callback_handle_;
         std::thread hotplug_loop_thread_;
 
-        HazardLightRed red_lights = HazardLightRed(nh_);
-        HazardLightOrange orange_lights = HazardLightOrange(nh_);
-        HazardLightGreen green_lights = HazardLightGreen(nh_);
-        HazardBuzzer buzzers = HazardBuzzer(nh_);
+        HazardLightRed red_lights_ = HazardLightRed(nh_);
+        HazardLightOrange orange_lights_ = HazardLightOrange(nh_);
+        HazardLightGreen green_lights_ = HazardLightGreen(nh_);
+        HazardBuzzer buzzers_ = HazardBuzzer(nh_);
 
         ros::Publisher hazard_light_publisher_ = nh_.advertise<sr_hazard_light::Status>("sr_hazard_light/status", 1);
         ros::ServiceServer hazard_light_service_  = nh_.advertiseService("sr_hazard_light/set_hazard_light",
                                                                          &SrHazardLights::change_hazard_light, this);
         ros::ServiceServer reset_hazard_light_service_  = nh_.advertiseService("sr_hazard_light/reset_hazard_light",
-                                                                               &SrHazardLights::reset_hazard_light, this);
+                                                                          &SrHazardLights::reset_hazard_light, this);
 
         bool open_device();
         void close_device();

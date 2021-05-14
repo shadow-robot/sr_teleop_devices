@@ -56,6 +56,11 @@ bool HazardEvent::send_buffer(std::uint8_t sent_buffer[8])
   return true;
 }
 
+bool HazardEvent::return_status()
+{
+  return is_on_;
+}
+
 void HazardEvent::timer_cb(int16_t timer_key_remove, std::map<int16_t, hazard_light_data>* timer_map_)
 {
   std::pair<int16_t, hazard_light_data> reset_data = *(std::prev(timer_map_->find(timer_key_remove)));
@@ -263,10 +268,10 @@ bool SrHazardLights::open_device()
   if (!HazardEvent::send_buffer(start_buffer)) return false;
 
   connected_ = true;
-  red_lights.is_on_ = false;
-  orange_lights.is_on_ = false;
-  green_lights.is_on_ = false;
-  buzzers.is_on_ = false;
+  red_lights_.clear();
+  orange_lights_.clear();
+  green_lights_.clear();
+  buzzers_.clear();
 
   ROS_INFO("Hazard light USB device opened and claimed");
 
@@ -277,10 +282,10 @@ bool SrHazardLights::open_device()
 void SrHazardLights::close_device()
 {
   connected_ = false;
-  red_lights.is_on_ = false;
-  orange_lights.is_on_ = false;
-  green_lights.is_on_ = false;
-  buzzers.is_on_ = false;
+  red_lights_.clear();
+  orange_lights_.clear();
+  green_lights_.clear();
+  buzzers_.clear();
 }
 
 bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Request &request,
@@ -319,17 +324,17 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
     if (std::find(std::begin(colours), std::end(colours), light[light_cmd].colour) != std::end(colours))
     {
       if ("red" == light[light_cmd].colour)
-        set_light_result = red_lights.set_light(light[light_cmd].pattern,
+        set_light_result = red_lights_.set_light(light[light_cmd].pattern,
                                                 light[light_cmd].duration,
                                                 buffer);
         if (!set_light_result) complete_commands = false;
       else if ("orange" == light[light_cmd].colour)
-        set_light_result = orange_lights.set_light(light[light_cmd].pattern,
+        set_light_result = orange_lights_.set_light(light[light_cmd].pattern,
                                                    light[light_cmd].duration,
                                                    buffer);
         if (!set_light_result) complete_commands = false;
       else if ("green" == light[light_cmd].colour)
-        set_light_result = green_lights.set_light(light[light_cmd].pattern,
+        set_light_result = green_lights_.set_light(light[light_cmd].pattern,
                                                   light[light_cmd].duration,
                                                   buffer);
         if (!set_light_result) complete_commands = false;
@@ -367,7 +372,7 @@ bool SrHazardLights::change_hazard_light(sr_hazard_light::SetHazardLight::Reques
       ROS_ERROR("Number chosen for buzzer duration is out of range");
       return false;
     }
-    set_buzzer_result = buzzers.set_buzzer(buzzer[buzzer_cmd].pattern,
+    set_buzzer_result = buzzers_.set_buzzer(buzzer[buzzer_cmd].pattern,
                                         buzzer[buzzer_cmd].tonea,
                                         buzzer[buzzer_cmd].toneb,
                                         buzzer[buzzer_cmd].duration);
@@ -385,10 +390,10 @@ bool SrHazardLights::reset_hazard_light(sr_hazard_light::ResetHazardLight::Reque
 {
   ROS_INFO("Resetting hazard light.");
   uint8_t reset_buffer[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  red_lights.clear();
-  orange_lights.clear();
-  green_lights.clear();
-  buzzers.clear();
+  red_lights_.clear();
+  orange_lights_.clear();
+  green_lights_.clear();
+  buzzers_.clear();
   response.confirmation = HazardEvent::send_buffer(reset_buffer);
   return response.confirmation;
 }
@@ -398,10 +403,10 @@ void SrHazardLights::publish_hazard_light_data()
   sr_hazard_light::Status sr_hazard_light_status;
   sr_hazard_light_status.header.stamp = ros::Time::now();
   sr_hazard_light_status.connected = connected_;
-  sr_hazard_light_status.red_light_on = red_lights.is_on_;
-  sr_hazard_light_status.orange_light_on = orange_lights.is_on_;
-  sr_hazard_light_status.green_light_on = green_lights.is_on_;
-  sr_hazard_light_status.buzzer_on = buzzers.is_on_;
+  sr_hazard_light_status.red_light_on = red_lights_.return_status();
+  sr_hazard_light_status.orange_light_on = orange_lights_.return_status();
+  sr_hazard_light_status.green_light_on = green_lights_.return_status();
+  sr_hazard_light_status.buzzer_on = buzzers_.return_status();
   hazard_light_publisher_.publish(sr_hazard_light_status);
 }
 
