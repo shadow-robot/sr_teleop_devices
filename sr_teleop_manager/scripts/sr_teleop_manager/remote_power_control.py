@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
 import rospy
 import requests
 import actionlib
@@ -125,7 +126,7 @@ class RemotePowerControl(PowerControlCommon):
         rospy.loginfo("Devices in config:")
         for device in self._devices:
             rospy.loginfo("Name: %s", device['name'])
-            for key, value in device.iteritems():
+            for key, value in device.items():
                 if 'name' != key:
                     rospy.loginfo("  %s: %s", key, value)
 
@@ -168,16 +169,16 @@ class RemotePowerControl(PowerControlCommon):
 
         now = rospy.get_rostime()
         rospy.logwarn("waiting for threads to complete...")
-        while any(thread.is_alive() for name, thread in threads.iteritems()):
+        while any(thread.is_alive() for name, thread in threads.items()):
             if (now.secs + self._CONST_ALL_THREADS_FINISHED_TIMEOUT) < rospy.get_rostime().secs:
                 break
         rospy.loginfo("All goal tasks processed")
 
-        if not any(thread.is_alive() for name, thread in threads.iteritems()):
+        if not any(thread.is_alive() for name, thread in threads.items()):
             self._as.set_succeeded(self._result)
         else:
             rospy.logerr("something went wrong, a thread hasn't returned")
-            for name, thread in threads.iteritems():
+            for name, thread in threads.items():
                 if thread.is_alive():
                     rospy.logerr("thread(s) still alive: %s", name)
 

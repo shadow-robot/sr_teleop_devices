@@ -21,7 +21,8 @@ Minimizes the mapping matrix using a simplex algorithm
 @contact: ugo@shadowrobot.com, contact@shadowrobot.com
 """
 
-
+from __future__ import absolute_import
+from builtins import input
 import rospy
 from scipy.optimize import fmin
 from cyberglove_library import Cyberglove
