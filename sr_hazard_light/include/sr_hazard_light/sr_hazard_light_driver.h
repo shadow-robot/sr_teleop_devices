@@ -39,18 +39,20 @@ class HazardEvent
     public:
         HazardEvent(ros::NodeHandle node_handle_, std::vector<uint8_t> buffer);
         ~HazardEvent() {}
-
-        std::vector<uint8_t> buffer_default = std::vector<uint8_t>(8);
-        bool is_on;
-        std::map<int16_t, hazard_light_data> timer_map;
-        ros::Timer default_timer;
-        const int16_t default_setting_key = 0;
-        int16_t timed_setting_key = 1;
-        ros::NodeHandle nh_;
+        bool is_on_;
 
         static bool send_buffer(std::uint8_t sent_buffer[8]);
-        void timer_cb(int16_t timer_key_remove, std::map<int16_t, hazard_light_data>* timer_map);
+        void timer_cb(int16_t timer_key_remove, std::map<int16_t, hazard_light_data>* timer_map_);
         void clear();
+
+    protected:
+        std::map<int16_t, hazard_light_data> timer_map_;
+        std::vector<uint8_t> buffer_default_;
+        ros::Timer default_timer_;
+        const int16_t default_setting_key_ = 0;
+        int16_t timed_setting_key_ = 1;
+        ros::NodeHandle nh_;
+
         virtual void change_topic_bool(std::vector<uint8_t> buffer) = 0;
 };
 
@@ -61,6 +63,8 @@ class HazardLight : public HazardEvent
                        HazardEvent(node_handle_, buffer) {}
         ~HazardLight() {}
         virtual bool set_light(int pattern,  int duration, std::vector<uint8_t> buffer) = 0;
+
+    protected:
         bool update_light(std::vector<uint8_t> buffer, int duration);
 };
 
@@ -72,6 +76,8 @@ class HazardBuzzer : public HazardEvent
                                    {0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00}) {}
         ~HazardBuzzer() {}
         bool set_buzzer(int pattern, int tonea, int toneb, int duration);
+
+    protected:
         void change_topic_bool(std::vector<uint8_t> buffer);
 };
 
@@ -82,6 +88,8 @@ class HazardLightRed : public HazardLight
                        HazardLight(node_handle_, {0x00, 0x00, 0xFF, 0xFF, 0x0F, 0xFF, 0x00, 0x00}) {}
         ~HazardLightRed() {}
         bool set_light(int pattern, int duration, std::vector<uint8_t> buffer);
+
+    protected:
         void change_topic_bool(std::vector<uint8_t> buffer);
 };
 
@@ -93,6 +101,8 @@ class HazardLightOrange : public HazardLight
                                    {0x00, 0x00, 0xFF, 0xFF, 0xF0, 0xFF, 0x00, 0x00}) {}
         ~HazardLightOrange() {}
         bool set_light(int pattern, int duration, std::vector<uint8_t> buffer);
+
+    protected:
         void change_topic_bool(std::vector<uint8_t> buffer);
 };
 
@@ -104,6 +114,8 @@ class HazardLightGreen : public HazardLight
                                    {0x00, 0x00, 0xFF, 0xFF, 0x0F, 0xFF, 0x00, 0x00}) {}
         ~HazardLightGreen() {}
         bool set_light(int pattern, int duration, std::vector<uint8_t> buffer);
+
+    protected:
         void change_topic_bool(std::vector<uint8_t> buffer);
 };
 
@@ -111,11 +123,13 @@ class SrHazardLights
 {
     public:
         SrHazardLights();
-        ~SrHazardLights();
         void start(int publishing_rate);
         void stop();
-        ros::ServiceServer hazard_light_service;
-        ros::ServiceServer reset_hazard_light_service;
+        ros::ServiceServer hazard_light_service_;
+        ros::ServiceServer reset_hazard_light_service_;
+
+    protected:
+        ~SrHazardLights();
 
     private:
         ros::NodeHandle nh_ = ros::NodeHandle();
