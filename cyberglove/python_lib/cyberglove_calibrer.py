@@ -22,6 +22,7 @@ Calibration utility for the cyberglove.
 """
 
 from __future__ import absolute_import
+from builtins import input
 import os
 from cyberglove_library import Cyberglove
 from cyberglove.srv import Calibration as CalibrationSrv
