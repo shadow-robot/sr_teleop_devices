@@ -1,0 +1,1 @@
+SUBSYSTEMS=="usb", ENV{DEVTYPE}=="usb_device", ATTRS{idVendor}=="191a", ATTRS{idProduct}=="8003", MODE="0666"
