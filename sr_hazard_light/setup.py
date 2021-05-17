@@ -4,7 +4,7 @@ from catkin_pkg.python_setup import generate_distutils_setup
 
 # fetch values from package.xml
 setup_args = generate_distutils_setup(
-    packages=['logitech_r400'],
+    packages=['sr_hazard_light'],
     package_dir={'': 'src'})
 
 setup(**setup_args)
