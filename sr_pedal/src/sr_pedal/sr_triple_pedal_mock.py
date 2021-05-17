@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+
 # -*- coding: latin-1 -*-
 
 # Copyright 2020 Shadow Robot Company Ltd.
