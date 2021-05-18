@@ -1,0 +1,12 @@
+<launch>
+    <!-- Launches the hazard light node. -->
+
+    <!-- The status publish rate. Default is 1 as the topic only publishes connection and current light status.
+         It is not safety critical. -->
+    <arg name="publishing_rate" default="1"/>
+
+    <node name="sr_hazard_light" pkg="sr_hazard_light" type="sr_hazard_light_node" output="screen">
+        <param name="publishing_rate" value="$(arg publishing_rate)"/>
+    </node>
+
+</launch>
