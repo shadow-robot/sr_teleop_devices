@@ -39,7 +39,6 @@ class SrPedalMock():
         self._status.middle_pressed = middle_pressed
         self._status.right_pressed = right_pressed
         self._ctrl_pressed = False
-        self._shift_pressed = False
         self._alt_pressed = False
         self._kb_listener = None
         if keyboard_control:
@@ -108,11 +107,10 @@ class SrPedalMock():
     def _on_keyboard_press(self, key):
         if key == keyboard.Key.ctrl:
             self._ctrl_pressed = True
-        if key == keyboard.Key.shift:
-            self._shift_pressed = True
         if key == keyboard.Key.alt:
             self._alt_pressed = True
-        if self._ctrl_pressed and self._alt_pressed and not self._shift_pressed:
+
+        if self._ctrl_pressed and self._alt_pressed:
             if str(key) == "'5'":
                 self.set_status(connected = not self._status.connected)
             elif str(key) == "'6'":
@@ -128,8 +126,6 @@ class SrPedalMock():
     def _on_keyboard_release(self, key):
         if key == keyboard.Key.ctrl:
             self._ctrl_pressed = False
-        elif key == keyboard.Key.shift:
-            self._shift_pressed = False
         elif key == keyboard.Key.alt:
             self._alt_pressed = False
 
