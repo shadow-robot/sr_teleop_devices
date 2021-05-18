@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+
 # -*- coding: latin-1 -*-
 
 # Copyright 2020 Shadow Robot Company Ltd.
@@ -38,7 +39,6 @@ class SrPedalMock():
         self._status.middle_pressed = middle_pressed
         self._status.right_pressed = right_pressed
         self._ctrl_pressed = False
-        self._shift_pressed = False
         self._alt_pressed = False
         self._kb_listener = None
         if keyboard_control:
@@ -56,6 +56,7 @@ class SrPedalMock():
                           "║ ctrl+alt+6 ║ Toggle left pedal       ║\n" +
                           "║ ctrl+alt+7 ║ Toggle middle pedal     ║\n" +
                           "║ ctrl+alt+8 ║ Toggle right pedal      ║\n" +
+                          "║ ctrl+alt+9 ║ Toggle left and right   ║\n" +
                           "╚============╩=========================╝")
         self._thread.start()
 
@@ -106,27 +107,25 @@ class SrPedalMock():
     def _on_keyboard_press(self, key):
         if key == keyboard.Key.ctrl:
             self._ctrl_pressed = True
-        elif key == keyboard.Key.ctrl:
-            self._ctrl_pressed = True
-        elif key == keyboard.Key.shift:
-            self._shift_pressed = True
-        elif key == keyboard.Key.alt:
+        if key == keyboard.Key.alt:
             self._alt_pressed = True
-        elif self._ctrl_pressed and self._alt_pressed and not self._shift_pressed:
-            if str(key) == "u'5'":
+
+        if self._ctrl_pressed and self._alt_pressed:
+            if str(key) == "'5'":
                 self.set_status(connected=not self._status.connected)
-            elif str(key) == "u'6'":
+            elif str(key) == "'6'":
                 self.set_status(left_pressed=not self._status.left_pressed)
-            elif str(key) == "u'7'":
+            elif str(key) == "'7'":
                 self.set_status(middle_pressed=not self._status.middle_pressed)
-            elif str(key) == "u'8'":
+            elif str(key) == "'8'":
+                self.set_status(right_pressed=not self._status.right_pressed)
+            elif str(key) == "'9'":
+                self.set_status(left_pressed=not self._status.left_pressed)
                 self.set_status(right_pressed=not self._status.right_pressed)
 
     def _on_keyboard_release(self, key):
         if key == keyboard.Key.ctrl:
             self._ctrl_pressed = False
-        elif key == keyboard.Key.shift:
-            self._shift_pressed = False
         elif key == keyboard.Key.alt:
             self._alt_pressed = False
 
