@@ -112,13 +112,13 @@ class SrPedalMock():
 
         if self._ctrl_pressed and self._alt_pressed:
             if str(key) == "'5'":
-                self.set_status(connected = not self._status.connected)
+                self.set_status(connected=not self._status.connected)
             elif str(key) == "'6'":
-                self.set_status(left_pressed = not self._status.left_pressed)
+                self.set_status(left_pressed=not self._status.left_pressed)
             elif str(key) == "'7'":
-                self.set_status(middle_pressed = not self._status.middle_pressed)
+                self.set_status(middle_pressed=not self._status.middle_pressed)
             elif str(key) == "'8'":
-                self.set_status(right_pressed = not self._status.right_pressed)
+                self.set_status(right_pressed=not self._status.right_pressed)
             elif str(key) == "'9'":
                 self.set_status(left_pressed=not self._status.left_pressed)
                 self.set_status(right_pressed=not self._status.right_pressed)
