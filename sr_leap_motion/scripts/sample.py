@@ -21,8 +21,8 @@ class SampleListener(Leap.Listener):
     state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
 
     def on_init(self, controller):
-        rospy.init_node("test")
-        self._leap_ros_publisher = rospy.Publisher("/leap_motion/leap_filtered", Human, queue_size=1)
+        self._leap_ros_publisher = rospy.Publisher("/leap_motion/human_out", Hand, queue_size=10)
+        self._finger_pub = rospy.Publisher("/leap_motion/finger", Finger, queue_size=10)
         print("Initialized")
 
     def on_connect(self, controller):
@@ -41,7 +41,92 @@ class SampleListener(Leap.Listener):
     def on_exit(self, controller):
         print("Exited")
         
+    def parse_bones(self, bone):
+        bone_msg = Bone()
+        bone_msg.header.stamp = rospy.Time.now()
+        bone_msg.type = bone.type
+        return bone_msg
+    
+    def parse_finger(self, finger):
+        finger_msg = Finger()
+        finger_msg.header = std_msgs.msg.Header()
+        finger_msg.header.stamp = rospy.Time.now()
+        #finger_header = std_msgs.msg.Header()
+        #finger_header.stamp = rospy.Time.now()
+        #finger_msg.header = finger_header
+        finger_msg.lmc_finger_id = finger.id
+        finger_msg.type = finger.type
+        finger_msg.length = finger.length/1000
+        finger_msg.width = finger.width/1000
+        for bone in [finger.bone(b) for b in range(0, 4)]:
+            finger_msg.bone_list.append(self.parse_bones(bone))
+            
+
+    def parse_hand(self, hand):
+        hand_msg = Hand()
+        hand_msg.header.stamp = rospy.Time.now()
+        hand_msg.lmc_hand_id = hand.id
+        hand_msg.roll = hand.palm_normal.roll
+        hand_msg.pitch = hand.direction.pitch
+        hand_msg.yaw = hand.direction.yaw
+        hand_msg.direction = hand.direction
+        hand_msg.normal = hand.palm_normal
+        hand_msg.is_present = True
+        for finger in hand.fingers:
+            hand_msg.finger_list.append(self.parse_finger(finger))
+        return hand_msg
+            
+    def parse_human(self, frame):
+        human_msg = Human()
+        #header = std_msgs.msg.Header()
+        #header.stamp = rospy.Time().now()
+        #print(header.stamp.secs)
+        #print(type(header.stamp.secs))
+        human_msg.header.stamp = rospy.Time.now()
+        human_msg.lmc_frame_id = frame.id
+        for hand in frame.hands:
+            if hand.is_left:
+                human_msg.left_hand = self.parse_hand(hand)
+            else:
+                human_msg.right_hand = self.parse_hand(hand)
+        return human_msg
+            
+        
     def parse_frame(self, frame):
+        hand = frame.hands[0]
+        human = self.parse_human(frame)
+        hand_msg = self.parse_hand(frame.hands[0])
+        hand_msg = Hand()
+        header = std_msgs.msg.Header()
+        header.stamp = rospy.Time.now()
+        hand_msg.header = header
+        hand_msg.lmc_hand_id = hand.id
+        hand_msg.roll = hand.palm_normal.roll
+        hand_msg.pitch = hand.direction.pitch
+        hand_msg.yaw = hand.direction.yaw
+        hand_msg.direction = hand.direction
+        hand_msg.normal = hand.palm_normal
+        finger_msg = Finger()
+        for finger in hand.fingers:
+            #hand_msg.finger_list.append(self.parse_finger(finger))
+            f = Finger()
+            f.header.stamp = rospy.Time.now()
+            f.lmc_finger_id = finger.id
+            f.type = finger.type
+            f.length = finger.length/1000
+            f.width = finger.width/1000
+            hand_msg.finger_list.append(f)
+            for bone in [finger.bone(b) for b in range(0, 4)]:
+                b = Bone()
+                b.header.stamp = rospy.Time.now()
+                b.type = bone.type
+                f.bone_list.append(b)
+        self._leap_ros_publisher.publish(hand_msg)
+        return
+        bones = self.parse_bones(frame)
+        fingers = self.parse_finger(frame, bones)
+        hands = self.parse_hand(frame, fingers)
+        human = self.parse_human(frame, hands)
         #header = std_msgs.msg.Header()
         #header.stamp = rospy.Time.now()
         human_ros_msg = Human()
@@ -69,7 +154,7 @@ class SampleListener(Leap.Listener):
                     bone_ros_msg = Bone()
                     bone_ros_msg.type = bone.type
                     bone_ros_msg.to_string = self.bone_names[bone.type]
-                    #finger_ros_msg.bone_list.append(bone_ros_msg)
+                    finger_ros_msg.bone_list.append(bone_ros_msg)
                 hand_ros_msg.finger_list.append(finger)
             arm = Arm()
             arm.elbow.position = hand.arm.elbow_position
@@ -95,14 +180,10 @@ class SampleListener(Leap.Listener):
               frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures())))
               
         
-
+    '''
         # Get hands
-        human_ros_msg = Human()
-        for hand in frame.hands:
-            if hand.is_left:
-                human_ros_msg.left_hand = hand
-            else:
-                human_ros_msg.right_hand = hand
+        #human_ros_msg = Human()
+        
 
             handType = "Left hand" if hand.is_left else "Right hand"
 
@@ -191,7 +272,7 @@ class SampleListener(Leap.Listener):
 
         if not (frame.hands.is_empty and frame.gestures().is_empty):
             print("")
-        
+    '''        
 
     def state_string(self, state):
         if state == Leap.Gesture.STATE_START:
@@ -207,6 +288,7 @@ class SampleListener(Leap.Listener):
             return "STATE_INVALID"
 
 def main():
+    rospy.init_node("test")
     # Create a sample listener and controller
     listener = SampleListener()
     controller = Leap.Controller()
