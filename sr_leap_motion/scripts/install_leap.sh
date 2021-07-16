@@ -10,3 +10,5 @@ cd /home/user && git clone https://github.com/BlackLight/leap-sdk-python3 && cd 
 cd /home/user && git clone http://github.com/shadow-robot/sr_teleop_devices && cd sr_teleop_devices/sr_leap_motion/scripts && sed -i 's/install/install -y/g' install_sdk.sh && ./install_sdk.sh
 
 source /home/user/projects/shadow_robot/base_deps/devel/setup.bash && roscd leap_motion && rm -rf LeapSDK && sudo ln -s /home/user/leap-sdk-python3/leap/LeapSDK $(rospack find leap_motion)/LeapSDK
+
+echo "export PYTHONPATH=\$PYTHONPATH:/home/user/leap-sdk-python3" >> ~/.bashrc
