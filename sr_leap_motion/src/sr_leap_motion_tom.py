@@ -37,36 +37,45 @@ class SampleListener(Leap.Listener):
     def on_exit(self, controller):
         print("Exited")
         
-    def parse_bones(self, bone):
+    def parse_bones(self, bone, is_left):
         bone_msg = Bone()
         bone_msg.header.stamp = rospy.Time.now()
         bone_msg.header.frame_id = self.CONST_FRAME_ID
         bone_msg.type = bone.type
         bone_msg.length = bone.length/1000
         bone_msg.width = bone.width/1000
-        # bone_msg.to_string
-        bone_msg.bone_start = bone.prev_joint
-        bone_msg.bone_end = bone.next_joint
-        for i in bone.center:
-            bone_msg.center.append(i)
+        bone_msg.bone_start.position.x = bone.prev_joint.x / 1000
+        bone_msg.bone_start.position.y = bone.prev_joint.y / 1000
+        bone_msg.bone_start.position.z = bone.prev_joint.z / 1000
+        bone_msg.bone_end.position.x = bone.next_joint.x / 1000
+        bone_msg.bone_end.position.y = bone.next_joint.y / 1000
+        bone_msg.bone_end.position.z = bone.next_joint.z / 1000                    
+        bone_msg.center.append(bone.center.x/1000)
+        bone_msg.center.append(bone.center.y/1000)
+        bone_msg.center.append(bone.center.z/1000)
+        # @TODO - get bone rotation using basis vectors for left hand 
         return bone_msg
     
-    def parse_finger(self, finger, finger_msg):
+    def parse_finger(self, finger, finger_msg, is_left):
         finger_msg.header.stamp = rospy.Time.now()
         finger_msg.header.frame_id = self.CONST_FRAME_ID
         finger_msg.lmc_finger_id = finger.id
         finger_msg.type = finger.type
         finger_msg.length = finger.length/1000
         finger_msg.width = finger.width/1000
-        # finger_msg.to_string
+        for b in range(0, 4):
+            bone = finger.bone(b)
+            bone_msg = self.parse_bones(bone, is_left)
+            finger_msg.bone_list.append(bone_msg)
         return finger_msg
 
     def parse_hand(self, hand):
         hand_msg = Hand()
         hand_msg.header.stamp = rospy.Time.now()
+        hand_msg.header.frame_id = self.CONST_FRAME_ID
         hand_msg.lmc_hand_id = hand.id
         hand_msg.is_present = True
-        # hand_msg.valid_gestures
+        hand_msg.valid_gestures = False
         hand_msg.confidence = hand.confidence
         hand_msg.roll = hand.palm_normal.roll
         hand_msg.pitch = hand.direction.pitch
@@ -75,6 +84,7 @@ class SampleListener(Leap.Listener):
         hand_msg.normal = hand.palm_normal
         hand_msg.grab_strength = hand.grab_strength
         hand_msg.pinch_strength = hand.pinch_strength
+        hand_msg.time_visible = hand.time_visible
         for i in range(0, 3):
             hand_msg.palm_velocity.append(hand.palm_velocity[i] / 1000)
             hand_msg.sphere_center.append(hand.sphere_center[i] / 1000)
@@ -84,7 +94,7 @@ class SampleListener(Leap.Listener):
         # hand_msg.to_string
         for finger in hand.fingers:
             f = Finger()
-            f = self.parse_finger(finger, f)
+            f = self.parse_finger(finger, f, hand.is_left)
             hand_msg.finger_list.append(f)
         return hand_msg
             
