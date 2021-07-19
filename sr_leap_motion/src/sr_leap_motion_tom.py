@@ -4,10 +4,13 @@ from __future__ import absolute_import
 import Leap
 import sys, threading, time
 import rospy
+import tf2_ros, tf
+from geometry_msgs.msg import Quaternion
 from leap_motion.msg import Human, Hand, Finger, Bone, Arm
 import std_msgs.msg
+import numpy
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
-
+ 
 
 class SampleListener(Leap.Listener):
     finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
@@ -37,7 +40,44 @@ class SampleListener(Leap.Listener):
     def on_exit(self, controller):
         print("Exited")
         
-    def parse_bones(self, bone, is_left):
+    def quaternion_from_matrix(self, matrix):
+        M = numpy.array(matrix, dtype=numpy.float64, copy=False)[:4, :4]
+        m00 = M[0, 0]
+        m01 = M[0, 1]
+        m02 = M[0, 2]
+        m10 = M[1, 0]
+        m11 = M[1, 1]
+        m12 = M[1, 2]
+        m20 = M[2, 0]
+        m21 = M[2, 1]
+        m22 = M[2, 2]
+        # symmetric matrix K
+        K = numpy.array([[m00-m11-m22, 0.0,         0.0,         0.0],
+                         [m01+m10,     m11-m00-m22, 0.0,         0.0],
+                         [m02+m20,     m12+m21,     m22-m00-m11, 0.0],
+                         [m21-m12,     m02-m20,     m10-m01,     m00+m11+m22]])
+        K /= 3.0
+        # quaternion is eigenvector of K that corresponds to largest eigenvalue
+        w, V = numpy.linalg.eigh(K)
+        q = V[[3, 0, 1, 2], numpy.argmax(w)]
+        if q[0] < 0.0:
+            numpy.negative(q, q)
+        return q
+        
+    def quaternion_from_basis(self, basis, x_basis_sign):
+        leap_matrix = basis
+        tf_matrix = numpy.array([[x_basis_sign * leap_matrix.x_basis.x, x_basis_sign * leap_matrix.x_basis.y, x_basis_sign * leap_matrix.x_basis.z],
+                                [leap_matrix.y_basis.x, leap_matrix.y_basis.y, leap_matrix.y_basis.z],
+                                [leap_matrix.z_basis.x, leap_matrix.z_basis.y, leap_matrix.z_basis.z]])
+        quat = self.quaternion_from_matrix(tf_matrix)
+        orientation = Quaternion()
+        orientation.x = quat[0]
+        orientation.y = quat[1]
+        orientation.z = quat[2]
+        orientation.w = quat[3]
+        return orientation
+        
+    def parse_bones(self, bone, x_basis_sign):
         bone_msg = Bone()
         bone_msg.header.stamp = rospy.Time.now()
         bone_msg.header.frame_id = self.CONST_FRAME_ID
@@ -53,10 +93,12 @@ class SampleListener(Leap.Listener):
         bone_msg.center.append(bone.center.x/1000)
         bone_msg.center.append(bone.center.y/1000)
         bone_msg.center.append(bone.center.z/1000)
-        # @TODO - get bone rotation using basis vectors for left hand 
+        orientation = self.quaternion_from_basis(bone.basis, x_basis_sign)
+        bone_msg.bone_end.orientation = orientation
+        bone_msg.bone_start.orientation = orientation
         return bone_msg
     
-    def parse_finger(self, finger, finger_msg, is_left):
+    def parse_finger(self, finger, finger_msg, x_basis_sign):
         finger_msg.header.stamp = rospy.Time.now()
         finger_msg.header.frame_id = self.CONST_FRAME_ID
         finger_msg.lmc_finger_id = finger.id
@@ -65,9 +107,30 @@ class SampleListener(Leap.Listener):
         finger_msg.width = finger.width/1000
         for b in range(0, 4):
             bone = finger.bone(b)
-            bone_msg = self.parse_bones(bone, is_left)
+            bone_msg = self.parse_bones(bone, x_basis_sign)
             finger_msg.bone_list.append(bone_msg)
         return finger_msg
+        
+    def parse_arm(self, hand, x_basis_sign):
+        arm_msg = Arm()
+        arm_msg.header.stamp = rospy.Time.now()
+        arm_msg.header.frame_id = self.CONST_FRAME_ID
+        arm_msg.elbow.position.x = hand.arm.elbow_position.x/1000
+        arm_msg.elbow.position.y = hand.arm.elbow_position.y/1000
+        arm_msg.elbow.position.z = hand.arm.elbow_position.z/1000
+        arm_msg.center.append(hand.arm.center.x/1000)
+        arm_msg.center.append(hand.arm.center.y/1000)
+        arm_msg.center.append(hand.arm.center.z/1000)
+        arm_msg.wrist.position.x = hand.arm.wrist_position.x / 1000
+        arm_msg.wrist.position.y = hand.arm.wrist_position.y / 1000
+        arm_msg.wrist.position.z = hand.arm.wrist_position.z / 1000
+        arm_msg.direction.x = hand.arm.center.x/1000
+        arm_msg.direction.y = hand.arm.center.y/1000
+        arm_msg.direction.z = hand.arm.center.z/1000
+        orientation = self.quaternion_from_basis(hand.arm.basis, x_basis_sign)
+        arm_msg.elbow.orientation = orientation
+        arm_msg.wrist.orientation = orientation
+        return arm_msg
 
     def parse_hand(self, hand):
         hand_msg = Hand()
@@ -85,16 +148,18 @@ class SampleListener(Leap.Listener):
         hand_msg.grab_strength = hand.grab_strength
         hand_msg.pinch_strength = hand.pinch_strength
         hand_msg.time_visible = hand.time_visible
+        x_basis_sign = -1.0 if hand.is_left else 1.0
         for i in range(0, 3):
             hand_msg.palm_velocity.append(hand.palm_velocity[i] / 1000)
             hand_msg.sphere_center.append(hand.sphere_center[i] / 1000)
         hand_msg.palm_center = hand.palm_position / 1000
         hand_msg.palm_width = hand.palm_width / 1000
         hand_msg.sphere_radius = hand.sphere_radius / 1000
+        hand_msg.arm = self.parse_arm(hand, x_basis_sign)
         # hand_msg.to_string
         for finger in hand.fingers:
             f = Finger()
-            f = self.parse_finger(finger, f, hand.is_left)
+            f = self.parse_finger(finger, f, x_basis_sign)
             hand_msg.finger_list.append(f)
         return hand_msg
             
