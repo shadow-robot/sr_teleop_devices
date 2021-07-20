@@ -16,15 +16,18 @@
 
 from __future__ import absolute_import
 import Leap
-import sys, threading, time
+import sys
+import threading
+import time
 import rospy
-import tf2_ros, tf
+import tf2_ros
+import tf
 from geometry_msgs.msg import Quaternion
 from leap_motion.msg import Human, Hand, Finger, Bone, Arm
 import std_msgs.msg
 import numpy
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
- 
+
 
 class SampleListener(Leap.Listener):
     finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
@@ -40,20 +43,21 @@ class SampleListener(Leap.Listener):
         print("Connected")
 
         # Enable gestures
-        controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE);
-        controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP);
-        controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP);
-        controller.enable_gesture(Leap.Gesture.TYPE_SWIPE);
+        controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE)
+        controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP)
+        controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP)
+        controller.enable_gesture(Leap.Gesture.TYPE_SWIPE)
 
     def on_disconnect(self, controller):
         print("Disconnected")
 
     def on_exit(self, controller):
         print("Exited")
-        
+
     def quaternion_from_basis(self, basis, x_basis_sign):
         leap_matrix = basis
-        tf_matrix = numpy.array([[x_basis_sign * leap_matrix.x_basis.x, x_basis_sign * leap_matrix.x_basis.y, x_basis_sign * leap_matrix.x_basis.z, 0.0],
+        tf_matrix = numpy.array([[x_basis_sign * leap_matrix.x_basis.x, x_basis_sign * leap_matrix.x_basis.y,
+                                  x_basis_sign * leap_matrix.x_basis.z, 0.0],
                                 [leap_matrix.y_basis.x, leap_matrix.y_basis.y, leap_matrix.y_basis.z, 0.0],
                                 [leap_matrix.z_basis.x, leap_matrix.z_basis.y, leap_matrix.z_basis.z, 0.0],
                                 [0.0, 0.0, 0.0, 1.0]])
@@ -64,7 +68,7 @@ class SampleListener(Leap.Listener):
         orientation.z = quat[2]
         orientation.w = quat[3]
         return orientation
-        
+
     def parse_bones(self, bone, x_basis_sign):
         bone_msg = Bone()
         bone_msg.header.stamp = rospy.Time.now()
@@ -77,7 +81,7 @@ class SampleListener(Leap.Listener):
         bone_msg.bone_start.position.z = bone.prev_joint.z / 1000
         bone_msg.bone_end.position.x = bone.next_joint.x / 1000
         bone_msg.bone_end.position.y = bone.next_joint.y / 1000
-        bone_msg.bone_end.position.z = bone.next_joint.z / 1000                    
+        bone_msg.bone_end.position.z = bone.next_joint.z / 1000
         bone_msg.center.append(bone.center.x/1000)
         bone_msg.center.append(bone.center.y/1000)
         bone_msg.center.append(bone.center.z/1000)
@@ -85,7 +89,7 @@ class SampleListener(Leap.Listener):
         bone_msg.bone_end.orientation = orientation
         bone_msg.bone_start.orientation = orientation
         return bone_msg
-    
+
     def parse_finger(self, finger, finger_msg, x_basis_sign):
         finger_msg.header.stamp = rospy.Time.now()
         finger_msg.header.frame_id = self.CONST_FRAME_ID
@@ -98,7 +102,7 @@ class SampleListener(Leap.Listener):
             bone_msg = self.parse_bones(bone, x_basis_sign)
             finger_msg.bone_list.append(bone_msg)
         return finger_msg
-        
+
     def parse_arm(self, hand, x_basis_sign):
         arm_msg = Arm()
         arm_msg.header.stamp = rospy.Time.now()
@@ -149,7 +153,7 @@ class SampleListener(Leap.Listener):
             f = self.parse_finger(finger, f, x_basis_sign)
             hand_msg.finger_list.append(f)
         return hand_msg
-            
+
     def parse_human(self, frame):
         human_msg = Human()
         human_msg.header.stamp = rospy.Time.now()
@@ -164,7 +168,7 @@ class SampleListener(Leap.Listener):
             else:
                 human_msg.right_hand = self.parse_hand(hand)
         return human_msg
-       
+
     def parse_frame(self, frame):
         human_msg = self.parse_human(frame)
         self._human_pub.publish(human_msg)
@@ -173,7 +177,8 @@ class SampleListener(Leap.Listener):
         frame = controller.frame()
         self.parse_frame(frame)
         # print("Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
-        #       frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures())))
+        #       frame.id, frame.timestamp, len(frame.hands), len(frame.fingers),
+        #       len(frame.tools), len(frame.gestures())))
 
     def state_string(self, state):
         if state == Leap.Gesture.STATE_START:
@@ -187,6 +192,7 @@ class SampleListener(Leap.Listener):
 
         if state == Leap.Gesture.STATE_INVALID:
             return "STATE_INVALID"
+
 
 def main():
     rospy.init_node("test")
