@@ -1,3 +1,7 @@
+/*
+* Copyright (C) 2021 Shadow Robot Company Ltd - All Rights Reserved. Proprietary and Confidential.
+* Unauthorized copying of the content in this file, via any medium is strictly prohibited.
+*/
 //!  Lowpass filter class 
 /*!
 * This is a 2nd-order Butterworth LPF that is used to filter the hand x, y, z coordinates
