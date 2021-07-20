@@ -13,7 +13,7 @@
 * You should have received a copy of the GNU General Public License along
 * with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-//!  Lowpass filter class 
+//!  Lowpass filter class
 /*!
 * This is a 2nd-order Butterworth LPF that is used to filter the hand x, y, z coordinates
 * coming from the Leap Controller via Human.msg
@@ -26,7 +26,7 @@ class lpf
 {
     public:
         lpf();
-        lpf(double);
+        explicit lpf(double);
         void setCutoff(double);
         void setInitialPos(double initial_msrmt, int b_idx, int dim);
         double filter(const double& new_msrmt, int f_idx, int dim);
@@ -39,4 +39,4 @@ class lpf
         double prev_msrmts_ [6][3][3];
         double prev_filtered_msrmts_ [6][3][2];
 };
-#endif /* LMC_FILTER_NODE_H */
+#endif  // LMC_FILTER_NODE_H
