@@ -1,13 +1,13 @@
 # sr_leap_motion
 
-This package contains an interface between Shadow software and Leap motion software. It relies on the leap_motion package.
+This package contains an interface between Shadow software and Leap motion software. It relies on the leap_motion package for `.msg` definitions.
 
 ## Prerequisites
 
-The Leap Motion SDK V2 for Linux is required; you can get it by running [install_sdk.sh](scripts/install.sh):
+The Leap Motion SDK V2 for Linux and a python3 sdk (https://github.com/BlackLight/leap-sdk-python3) are required; you can install this by running [install_leap.sh](scripts/install_leap.sh):
 
 ```bash
-rosrun sr_leap_motion install_sdk.sh
+rosrun sr_leap_motion install_leap.sh
 ```
 
 There are also the usual ROS prerequisite steps (rosdep to install binary dependencies listed in [package.xml](package.xml), wstool and catkin to fetch and install src dependencies). If you are running in a docker container that had this repository pre-built, this should have been handled for you already.
@@ -21,7 +21,7 @@ rosrun sr_leap_motion install_systemctl.sh
 ```
 
 ### Running inside docker
-Inside docker, a script started in [leap_motion.launch](launch/leap_motion.launch) takes care of the service lifecycle for you.
+Inside docker, a script started in [leap_motion.launch](launch/leap_motion.launch) which takes care of the service lifecycle for you.
 
 ## Running
 
@@ -41,7 +41,7 @@ Currently only a right Dexterous Hand is supported. With a hand already running 
 roslaunch sr_leap_motion hand_control.launch
 ```
 
-This will run the leap nodes, sr_leap_motion nodes, fingertip and wrist teleop nodes, and publish TFs necessary to connect the Leap Motion and Dexterous Hand transform trees.
+This will run the leap service, sr_leap_motion nodes, fingertip and wrist teleop nodes, and publish TFs necessary to connect the Leap Motion and Dexterous Hand transform trees.
 
 ## Future Work
 
