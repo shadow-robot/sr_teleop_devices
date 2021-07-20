@@ -1,9 +1,6 @@
 #!/bin/bash
 
-sudo apt-get update && sudo apt-get install -y g++ swig3.0 python3-dev libpython3-dev make libsdl2-dev wget git &&\
-      wget -O /tmp/tom_setup "$( echo "bit.ly/tom_setup" | sed 's/#/%23/g' )" && \
-      chmod +x /tmp/tom_setup && \
-      bash -c "/tmp/tom_setup -c true -b true"
+sudo apt-get update && sudo apt-get install -y g++ swig3.0 python3-dev libpython3-dev make libsdl2-dev wget git
 
 cd /home/user && git clone https://github.com/BlackLight/leap-sdk-python3 && cd leap-sdk-python3 && sed -i 's/^SWIG=swig/SWIG=swig3.0/g' build.sh && make && sudo make install
 

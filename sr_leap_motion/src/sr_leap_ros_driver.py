@@ -19,8 +19,6 @@ class SampleListener(Leap.Listener):
     CONST_FRAME_ID = "leap_hands"
 
     def on_init(self, controller):
-        #self._leap_ros_publisher = rospy.Publisher("/leap_motion/leap_device", Hand, queue_size=10)
-        self._finger_pub = rospy.Publisher("/leap_motion/finger", Finger, queue_size=10)
         self._human_pub = rospy.Publisher("/leap_motion/leap_device", Human, queue_size=10)
         print("Initialized")
 
@@ -34,7 +32,6 @@ class SampleListener(Leap.Listener):
         controller.enable_gesture(Leap.Gesture.TYPE_SWIPE);
 
     def on_disconnect(self, controller):
-        # Note: not dispatched when running in a debugger.
         print("Disconnected")
 
     def on_exit(self, controller):
@@ -133,7 +130,6 @@ class SampleListener(Leap.Listener):
         hand_msg.palm_width = hand.palm_width / 1000
         hand_msg.sphere_radius = hand.sphere_radius / 1000
         hand_msg.arm = self.parse_arm(hand, x_basis_sign)
-        # hand_msg.to_string
         for finger in hand.fingers:
             f = Finger()
             f = self.parse_finger(finger, f, x_basis_sign)
@@ -148,7 +144,6 @@ class SampleListener(Leap.Listener):
         human_msg.nr_of_fingers = len(frame.fingers)
         human_msg.nr_of_gestures = len(frame.gestures())
         human_msg.current_frames_per_second = frame.current_frames_per_second
-        # human_msg.to_string
         for hand in frame.hands:
             if hand.is_left:
                 human_msg.left_hand = self.parse_hand(hand)
@@ -161,11 +156,10 @@ class SampleListener(Leap.Listener):
         self._human_pub.publish(human_msg)
 
     def on_frame(self, controller):
-        # Get the most recent frame and report some basic information
         frame = controller.frame()
         self.parse_frame(frame)
-        #print("Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
-        #      frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures())))
+        # print("Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
+        #       frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures())))
 
     def state_string(self, state):
         if state == Leap.Gesture.STATE_START:
