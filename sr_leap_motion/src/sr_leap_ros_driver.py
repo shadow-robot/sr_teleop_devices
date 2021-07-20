@@ -19,9 +19,9 @@ class SampleListener(Leap.Listener):
     CONST_FRAME_ID = "leap_hands"
 
     def on_init(self, controller):
-        self._leap_ros_publisher = rospy.Publisher("/leap_motion/human_out", Hand, queue_size=10)
+        #self._leap_ros_publisher = rospy.Publisher("/leap_motion/leap_device", Hand, queue_size=10)
         self._finger_pub = rospy.Publisher("/leap_motion/finger", Finger, queue_size=10)
-        self._human_pub = rospy.Publisher("/leap_motion/leap_filtered", Human, queue_size=10)
+        self._human_pub = rospy.Publisher("/leap_motion/leap_device", Human, queue_size=10)
         print("Initialized")
 
     def on_connect(self, controller):
