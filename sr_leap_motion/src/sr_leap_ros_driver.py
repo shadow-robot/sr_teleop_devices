@@ -21,7 +21,7 @@ class SampleListener(Leap.Listener):
     def on_init(self, controller):
         self._leap_ros_publisher = rospy.Publisher("/leap_motion/human_out", Hand, queue_size=10)
         self._finger_pub = rospy.Publisher("/leap_motion/finger", Finger, queue_size=10)
-        self._human_pub = rospy.Publisher("/leap_motion/human", Human, queue_size=10)
+        self._human_pub = rospy.Publisher("/leap_motion/leap_filtered", Human, queue_size=10)
         print("Initialized")
 
     def on_connect(self, controller):
@@ -40,36 +40,13 @@ class SampleListener(Leap.Listener):
     def on_exit(self, controller):
         print("Exited")
         
-    def quaternion_from_matrix(self, matrix):
-        M = numpy.array(matrix, dtype=numpy.float64, copy=False)[:4, :4]
-        m00 = M[0, 0]
-        m01 = M[0, 1]
-        m02 = M[0, 2]
-        m10 = M[1, 0]
-        m11 = M[1, 1]
-        m12 = M[1, 2]
-        m20 = M[2, 0]
-        m21 = M[2, 1]
-        m22 = M[2, 2]
-        # symmetric matrix K
-        K = numpy.array([[m00-m11-m22, 0.0,         0.0,         0.0],
-                         [m01+m10,     m11-m00-m22, 0.0,         0.0],
-                         [m02+m20,     m12+m21,     m22-m00-m11, 0.0],
-                         [m21-m12,     m02-m20,     m10-m01,     m00+m11+m22]])
-        K /= 3.0
-        # quaternion is eigenvector of K that corresponds to largest eigenvalue
-        w, V = numpy.linalg.eigh(K)
-        q = V[[3, 0, 1, 2], numpy.argmax(w)]
-        if q[0] < 0.0:
-            numpy.negative(q, q)
-        return q
-        
     def quaternion_from_basis(self, basis, x_basis_sign):
         leap_matrix = basis
-        tf_matrix = numpy.array([[x_basis_sign * leap_matrix.x_basis.x, x_basis_sign * leap_matrix.x_basis.y, x_basis_sign * leap_matrix.x_basis.z],
-                                [leap_matrix.y_basis.x, leap_matrix.y_basis.y, leap_matrix.y_basis.z],
-                                [leap_matrix.z_basis.x, leap_matrix.z_basis.y, leap_matrix.z_basis.z]])
-        quat = self.quaternion_from_matrix(tf_matrix)
+        tf_matrix = numpy.array([[x_basis_sign * leap_matrix.x_basis.x, x_basis_sign * leap_matrix.x_basis.y, x_basis_sign * leap_matrix.x_basis.z, 0.0],
+                                [leap_matrix.y_basis.x, leap_matrix.y_basis.y, leap_matrix.y_basis.z, 0.0],
+                                [leap_matrix.z_basis.x, leap_matrix.z_basis.y, leap_matrix.z_basis.z, 0.0],
+                                [0.0, 0.0, 0.0, 1.0]])
+        quat = tf.transformations.quaternion_from_matrix(tf_matrix)
         orientation = Quaternion()
         orientation.x = quat[0]
         orientation.y = quat[1]
@@ -187,8 +164,8 @@ class SampleListener(Leap.Listener):
         # Get the most recent frame and report some basic information
         frame = controller.frame()
         self.parse_frame(frame)
-        print("Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
-              frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures())))
+        #print("Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
+        #      frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures())))
 
     def state_string(self, state):
         if state == Leap.Gesture.STATE_START:

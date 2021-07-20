@@ -13,7 +13,7 @@
         <arg name="heartbeat_topic_name" value="$(arg heartbeat_topic)"/>
     </include>
     <arg name="leap_to_sr_rotation" value="1.57079632679 0 1.57079632679"/>
-    <node pkg="tf2_ros" type="static_transform_publisher" name="sr_to_join" args="0.011 0 0.099 0 0 0 1.0 rh_palm rh_leap_sr_join" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="sr_to_join" args="1.011 0 0.099 0 0 0 1.0 rh_palm rh_leap_sr_join" />
     <node pkg="tf2_ros" type="static_transform_publisher" name="leap_to_join" args="0 0 0 0 -1.57079632679 -1.57079632679 rh_leap_sr_join rh_leap_mf_mca_end" />
     <node pkg="tf2_ros" type="static_transform_publisher" name="leap_to_sr_ff" args="0 0 0 $(arg leap_to_sr_rotation) rh_leap_ff_dis_end rh_first_finger_tip_mocap" />
     <node pkg="tf2_ros" type="static_transform_publisher" name="leap_to_sr_mf" args="0 0 0 $(arg leap_to_sr_rotation) rh_leap_mf_dis_end rh_middle_finger_tip_mocap" />
