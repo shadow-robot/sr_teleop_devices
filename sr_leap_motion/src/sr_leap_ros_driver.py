@@ -180,7 +180,7 @@ class SampleListener(Leap.Listener):
                frame.id, frame.timestamp, len(frame.hands), len(frame.fingers),
                len(frame.tools), len(frame.gestures())))
 
-    # @TODO: re-implement gesture publishing: 
+    # @TODO: re-implement gesture publishing:
     # https://github.com/ros-drivers/leap_motion/blob/hydro/src/lmc_listener.cpp#L363-L399
     def state_string(self, state):
         if state == Leap.Gesture.STATE_START:
