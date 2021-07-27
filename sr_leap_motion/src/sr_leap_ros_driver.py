@@ -30,7 +30,7 @@ from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 
 
 class SampleListener(Leap.Listener):
-    CONST_BONE_NAMES = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']1
+    CONST_BONE_NAMES = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     CONST_FRAME_ID = "leap_hands"
 
     def on_init(self, controller):
@@ -94,7 +94,7 @@ class SampleListener(Leap.Listener):
         finger_msg.type = finger.type
         finger_msg.length = finger.length/1000
         finger_msg.width = finger.width/1000
-        for bone_number in range(0, len(CONST_BONE_NAMES)):
+        for bone_number in range(0, len(self.CONST_BONE_NAMES)):
             bone = finger.bone(bone_number)
             bone_msg = self.parse_bones(bone, x_basis_sign)
             finger_msg.bone_list.append(bone_msg)
@@ -138,7 +138,7 @@ class SampleListener(Leap.Listener):
         hand_msg.pinch_strength = hand.pinch_strength
         hand_msg.time_visible = hand.time_visible
         x_basis_sign = -1.0 if hand.is_left else 1.0
-        for i in range(0, len(hand.palm_velocity)):
+        for i in range(0, 3):
             hand_msg.palm_velocity.append(hand.palm_velocity[i] / 1000)
             hand_msg.sphere_center.append(hand.sphere_center[i] / 1000)
         hand_msg.palm_center = hand.palm_position / 1000
