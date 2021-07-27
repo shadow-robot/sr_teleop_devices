@@ -3,6 +3,7 @@ This directory contains scripts useful for setting up and running a leap motion 
 ```bash
 rosrun sr_leap_motion <script.sh>
 ```
+`install_leap.sh` builds and installs the python3 leap api, `install_sdk.sh` is called as part of this script.
 
 `install_sdk.sh` installs the Leap Motion SDK by downloading a .deb and install it and it's dependencies.
 
