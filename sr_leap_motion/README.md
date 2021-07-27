@@ -48,3 +48,4 @@ This will run the leap service, sr_leap_motion nodes, fingertip and wrist teleop
 * Make the Leap hardware work inside a docker container.
 * Integrate multiple Leap sensors for increased reliabilty and accuracy.
 * Add joint-angle mode (currently only fingertip-position IK is supported)
+* Make left hand work
