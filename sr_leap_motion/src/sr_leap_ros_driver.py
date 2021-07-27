@@ -30,17 +30,15 @@ from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 
 
 class SampleListener(Leap.Listener):
-    finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
-    bone_names = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
-    state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
+    CONST_BONE_NAMES = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']1
     CONST_FRAME_ID = "leap_hands"
 
     def on_init(self, controller):
         self._human_pub = rospy.Publisher("/leap_motion/leap_device", Human, queue_size=10)
-        print("Initialized")
+        rospy.loginfo("Initialized")
 
     def on_connect(self, controller):
-        print("Connected")
+        rospy.loginfo("Connected")
 
         # Enable gestures
         controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE)
@@ -49,17 +47,16 @@ class SampleListener(Leap.Listener):
         controller.enable_gesture(Leap.Gesture.TYPE_SWIPE)
 
     def on_disconnect(self, controller):
-        print("Disconnected")
+        rospy.loginfo("Disconnected")
 
     def on_exit(self, controller):
-        print("Exited")
+        rospy.loginfo("Exited")
 
     def quaternion_from_basis(self, basis, x_basis_sign):
-        leap_matrix = basis
-        tf_matrix = numpy.array([[x_basis_sign * leap_matrix.x_basis.x, x_basis_sign * leap_matrix.x_basis.y,
-                                  x_basis_sign * leap_matrix.x_basis.z, 0.0],
-                                [leap_matrix.y_basis.x, leap_matrix.y_basis.y, leap_matrix.y_basis.z, 0.0],
-                                [leap_matrix.z_basis.x, leap_matrix.z_basis.y, leap_matrix.z_basis.z, 0.0],
+        tf_matrix = numpy.array([[x_basis_sign * basis.x_basis.x, x_basis_sign * basis.x_basis.y,
+                                  x_basis_sign * basis.x_basis.z, 0.0],
+                                [basis.y_basis.x, basis.y_basis.y, basis.y_basis.z, 0.0],
+                                [basis.z_basis.x, basis.z_basis.y, basis.z_basis.z, 0.0],
                                 [0.0, 0.0, 0.0, 1.0]])
         quat = tf.transformations.quaternion_from_matrix(tf_matrix)
         orientation = Quaternion()
@@ -97,8 +94,8 @@ class SampleListener(Leap.Listener):
         finger_msg.type = finger.type
         finger_msg.length = finger.length/1000
         finger_msg.width = finger.width/1000
-        for b in range(0, 4):
-            bone = finger.bone(b)
+        for bone_number in range(0, len(CONST_BONE_NAMES)):
+            bone = finger.bone(bone_number)
             bone_msg = self.parse_bones(bone, x_basis_sign)
             finger_msg.bone_list.append(bone_msg)
         return finger_msg
@@ -141,7 +138,7 @@ class SampleListener(Leap.Listener):
         hand_msg.pinch_strength = hand.pinch_strength
         hand_msg.time_visible = hand.time_visible
         x_basis_sign = -1.0 if hand.is_left else 1.0
-        for i in range(0, 3):
+        for i in range(0, len(hand.palm_velocity)):
             hand_msg.palm_velocity.append(hand.palm_velocity[i] / 1000)
             hand_msg.sphere_center.append(hand.sphere_center[i] / 1000)
         hand_msg.palm_center = hand.palm_position / 1000
@@ -175,11 +172,16 @@ class SampleListener(Leap.Listener):
 
     def on_frame(self, controller):
         frame = controller.frame()
+        # self.print_frame(frame)
         self.parse_frame(frame)
-        # print("Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
-        #       frame.id, frame.timestamp, len(frame.hands), len(frame.fingers),
-        #       len(frame.tools), len(frame.gestures())))
 
+    def print_frame(self, frame):
+        print("Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
+               frame.id, frame.timestamp, len(frame.hands), len(frame.fingers),
+               len(frame.tools), len(frame.gestures())))
+
+    # @TODO: re-implement gesture publishing: 
+    # https://github.com/ros-drivers/leap_motion/blob/hydro/src/lmc_listener.cpp#L363-L399
     def state_string(self, state):
         if state == Leap.Gesture.STATE_START:
             return "STATE_START"
