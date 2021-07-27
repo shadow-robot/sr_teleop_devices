@@ -1,9 +1,11 @@
 <launch>
+    <arg name="rviz" default="false"/>
     <arg name="run_without_heartbeat" default="true"/>
     <arg name="heartbeat_topic" default="/sr_leap_motion/heartbeat"/>
 
     <!-- Leap motion nodes -->
     <include file="$(find sr_leap_motion)/launch/sr_leap_motion.launch">
+        <arg name="rviz" value="$(arg rviz)"/>
         <arg name="right_root_tf_name" value="rh_leap_mf_mca_end"/>
         <arg name="heartbeat_topic" value="$(arg heartbeat_topic)"/>
     </include>
