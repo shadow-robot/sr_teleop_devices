@@ -38,10 +38,10 @@ roslaunch sr_leap_motion sr_leap_motion.launch rviz:=true
 Currently only a right Dexterous Hand is supported. With a hand already running (simulated or HW), run:
 
 ```bash
-roslaunch sr_leap_motion hand_control.launch
+roslaunch sr_fingertip_hand_teleop leap_motion.launch
 ```
 
-This will run the leap service, sr_leap_motion nodes, fingertip and wrist teleop nodes, and publish TFs necessary to connect the Leap Motion and Dexterous Hand transform trees.
+This requires access to the private sr_teleop_internal repository. It will run the leap service, sr_leap_motion nodes, fingertip and wrist teleop nodes, and publish TFs necessary to connect the Leap Motion and Dexterous Hand transform trees.
 
 ## Future Work
 
