@@ -90,21 +90,10 @@ class RemotePowerControl(PowerControlCommon):
                     rospy.loginfo("  %s: %s", key, value)
 
     def handle_custom_relay_request(self, req):
-        if 'get' in req.request_type.lower():
-            req_type = 'get'
-        if 'set' in req.request_type.lower():
-            req_type = 'set'
-        if req.command_string == "":
-            request_string = 'http://' + str(req.ip_address) + '/' + str(req_type) + 'para[' + str(
-                req.param_number) + ']=' + str(req.value)
-        else:
-            request_string = 'http://' + str(req.ip_address) + '/' + req.command_string
+        request_string = 'http://' + str(req.ip_address) + '/' + req.command_string
         response = self.requests_retry_session().get(request_string)
         response_content = response.content.replace("<html><body>", '').replace("</body></html>\r\n\r\n", '')
         return CustomRelayCommandResponse(response_content)
-
-
-
 
 
 if __name__ == "__main__":
