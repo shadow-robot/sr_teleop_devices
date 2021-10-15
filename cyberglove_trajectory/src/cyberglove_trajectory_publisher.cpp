@@ -148,53 +148,11 @@ const std::vector<std::string> CybergloveTrajectoryPublisher::glove_sensors_vect
     reload_calibration_service = n_tilde.advertiseService<std_srvs::Empty::Request, std_srvs::Empty::Response>(
       "reload_calibration", boost::bind(&CybergloveTrajectoryPublisher::reload_calibration, this, _1, _2));
 
-    // initialises joint names (the order is important)
-    raw_jointstate_msg.name.push_back("G_ThumbRotate");
-    raw_jointstate_msg.name.push_back("G_ThumbMPJ");
-    raw_jointstate_msg.name.push_back("G_ThumbIJ");
-    raw_jointstate_msg.name.push_back("G_ThumbAb");
-    raw_jointstate_msg.name.push_back("G_IndexMPJ");
-    raw_jointstate_msg.name.push_back("G_IndexPIJ");
-    raw_jointstate_msg.name.push_back("G_IndexDIJ");
-    raw_jointstate_msg.name.push_back("G_MiddleMPJ");
-    raw_jointstate_msg.name.push_back("G_MiddlePIJ");
-    raw_jointstate_msg.name.push_back("G_MiddleDIJ");
-    raw_jointstate_msg.name.push_back("G_MiddleIndexAb");
-    raw_jointstate_msg.name.push_back("G_RingMPJ");
-    raw_jointstate_msg.name.push_back("G_RingPIJ");
-    raw_jointstate_msg.name.push_back("G_RingDIJ");
-    raw_jointstate_msg.name.push_back("G_RingMiddleAb");
-    raw_jointstate_msg.name.push_back("G_PinkieMPJ");
-    raw_jointstate_msg.name.push_back("G_PinkiePIJ");
-    raw_jointstate_msg.name.push_back("G_PinkieDIJ");
-    raw_jointstate_msg.name.push_back("G_PinkieRingAb");
-    raw_jointstate_msg.name.push_back("G_PalmArch");
-    raw_jointstate_msg.name.push_back("G_WristPitch");
-    raw_jointstate_msg.name.push_back("G_WristYaw");
-
-    cal_jointstate_msg.name.push_back("G_ThumbRotate");
-    cal_jointstate_msg.name.push_back("G_ThumbMPJ");
-    cal_jointstate_msg.name.push_back("G_ThumbIJ");
-    cal_jointstate_msg.name.push_back("G_ThumbAb");
-    cal_jointstate_msg.name.push_back("G_IndexMPJ");
-    cal_jointstate_msg.name.push_back("G_IndexPIJ");
-    cal_jointstate_msg.name.push_back("G_IndexDIJ");
-    cal_jointstate_msg.name.push_back("G_MiddleMPJ");
-    cal_jointstate_msg.name.push_back("G_MiddlePIJ");
-    cal_jointstate_msg.name.push_back("G_MiddleDIJ");
-    cal_jointstate_msg.name.push_back("G_MiddleIndexAb");
-    cal_jointstate_msg.name.push_back("G_RingMPJ");
-    cal_jointstate_msg.name.push_back("G_RingPIJ");
-    cal_jointstate_msg.name.push_back("G_RingDIJ");
-    cal_jointstate_msg.name.push_back("G_RingMiddleAb");
-    cal_jointstate_msg.name.push_back("G_PinkieMPJ");
-    cal_jointstate_msg.name.push_back("G_PinkiePIJ");
-    cal_jointstate_msg.name.push_back("G_PinkieDIJ");
-    cal_jointstate_msg.name.push_back("G_PinkieRingAb");
-    cal_jointstate_msg.name.push_back("G_PalmArch");
-    cal_jointstate_msg.name.push_back("G_WristPitch");
-    cal_jointstate_msg.name.push_back("G_WristYaw");
-
+    for (std::string name : glove_sensors_vector_)
+    {
+      raw_jointstate_msg.name.push_back(name);
+      cal_jointstate_msg.name.push_back(name);
+    }
 
     // set sampling frequency
     double sampling_freq;
