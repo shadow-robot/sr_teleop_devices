@@ -4,24 +4,21 @@ This package contains an interface between Shadow software and Leap motion softw
 
 ## Prerequisites
 
-The Leap Motion SDK V2 for Linux and a python3 sdk (https://github.com/BlackLight/leap-sdk-python3) are required; you can install this by running [install_leap.sh](scripts/install_leap.sh):
+Whether running inside or outside of a container, there are also the usual ROS prerequisite steps (rosdep to install binary dependencies listed in [package.xml](package.xml), wstool and catkin to fetch and install src dependencies). If you are running in a docker container that had this repository pre-built, this should have been handled for you already.
 
-```bash
-rosrun sr_leap_motion install_leap.sh
-```
+## Running outside of docker
 
-There are also the usual ROS prerequisite steps (rosdep to install binary dependencies listed in [package.xml](package.xml), wstool and catkin to fetch and install src dependencies). If you are running in a docker container that had this repository pre-built, this should have been handled for you already.
+Run [install_leap.sh](scripts/install_leap.sh); this will install the Leap Motion SDK V2 for Linux and a [python3 sdk](https://github.com/BlackLight/leap-sdk-python3). Afterwards, you will need to restart your terminal or start a new one in order for Python to find the `Leap` module.
 
-### Running outside docker
+The Leap service (leapd) must be running all the time; Ubuntu has changed how services work since V2 was released. As a result, you need to run [install_systemctl.sh](scripts/install_systemctl.sh)
 
-We need the Leap service to be running all the time; Ubuntu has changed how services work since V2 was released. As a result, you need to run [install_systemctl.sh](scripts/install_systemctl.sh):
+## Running inside docker
 
-```bash
-rosrun sr_leap_motion install_systemctl.sh
-```
+Surprisingly, no udev rules or `/dev` forwarding shenanigans are required. Just make sure the Leap Motion is plugged into your machine before starting the container. You can stop and start the container to achieve this, it doesn't need to be a fresh `docker run`.
 
-### Running inside docker
-Inside docker, a script started in [leap_motion.launch](launch/leap_motion.launch) which takes care of the service lifecycle for you.
+Run [install_leap.sh](scripts/install_leap.sh); this will install the Leap Motion SDK V2 for Linux and a [python3 sdk](https://github.com/BlackLight/leap-sdk-python3) inside your container. Afterwards, you will need to restart your terminal or start a new one in order for Python to find the `Leap` module.
+
+You don't need to set up the `leapd` service when running inside a container; a script started in [leap_motion.launch](launch/leap_motion.launch) which takes care of the service lifecycle for you.
 
 ## Running
 
