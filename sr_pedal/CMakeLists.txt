@@ -81,8 +81,8 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${LIBUSB_1_INCLUDE_DIRS}
-  ${hidapi_INCLUDE_DIR}
+  "C:/opt/ros/noetic/x64/tools/vcpkg/packages/libusb_x64-windows/include"
+  "C:/opt/ros/noetic/x64/tools/vcpkg/packages/hidapi_x64-windows/include"
 )
 
 ## Declare a C++ executable
@@ -95,11 +95,12 @@ add_executable(sr_pedal_node src/sr_pedal/sr_pedal_driver.cpp)
 add_dependencies(sr_pedal_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
+
 target_link_libraries(sr_pedal_node
   ${catkin_LIBRARIES}
-  ${LIBUSB_1_LIBRARIES}
-  hidapi-libusb
-  usb-1.0
+  ${LIBUSB_LIBRARIES}
+  "C:/opt/ros/noetic/x64/tools/vcpkg/packages/hidapi_x64-windows/lib/hidapi.lib"
+  "C:/opt/ros/noetic/x64/tools/vcpkg/packages/libusb_x64-windows/lib/libusb-1.0.lib"
 )
 
 #############
