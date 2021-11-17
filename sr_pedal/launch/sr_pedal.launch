@@ -1,38 +1,10 @@
 <launch>
-    <!-- Launches the pedal node. -->
+    <arg name="ros_master_uri" default="http://10.9.12.1:11311"/>
+    <arg name="ros_ip" default="10.9.12.1"/>
 
-    <!-- The goal publish rate. Publishing will be much slower when the pedal is disconnected (1-2Hz) due to the
-         relatively slow hardware searching. Default is 20 to allow heartbeat clients to use a 10Hz/0.1s timeout,
-         ensuring a <0.1s response to pedal data being lost for whatever reason. -->
-    <arg name="publishing_rate" default="20"/>
+    <env name="ROS_MASTER_URI" value="$(arg ros_master_uri)"/>
+    <env name="ROS_IP" value="$(arg ros_master_uri)"/>
 
-    <!-- If true, a mock pedal status is published.-->
-    <arg name="mock" default="false"/>
-    
-    <group unless="$(arg mock)">
-        <node name="sr_pedal" pkg="sr_pedal" type="sr_pedal_node" output="screen">
-            <param name="publishing_rate" value="$(arg publishing_rate)"/>
-        </node>
-    </group>
-
-    <!-- Mock pedal and arguments -->
-
-    <!-- Whether the mock pedal is "connected" when the mock starts. -->
-    <arg name="mock_connected" default="true"/>
-    <!-- Which pedals are pressed when the mock starts: 'none', 'left', 'middle', 'right', 'outer', or 'all'. -->
-    <arg name="mock_pressed" default="none"/>
-    <arg name="mock_left_pressed" default="$(eval mock_pressed in ['left', 'all', 'outer'])"/>
-    <arg name="mock_middle_pressed" default="$(eval mock_pressed in ['middle', 'all'])"/>
-    <arg name="mock_right_pressed" default="$(eval mock_pressed in ['right', 'all', 'outer'])"/>
-    <!-- Whether to provide keyboard control of the mock pedal. -->
-    <arg name="mock_keyboard_control" default="true"/>
-    
-    <node if="$(arg mock)" name="sr_pedal" pkg="sr_pedal" type="sr_triple_pedal_mock.py" output="screen">
-        <param name="connected" value="$(arg mock_connected)"/>
-        <param name="left_pressed" value="$(arg mock_left_pressed)"/>
-        <param name="middle_pressed" value="$(arg mock_middle_pressed)"/>
-        <param name="right_pressed" value="$(arg mock_right_pressed)"/>
-        <param name="rate" value="$(arg rate)"/>
-        <param name="keyboard_control" value="$(arg mock_keyboard_control)"/>
-    </node>
+    <node name="sr_pedal_node" pkg="sr_pedal" type="sr_pedal_node" output="screen" />
 </launch>
+
