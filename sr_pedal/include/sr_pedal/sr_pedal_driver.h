@@ -21,7 +21,7 @@
 #include <libusb-1.0/libusb.h>
 #include <iostream>
 #include <thread>  // NOLINT(build/c++11)
-#include <hidapi/hidapi.h>
+#include <hidapi.h>
 #include <sr_pedal/Status.h>
 #include <atomic>
 
