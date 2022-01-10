@@ -31,9 +31,9 @@ from sr_hand.tactile_receiver import TactileReceiver
 import matplotlib.pyplot as plt
 
 from dynamic_reconfigure.server import Server
-from sr_finger_mount.cfg import SrPiezoFeedbackConfig
+from sr_piezo_feedback.cfg import SrPiezoFeedbackConfig
+from sr_piezo_feedback.msg import PiezoFeedback
 
-from sr_finger_mount.msg import PiezoFeedback
 
 
 class DeviceHandler(threading.Thread):
