@@ -35,7 +35,6 @@ from sr_piezo_feedback.cfg import SrPiezoFeedbackConfig
 from sr_piezo_feedback.msg import PiezoFeedback
 
 
-
 class DeviceHandler(threading.Thread):
     def __init__(self, device, fingers, mount):
         super(DeviceHandler, self).__init__()
