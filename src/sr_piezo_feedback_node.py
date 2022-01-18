@@ -88,11 +88,8 @@ class DeviceHandler(threading.Thread):
 
 class SrPiezoFeedback():
 
-    CONST_PST_MAX = 1
-    CONST_PST_MIN = 0
-
-    CONST_BIOTAC_MAX = 1
-    CONST_BIOTAC_MIN = 0
+    CONST_TACTILE_MAX = 1
+    CONST_TACTILE_MIN = 0
 
     CONST_FINGERS = ["ff", "mf", "rf", "lf", "th"]
     CONST_ACCEPTABLE_DEVICE_NAMES = ["Boreas DevKit", "BOS1901-KIT"]
@@ -130,13 +127,23 @@ class SrPiezoFeedback():
             rospy.Subscriber("/"+self._hand_id+"/tactile", ShadowPST, self._pst_tactile_cb)
 
         elif self._used_tactiles == "biotac":
-            try:
-                from haptx_tactile_mapping.biotac_sp_minus_mapping import BiotacMapping
-                from haptx_msgs.msg import Movables, Movable, Tactor, BiotacAllFloat
-                BiotacMapping(self._hand_id)
-                rospy.Subscriber("haptx_movables", Movables, self._biotac_tactile_cb)
-            except Exception:
-                rospy.logerr("Error while importing haptx")
+            biotac_reference_data = rospy.wait_for_message("/"+self._hand_id+"/tactile", BiotacAll)
+            self._tactile_pdc_ref = len(self.CONST_FINGERS) * [0]
+            self._tactile_pac_ref = len(self.CONST_FINGERS) * [0]
+            self._pdc_threshold = 5.0
+            self._pdc_saturation = 100.0
+            self._pdc_mapping_exponent = 2.0
+            self._pac_threshold = 10.0
+            self._pac_saturation = 2000.0
+            self._pac_mapping_exponent = 2.0
+            self._pac_output_weight = 0.3
+            self._pdc_output_weight = 1.0
+
+            for i, tactile in enumerate(biotac_reference_data.tactiles):
+                self._tactile_pdc_ref[i] = tactile.pdc
+                self._tactile_pac_ref[i] = np.mean(tactile.pac)
+
+            rospy.Subscriber("/"+self._hand_id+"/tactile", BiotacAll, self._biotac_tactile_cb)
 
         if not set(self._used_fingers).intersection(set(self.CONST_FINGERS)):
             rospy.logerr("Failed to start node! Used fingers are not allowed: {}".format(self.CONST_FINGERS))
@@ -148,7 +155,7 @@ class SrPiezoFeedback():
         self.initialize()
 
     def _init_thresholds(self):
-        samples_to_collect = 50
+        samples_to_collect = 10
         thresholds_to_set = samples_to_collect * [None]
         for i in range(0, samples_to_collect):
             data = rospy.wait_for_message("/"+self._hand_id+"/tactile", ShadowPST)
@@ -204,11 +211,11 @@ class SrPiezoFeedback():
                 self.fading_amplitudes[finger] = 0
                 self.fading_frequencies[finger] = 0
 
-            self._amplitudes[finger] = ((mapped_values[finger] - self.CONST_PST_MIN) /
-                                        (self.CONST_PST_MAX - self.CONST_PST_MIN)) * \
+            self._amplitudes[finger] = ((mapped_values[finger] - self.CONST_TACTILE_MIN) /
+                                        (self.CONST_TACTILE_MAX - self.CONST_TACTILE_MIN)) * \
                 (self._amp_max - self._amp_min) + self._amp_min
-            self._frequencies[finger] = ((mapped_values[finger] - self.CONST_PST_MIN) /
-                                         (self.CONST_PST_MAX - self.CONST_PST_MIN)) * \
+            self._frequencies[finger] = ((mapped_values[finger] - self.CONST_TACTILE_MIN) /
+                                         (self.CONST_TACTILE_MAX - self.CONST_TACTILE_MIN)) * \
                 (self._freq_max - self._freq_min) + self._freq_min
 
             self._amplitudes[finger] = max(self._amplitudes[finger], self.fading_amplitudes[finger])
@@ -228,14 +235,39 @@ class SrPiezoFeedback():
                                                                                                len(data.pressure)))
 
     def _biotac_tactile_cb(self, data):
-        if len(data.movables) == len(self.CONST_FINGERS):
-            if self._hand_id in data.movables[0].name:
-                for i in range(0, len(data.movables)):
-                    self._normalized_pressure[i] = data.movables[i].tactors[0].pressure
-            self._process_tactile_data(dict(zip(self.CONST_FINGERS, self._normalized_pressure)))
+        pressure = self._process_biotac_tactile_msg(data)
+        if len(pressure) == len(self.CONST_FINGERS):
+            self._process_tactile_data(dict(zip(self.CONST_FINGERS, pressure)))
         else:
             rospy.logwarn("Missing data. Expected to receive {}, "
-                          "but got {} Biotac values".format(len(self.CONST_FINGERS), len(self._normalized_pressure)))
+                          "but got {} Biotac values".format(len(self.CONST_FINGERS), len(pressure)))
+
+    def _process_biotac_tactile_msg(self, data):
+        for i, tactile in enumerate(data.tactiles):
+            pdc_map = 0
+            pac_map = 0
+            pdc_norm = tactile.pdc - self._tactile_pdc_ref[i]
+            pac_norm = np.mean(tactile.pac) - self._tactile_pac_ref[i]
+
+            if (pdc_norm > self._pdc_threshold):
+                pdc_map = (pdc_norm - self._pdc_threshold)/(self._pdc_saturation - self._pdc_threshold)
+                pdc_map = min(max(pdc_map, 0), 1) ** self._pdc_mapping_exponent
+                pdc_out = pdc_map
+
+                pac_map = (abs(pac_norm)-self._pac_threshold)/(self._pac_saturation-self._pac_threshold)
+                pac_map = min(max(pac_map, 0), 1) ** self._pac_mapping_exponent
+                if (pac_norm < 0):
+                    pac_map = -pac_map
+                pac_out = pac_map
+            else:
+                pdc_out = 0
+                pac_out = 0
+                if (pdc_norm <= 0):
+                    pass
+
+            self._normalized_pressure[i] = pdc_out * self._pdc_output_weight + pac_out * self._pac_output_weight
+
+        return self._normalized_pressure
 
     def _reconfigure(self, config, level):
         self._contact_time = config.contact_time
