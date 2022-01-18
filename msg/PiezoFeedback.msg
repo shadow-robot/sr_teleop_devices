@@ -1,2 +1,2 @@
 std_msgs/Header header
-std_msgs/Float64 feedback
+std_msgs/Float32MultiArray feedback
