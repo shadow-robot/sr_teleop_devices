@@ -57,7 +57,8 @@ class DeviceHandler(threading.Thread):
         for finger in self._finger_per_devices:
             self._publisher[finger] = rospy.Publisher('sr_piezo_feedback/'+finger, PiezoFeedback, queue_size=1)
             self._finger_msg[finger] = PiezoFeedback()
-            self._finger_msg[finger].feedback.data = [float(outdata[frame, 0]), float(self._amp[0]), float(self._freq[0])]
+            self._finger_msg[finger].feedback.data = [float(self._oldsignal[0]), float(self._amp[0]),
+                                                      float(self._freq[0])]
 
     def run(self):
         self.start_piezo(self._finger_per_devices)
@@ -76,7 +77,8 @@ class DeviceHandler(threading.Thread):
                     self._amp[i] = self._mount._amplitudes[finger]
                 self._oldsignal[i] = outdata[frame, i]
 
-                self._finger_msg[finger].feedback.data = [float(outdata[frame, i]), float(self._amp[i]), float(self._freq[i])]
+                self._finger_msg[finger].feedback.data = [float(outdata[frame, i]), float(self._amp[i]),
+                                                          float(self._freq[i])]
                 self._publisher[finger].publish(self._finger_msg[finger])
 
     def start_piezo(self, fingers):
