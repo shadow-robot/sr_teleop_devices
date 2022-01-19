@@ -199,6 +199,11 @@ class SrPiezoFeedback():
         self._pst_saturation = len(self.CONST_FINGERS) * [config.pst_saturation]
         return config
 
+    def mapping(self, value, threshold, saturation, exponent=1, out_min=0, out_max=1):
+        out = (value - threshold)/(saturation-threshold)
+        out = min(max(out, out_min), out_max) ** exponent
+        return out
+
 
 class SrPiezoFeedbackPST(SrPiezoFeedback):
 
@@ -220,9 +225,7 @@ class SrPiezoFeedbackPST(SrPiezoFeedback):
     def _pst_tactile_cb(self, data):
         if len(data.pressure) == len(self.CONST_FINGERS):
             for i, press in enumerate(data.pressure):
-                self._normalized_pressure[i] = (press - self._pst_threshold[i]) / \
-                                         (self._pst_saturation[i] - self._pst_threshold[i])
-                self._normalized_pressure[i] = min(max(self._normalized_pressure[i], 0), 1)
+                self._normalized_pressure[i] = self.mapping(press, self._pst_threshold[i], self._pst_saturation[i])
             self._process_tactile_data(dict(zip(self.CONST_FINGERS, self._normalized_pressure)))
         else:
             rospy.logwarn("Missing data. Expected to receive {}, but got {} PST values".format(len(self.CONST_FINGERS),
@@ -265,10 +268,10 @@ class SrPiezoFeedbackBiotac(SrPiezoFeedback):
             for i, press in enumerate(processed_biotac_pressure):
                 pdc = processed_biotac_pressure[i][0]
                 pac = processed_biotac_pressure[i][1]
-                pdc_out = (pdc - self._pdc_threshold)/(self._pdc_saturation - self._pdc_threshold)
-                pdc_out = min(max(pdc_out, 0), 1) ** self._pdc_mapping_exponent
-                pac_out = (abs(pac)-self._pac_threshold)/(self._pac_saturation-self._pac_threshold)
-                pac_out = min(max(pac_out, 0), 1) ** self._pac_mapping_exponent
+                pdc_out = self.mapping(pdc, self._pdc_threshold, self._pdc_saturation,
+                                       exponent=self._pdc_mapping_exponent)
+                pac_out = self.mapping(pac, self._pac_threshold, self._pac_saturation,
+                                       exponent=self._pac_mapping_exponent)
                 self._normalized_pressure[i] = self._pdc_output_weight * pdc_out + self._pac_output_weight * pac_out
             self._process_tactile_data(dict(zip(self.CONST_FINGERS, self._normalized_pressure)))
         else:
