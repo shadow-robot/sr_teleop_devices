@@ -25,11 +25,8 @@ if __name__ == "__main__":
     rospy.init_node("pst_source_node")
     pub = rospy.Publisher("rh/tactile", ShadowPST, queue_size=20)
     msg = ShadowPST()
-    time = 0
 
     time_start = rospy.get_time()
-    spike_length = 2
-    amp = 0.0
     while not rospy.is_shutdown():
         time_passed = rospy.get_time() - time_start
 
