@@ -15,28 +15,33 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import
-from sr_robot_msgs.msg import ShadowPST
+from sr_robot_msgs.msg import Biotac, BiotacAll
+from std_msgs.msg import Header
 import numpy as np
 import rospy
 
 
 if __name__ == "__main__":
 
-    rospy.init_node("pst_mock_source_node")
-    pub = rospy.Publisher("rh/tactile", ShadowPST, queue_size=20)
-    msg = ShadowPST()
+    rospy.init_node("biotac_mock_source_node")
+    pub = rospy.Publisher("rh/tactile", BiotacAll, queue_size=20)
+    msg = BiotacAll()
+    msg.header = Header()
 
-    time_start = rospy.get_time()
     while not rospy.is_shutdown():
-        time_passed = rospy.get_time() - time_start
+        msg.header.stamp = rospy.get_rostime()
+        
+        for i in range(0,5):
+            biotac = Biotac()
+            biotac.pac0 = 0 + int(10*np.random.rand(1))
+            biotac.pac1 = 1 + int(10*np.random.rand(1))
+            biotac.pac = 5 * [int(10*np.random.rand(1))]
+            biotac.pdc = 2 + int(10*np.random.rand(1))
+            biotac.tac = 3 + int(10*np.random.rand(1))
+            biotac.tdc = 4 + int(10*np.random.rand(1))
+            biotac.electrodes = 5 * [int(10*np.random.rand(1))]
 
-        pressure_th = int(np.sin(4*time_passed)*100)+100
-        pressure_ff = int(np.sin(4*time_passed+1)*100)+100
-        pressure_mf = int(np.sin(6*time_passed+1.8)*100)+100
-        pressure_rf = int(np.sin(10*time_passed+2.5)*100)+100
-        pressure_lf = int(np.sin(time_passed+0.4)*100)+100
-
-        msg.pressure = [pressure_ff, pressure_mf, pressure_rf, pressure_lf, pressure_th]
+            msg.tactiles[i] = biotac
 
         pub.publish(msg)
         rospy.Rate(120).sleep()
