@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>sr_leap_motion</name>
+  <version>0.0.0</version>
+  <description>The sr_leap_motion package</description>
+  <maintainer email="software@shadowrobot.com">Shadow Robot's software team</maintainer>
+
+  <license>GPLv2</license>
+
+  <url type="website">http://www.shadowrobot.com</url>
+  <url type="repository">https://github.com/shadow-robot/sr_teleop_devices</url>
+  <url type="bugtracker">https://github.com/shadow-robot/sr_teleop_devices/issues</url>
+
+  <author>Ethan Fowler</author>
+  
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>leap_motion</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_export_depend>leap_motion</build_export_depend>
+  <build_export_depend>rospy</build_export_depend>
+  <exec_depend>leap_motion</exec_depend>
+  <exec_depend>rospy</exec_depend>
+</package>
