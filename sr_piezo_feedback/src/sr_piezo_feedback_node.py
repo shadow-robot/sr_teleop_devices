@@ -92,8 +92,10 @@ class SrPiezoFeedback():
     CONST_TACTILE_MAX = 1
     CONST_TACTILE_MIN = 0
 
-    CONST_TOUCH_DETECTION_THRESHOLD = 0.03
-    CONST_TOUCH_STRENGTH_DIFFERENCE = 0.02
+    CONST_TOUCH_DETECTION_THRESHOLD = 0.03  # Defines sensor value range from 0 to CONST_TOUCH_DETECTION_THRESHOLD
+    # which is considered as no contact.
+    CONST_TOUCH_STRENGTH_DIFFERENCE = 0.02  # Defines the sensitivity for the contact detection. Higher value increases
+    # sensitivity, lower decreases. This values is compared to the difference between current and past sensor readings
 
     CONST_FINGERS = ["ff", "mf", "rf", "lf", "th"]
     CONST_ACCEPTABLE_DEVICE_NAMES = ["Boreas DevKit", "BOS1901-KIT"]
