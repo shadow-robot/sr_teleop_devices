@@ -30,8 +30,8 @@ if __name__ == "__main__":
 
     while not rospy.is_shutdown():
         msg.header.stamp = rospy.get_rostime()
-        
-        for i in range(0,5):
+
+        for i in range(0, 5):
             biotac = Biotac()
             biotac.pac0 = 0 + int(10*np.random.rand(1))
             biotac.pac1 = 1 + int(10*np.random.rand(1))
