@@ -32,7 +32,7 @@
         <param name="left_pressed" value="$(arg mock_left_pressed)"/>
         <param name="middle_pressed" value="$(arg mock_middle_pressed)"/>
         <param name="right_pressed" value="$(arg mock_right_pressed)"/>
-        <param name="rate" value="$(arg rate)"/>
+        <param name="rate" value="$(arg publishing_rate)"/>
         <param name="keyboard_control" value="$(arg mock_keyboard_control)"/>
     </node>
 </launch>
