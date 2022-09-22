@@ -19,10 +19,15 @@
 from __future__ import absolute_import
 import rospy
 import sys
-import select
-from pynput import keyboard
 from sr_pedal.msg import Status
 from threading import Lock, Thread
+
+# If we're in a non-X-server (e.g. CI) environment, this import will fail
+try:
+    from pynput import keyboard
+except ImportError as err:
+    print("SrPedalMock could not import pynput module; likely because there is no available X server. "
+          "Pedal mock keyboard control disabled.")
 
 
 class SrPedalMock():
@@ -41,6 +46,8 @@ class SrPedalMock():
         self._ctrl_pressed = False
         self._alt_pressed = False
         self._kb_listener = None
+        # If pynput failed to import, disable keyboard control
+        keyboard_control = keyboard_control and "pynput" in sys.modules
         if keyboard_control:
             self._kb_listener = keyboard.Listener(on_press=self._on_keyboard_press,
                                                   on_release=self._on_keyboard_release)
