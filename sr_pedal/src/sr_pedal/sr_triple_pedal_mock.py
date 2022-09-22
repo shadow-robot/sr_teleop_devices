@@ -104,6 +104,16 @@ class SrPedalMock():
                 rospy.loginfo("Mock right pedal now released.")
         self._lock.release()
 
+    def toggle_status(self, status):
+        if status == "connected":
+            self._status.connected = not self._status.connected
+        if status == "left":
+            self._status.left_pressed = not self._status.left_pressed
+        if status == "middle":
+            self._status.middle_pressed = not self._status.middle_pressed
+        if status == "right":
+            self._status.right_pressed = not self._status.right_pressed
+
     def _on_keyboard_press(self, key):
         if key == keyboard.Key.ctrl:
             self._ctrl_pressed = True
