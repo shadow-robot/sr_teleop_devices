@@ -2,7 +2,7 @@
 
 # -*- coding: latin-1 -*-
 
-# Copyright 2020 Shadow Robot Company Ltd.
+# Copyright 2020-2022 Shadow Robot Company Ltd.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -19,10 +19,15 @@
 from __future__ import absolute_import
 import rospy
 import sys
-import select
-from pynput import keyboard
 from sr_pedal.msg import Status
 from threading import Lock, Thread
+
+# If we're in a non-X-server (e.g. CI) environment, this import will fail
+try:
+    from pynput import keyboard
+except ImportError as err:
+    print("SrPedalMock could not import pynput module; likely because there is no available X server. "
+          "Pedal mock keyboard control disabled.")
 
 
 class SrPedalMock():
@@ -41,6 +46,8 @@ class SrPedalMock():
         self._ctrl_pressed = False
         self._alt_pressed = False
         self._kb_listener = None
+        # If pynput failed to import, disable keyboard control
+        keyboard_control = keyboard_control and "pynput" in sys.modules
         if keyboard_control:
             self._kb_listener = keyboard.Listener(on_press=self._on_keyboard_press,
                                                   on_release=self._on_keyboard_release)
@@ -104,10 +111,22 @@ class SrPedalMock():
                 rospy.loginfo("Mock right pedal now released.")
         self._lock.release()
 
+    def toggle_status(self, status):
+        if status == "connected":
+            self._status.connected = not self._status.connected
+        elif status == "left":
+            self._status.left_pressed = not self._status.left_pressed
+        elif status == "middle":
+            self._status.middle_pressed = not self._status.middle_pressed
+        elif status == "right":
+            self._status.right_pressed = not self._status.right_pressed
+        else:
+            rospy.logwarn(f'Cannot toggle status of unknown pedal state "{status}".')
+
     def _on_keyboard_press(self, key):
         if key == keyboard.Key.ctrl:
             self._ctrl_pressed = True
-        if key == keyboard.Key.alt:
+        elif key == keyboard.Key.alt:
             self._alt_pressed = True
 
         if self._ctrl_pressed and self._alt_pressed:
