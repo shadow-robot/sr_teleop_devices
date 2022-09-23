@@ -114,17 +114,19 @@ class SrPedalMock():
     def toggle_status(self, status):
         if status == "connected":
             self._status.connected = not self._status.connected
-        if status == "left":
+        elif status == "left":
             self._status.left_pressed = not self._status.left_pressed
-        if status == "middle":
+        elif status == "middle":
             self._status.middle_pressed = not self._status.middle_pressed
-        if status == "right":
+        elif status == "right":
             self._status.right_pressed = not self._status.right_pressed
+        else:
+            rospy.logwarn(f'Cannot toggle status of unknown pedal state "{status}".')
 
     def _on_keyboard_press(self, key):
         if key == keyboard.Key.ctrl:
             self._ctrl_pressed = True
-        if key == keyboard.Key.alt:
+        elif key == keyboard.Key.alt:
             self._alt_pressed = True
 
         if self._ctrl_pressed and self._alt_pressed:
