@@ -11,7 +11,6 @@
  with this program. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<?xml version="1.0"?>
 <launch>
     <arg name="hand_id" default="rh"/>
     <arg name="fingers" default="ff"/>

@@ -14,14 +14,14 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import
+import subprocess
+import threading
+import os
 import rospy
 import requests
 import actionlib
-import os
 import yaml
 import rospkg
-import subprocess
-import threading
 import paramiko
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
