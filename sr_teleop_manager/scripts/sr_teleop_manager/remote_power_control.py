@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2020, 2021 Shadow Robot Company Ltd.
+# Copyright 2020-2022 Shadow Robot Company Ltd.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -14,21 +14,23 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import
+
+import os
 import subprocess
 import threading
-import os
-import rospy
-import requests
+
 import actionlib
-import yaml
-import rospkg
 import paramiko
+import requests
+import rospkg
+import rospy
+import sr_teleop_manager.msg
+import yaml
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-import sr_teleop_manager.msg
-from sr_teleop_manager.msg import PowerManagerAction
-from sr_teleop_manager.msg import BootProgress
-from sr_teleop_manager.srv import CustomRelayCommand, CustomRelayCommandResponse
+from sr_teleop_manager.msg import BootProgress, PowerManagerAction
+from sr_teleop_manager.srv import (CustomRelayCommand,
+                                   CustomRelayCommandResponse)
 
 
 class PowerControlCommon(object):

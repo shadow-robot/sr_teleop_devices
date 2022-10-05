@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2021 Shadow Robot Company Ltd.
+# Copyright 2021, 2022 Shadow Robot Company Ltd.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -14,24 +14,23 @@
 # You should have received a copy of the GNU General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-from __future__ import division
+from __future__ import absolute_import, division
+
 import argparse
-import sys
 import math
-import rospy
-import numpy as np
-import sounddevice as sd
-import matplotlib.pyplot as plt
-from sr_robot_msgs.msg import ShadowPST, BiotacAll
-from std_msgs.msg import Float64, Float64MultiArray, Header
+import sys
 import threading
 import time
-from sr_hand.tactile_receiver import TactileReceiver
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
+import numpy as np
+import rospy
+import sounddevice as sd
 from dynamic_reconfigure.server import Server
+from sr_hand.tactile_receiver import TactileReceiver
 from sr_piezo_feedback.msg import PiezoFeedback
+from sr_robot_msgs.msg import BiotacAll, ShadowPST
+from std_msgs.msg import Float64, Float64MultiArray, Header
 
 
 class DeviceHandler(threading.Thread):

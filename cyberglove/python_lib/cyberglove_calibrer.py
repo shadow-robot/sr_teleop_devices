@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2011 Shadow Robot Company Ltd.
+# Copyright 2011 , 2022Shadow Robot Company Ltd.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -22,13 +22,15 @@ Calibration utility for the cyberglove.
 """
 
 from __future__ import absolute_import
-from builtins import input
-import os
-from cyberglove_library import Cyberglove
-from cyberglove.srv import Calibration as CalibrationSrv
 
-import rospy
+import os
+from builtins import input
+
 import roslib
+import rospy
+from cyberglove.srv import Calibration as CalibrationSrv
+from cyberglove_library import Cyberglove
+
 roslib.load_manifest('sr_control_gui')
 
 

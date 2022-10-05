@@ -17,10 +17,12 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import
-import rospy
+
 import sys
-from sr_pedal.msg import Status
 from threading import Lock, Thread
+
+import rospy
+from sr_pedal.msg import Status
 
 # If we're in a non-X-server (e.g. CI) environment, this import will fail
 try:

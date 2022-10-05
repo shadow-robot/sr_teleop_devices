@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright 2020 Shadow Robot Company Ltd.
+# Copyright 2020, 2022 Shadow Robot Company Ltd.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -15,13 +15,15 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import
+
 import math
+
 import rospy
-from geometry_msgs.msg import TransformStamped, Quaternion
+from geometry_msgs.msg import Quaternion, TransformStamped
 from leap_motion.msg import Human
 from std_msgs.msg import Bool
-from tf.transformations import quaternion_from_euler, euler_from_quaternion
 from tf2_ros import Buffer, TransformBroadcaster
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 
 class SrLeapMotion():

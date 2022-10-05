@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # ####################################################################
-# Copyright (c) 2013 Shadow Robot Company Ltd.
+# Copyright (c) 2013, 2022 Shadow Robot Company Ltd.
 # All rights reserved.
 # This code is proprietary and may not be used, copied, distributed without
 # prior authorisation and agreement from Shadow Robot Company Ltd. *
@@ -11,14 +11,15 @@
 see README.md
 """
 
-from logitech_r400.msg import LogitechR400
-import rospy
-import rospkg
 from sys import exit as sysexit
 from time import sleep
+
+import rospkg
+import rospy
 import usb.core
 import usb.util
 import yaml
+from logitech_r400.msg import LogitechR400
 
 
 class LogitechR400Usb(object):

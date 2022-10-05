@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Copyright 2021 Shadow Robot Company Ltd.
+# Copyright 2021, 2022 Shadow Robot Company Ltd.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -15,18 +15,20 @@
 
 
 from __future__ import absolute_import, division
-import Leap
+
 import sys
 import threading
 import time
-import rospy
-import tf2_ros
-import tf
-from geometry_msgs.msg import Quaternion
-from leap_motion.msg import Human, Hand, Finger, Bone, Arm
-import std_msgs.msg
+
+import Leap
 import numpy
+import rospy
+import std_msgs.msg
+import tf
+import tf2_ros
+from geometry_msgs.msg import Quaternion
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
+from leap_motion.msg import Arm, Bone, Finger, Hand, Human
 
 
 class SampleListener(Leap.Listener):

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2021 Shadow Robot Company Ltd.
+# Copyright 2021, 2022 Shadow Robot Company Ltd.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -15,10 +15,10 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import
-from sr_robot_msgs.msg import ShadowPST
+
 import numpy as np
 import rospy
-
+from sr_robot_msgs.msg import ShadowPST
 
 if __name__ == "__main__":
 
