@@ -16,26 +16,22 @@
 
 from __future__ import absolute_import, division
 
-import argparse
 import math
-import sys
 import threading
 import time
 
-import matplotlib.pyplot as plt
 import numpy as np
 import rospy
 import sounddevice as sd
 from dynamic_reconfigure.server import Server
 from sr_hand.tactile_receiver import TactileReceiver
-from sr_piezo_feedback.msg import PiezoFeedback
 from sr_robot_msgs.msg import BiotacAll, ShadowPST
-from std_msgs.msg import Float64, Float64MultiArray, Header
+from sr_piezo_feedback.msg import PiezoFeedback
 
 
 class DeviceHandler(threading.Thread):
     def __init__(self, device, fingers, mount):
-        super(DeviceHandler, self).__init__()
+        super(__class__, self).__init__()
         self._device_name = device
         self._finger_per_devices = fingers
         self._mount = mount
@@ -59,9 +55,9 @@ class DeviceHandler(threading.Thread):
                                                       float(self._freq[0])]
 
     def run(self):
-        self.start_piezo(self._finger_per_devices)
+        self.start_piezo()
 
-    def callback(self, outdata, frames, time, status):
+    def callback(self, outdata, frames, _time, status):
         if status:
             rospy.logwarn(status)
 
@@ -79,7 +75,7 @@ class DeviceHandler(threading.Thread):
                                                           float(self._freq[i])]
                 self._publisher[finger].publish(self._finger_msg[finger])
 
-    def start_piezo(self, fingers):
+    def start_piezo(self):
         with sd.OutputStream(device=self._device_name, channels=2, callback=self.callback,
                              samplerate=self._samplerate, blocksize=100, latency='low'):
             while not rospy.is_shutdown():
@@ -172,9 +168,10 @@ class SrPiezoFeedback():
 
             # REMOVE IN FUTURE
             if self.fading_time[finger] <= self._contact_time:
-                a = -4 / (self._contact_time * self._contact_time)
-                b = -a * self._contact_time
-                fading_factor = a * self.fading_time[finger] * self.fading_time[finger] + b * self.fading_time[finger]
+                fading = -4 / (self._contact_time * self._contact_time)
+                fading_factor = fading * self.fading_time[finger] * \
+                                self.fading_time[finger] + \
+                                fading * self.fading_time[finger]
                 self.fading_amplitudes[finger] = self._amp_max * 1.0 * fading_factor
                 self.fading_frequencies[finger] = self._freq_max * fading_factor
             else:
@@ -205,8 +202,8 @@ class SrPiezoFeedback():
 
 class SrPiezoFeedbackPST(SrPiezoFeedback):
 
-    def __init__(self, fingers, hand_id):
-        super().__init__(fingers, hand_id)
+    def __init__(self, total_fingers, hand):
+        super().__init__(total_fingers, hand)
         self._pst_saturation = [550.0, 550.0, 550.0, 550.0, 550.0]
         self._init_thresholds()
         rospy.Subscriber("/"+self._hand_id+"/tactile", ShadowPST, self._pst_tactile_cb)
@@ -229,7 +226,7 @@ class SrPiezoFeedbackPST(SrPiezoFeedback):
             rospy.logwarn("Missing data. Expected to receive {}, but got {} PST values".format(len(self.CONST_FINGERS),
                                                                                                len(data.pressure)))
 
-    def _reconfigure(self, config, level):
+    def _reconfigure(self, config):
         self._contact_time = config.contact_time
         self._amp_max = config.max_amplitude
         self._amp_min = config.min_amplitude
@@ -240,8 +237,8 @@ class SrPiezoFeedbackPST(SrPiezoFeedback):
 
 
 class SrPiezoFeedbackBiotac(SrPiezoFeedback):
-    def __init__(self, fingers, hand_id):
-        super().__init__(fingers, hand_id)
+    def __init__(self, total_fingers, hand):
+        super().__init__(total_fingers, hand)
         self._tactile_pdc_ref = len(self.CONST_FINGERS) * [0]
         self._tactile_pac_ref = len(self.CONST_FINGERS) * [0]
         self._pdc_threshold = 5.0
@@ -272,7 +269,7 @@ class SrPiezoFeedbackBiotac(SrPiezoFeedback):
     def _biotac_tactile_cb(self, data):
         processed_biotac_pressure = self._process_biotac_tactile_msg(data)
         if len(processed_biotac_pressure) == len(self.CONST_FINGERS):
-            for i, press in enumerate(processed_biotac_pressure):
+            for i, _press in enumerate(processed_biotac_pressure):
                 pdc = processed_biotac_pressure[i][0]
                 pac = processed_biotac_pressure[i][1]
                 pdc_out = self.mapping(pdc, self._pdc_threshold, self._pdc_saturation,
@@ -282,10 +279,10 @@ class SrPiezoFeedbackBiotac(SrPiezoFeedback):
                 self._normalized_pressure[i] = self._pdc_output_weight * pdc_out + self._pac_output_weight * pac_out
             self._process_tactile_data(dict(zip(self.CONST_FINGERS, self._normalized_pressure)))
         else:
-            rospy.logwarn("Missing data. Expected to receive {}, "
-                          "but got {} Biotac values".format(len(self.CONST_FINGERS), len(pressure)))
+            rospy.logwarn(f"Missing data. Expected to receive {len(self.CONST_FINGERS)}, "
+                          f"but got {len(processed_biotac_pressure)} Biotac values")
 
-    def _reconfigure(self, config, level):
+    def _reconfigure(self, config):
         self._contact_time = config.contact_time
         self._amp_max = config.max_amplitude
         self._amp_min = config.min_amplitude
@@ -306,22 +303,22 @@ if __name__ == "__main__":
 
     rospy.init_node('sr_finger_mount_node')
 
-    fingers = rospy.get_param("~fingers", 'th')
-    hand_id = rospy.get_param("~hand_id", 'rh')
+    fingers_param = rospy.get_param("~fingers", 'th')
+    hand_id_param = rospy.get_param("~hand_id", 'rh')
 
-    if not (hand_id == "rh" or hand_id == "lh"):
+    if hand_id_param not in ("rh", "lh"):
         raise ValueError('/hand_id is not rh or lh')
 
-    if fingers is not None:
-        fingers = fingers.split(',')
+    if fingers_param is not None:
+        fingers_list = fingers_param.split(',')
 
-    tactile_type = TactileReceiver(hand_id).get_tactile_type()
+    tactile_type = TactileReceiver(hand_id_param).get_tactile_type()
     if tactile_type == "PST":
-        pst_feedback = SrPiezoFeedbackPST(fingers, hand_id)
+        pst_feedback = SrPiezoFeedbackPST(fingers_list, hand_id_param)
         from sr_piezo_feedback.cfg import SrPiezoFeedbackPSTConfig
         srv = Server(SrPiezoFeedbackPSTConfig, pst_feedback._reconfigure)
     elif tactile_type == "biotac":
-        biotac_feedback = SrPiezoFeedbackBiotac(fingers, hand_id)
+        biotac_feedback = SrPiezoFeedbackBiotac(fingers_list, hand_id_param)
         from sr_piezo_feedback.cfg import SrPiezoFeedbackBiotacConfig
         srv = Server(SrPiezoFeedbackBiotacConfig, biotac_feedback._reconfigure)
 

@@ -24,9 +24,9 @@ import paramiko
 import requests
 import rospkg
 import rospy
-import sr_teleop_manager.msg
 import yaml
 from requests.adapters import HTTPAdapter
+import sr_teleop_manager.msg
 from requests.packages.urllib3.util.retry import Retry
 from sr_teleop_manager.msg import BootProgress, PowerManagerAction
 from sr_teleop_manager.srv import (CustomRelayCommand,
@@ -193,7 +193,7 @@ class BootMonitor(threading.Thread, PowerControlCommon):
     def __init__(self, thread_id, device, action_server, feedback, result, on_off):
         threading.Thread.__init__(self)
         self._on_off = on_off
-        self.threadID = thread_id
+        self.thread_id = thread_id
         self._feedback = feedback
         self._CONST_UR_ARM_SSH_USERNAME = 'root'
         self._CONST_UR_ARM_SSH_PASSWORD = 'easybot'
@@ -339,37 +339,37 @@ class BootMonitor(threading.Thread, PowerControlCommon):
 
     def add_feedback(self, status_message, boot_status, finished=False, failed=False):
         rospy.loginfo("%s: %s", self._device_name, status_message)
-        fb = sr_teleop_manager.msg.PowerFeedback()
-        fb.status = self._device_name + " " + status_message
-        fb.name = self._device_name
-        fb.complete = finished
-        bp = BootProgress()
-        bp.boot_status = boot_status
-        fb.boot_status = bp
-        fb.failed = failed
-        threadLock.acquire()
-        self._feedback.feedback.append(fb)
+        power_fb = sr_teleop_manager.msg.PowerFeedback()
+        power_fb.status = self._device_name + " " + status_message
+        power_fb.name = self._device_name
+        power_fb.complete = finished
+        boot_process = BootProgress()
+        boot_process.boot_status = boot_status
+        power_fb.boot_status = boot_process
+        power_fb.failed = failed
+        thread_lock.acquire()
+        self._feedback.feedback.append(power_fb)
         self._as.publish_feedback(self._feedback)
-        threadLock.release()
+        thread_lock.release()
 
     def get_log_from_arm(self, arm_ip):
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(arm_ip, username=self._CONST_UR_ARM_SSH_USERNAME, password=self._CONST_UR_ARM_SSH_PASSWORD)
-        stdin, stdout, stderr = client.exec_command('cat /tmp/log/urcontrol/current')
+        _stdin, stdout, _stderr = client.exec_command('cat /tmp/log/urcontrol/current')
         log = stdout.readlines()
         client.close()
         return log
 
 
-threadLock = threading.Lock()
+thread_lock = threading.Lock()
 
 if __name__ == "__main__":
     rospy.init_node('remote_power_control', anonymous=False)
     config_file = 'power_devices.yaml'
     config_path = os.path.join(rospkg.RosPack().get_path('sr_teleop_manager'), 'config')
     config = os.path.join(config_path, config_file)
-    with open(config) as f:
-        dataMap = yaml.safe_load(f)
+    with open(config, "w", encoding="utf8") as file:
+        dataMap = yaml.safe_load(file)
 
     remote_power_control = RemotePowerControl(rospy.get_name(), dataMap)

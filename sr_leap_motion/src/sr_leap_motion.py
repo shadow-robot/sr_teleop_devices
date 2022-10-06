@@ -16,8 +16,6 @@
 
 from __future__ import absolute_import
 
-import math
-
 import rospy
 from geometry_msgs.msg import Quaternion, TransformStamped
 from leap_motion.msg import Human
@@ -34,17 +32,19 @@ class SrLeapMotion():
     FINGER_NAMES = ["th", "ff", "mf", "rf", "lf"]
     BONE_NAMES = ["mca", "prx", "int", "dis"]
 
-    def __init__(self, left_root_tf_name, right_root_tf_name, bone_starts=False, bone_middles=False,
-                 heartbeat_topic="/sr_leap_motion/heartbeat"):
-        self.right_root_tf_name = right_root_tf_name
-        self.left_root_tf_name = left_root_tf_name
-        self.bone_starts = bone_starts
-        self.bone_middles = bone_middles
-        self.heartbeat_publisher = rospy.Publisher(heartbeat_topic, Bool, queue_size=1)
+    def __init__(self, left_root_tf, right_root_tf, bone_start=False, bone_middle=False,
+                 heartbeat_topic_name="/sr_leap_motion/heartbeat"):
+        self.right_root_tf_name = right_root_tf
+        self.left_root_tf_name = left_root_tf
+        self.bone_starts = bone_start
+        self.bone_middles = bone_middle
+        self.heartbeat_publisher = rospy.Publisher(heartbeat_topic_name, Bool, queue_size=1)
         self.hand = None
         self.left_hand_mode = SrLeapMotion.JOINT_ANGLE_MODE
         self.right_hand_mode = SrLeapMotion.FINGERTIP_MODE
         self.transform_broadcaster = TransformBroadcaster()
+        self.left_tfs = []
+        self.right_tfs = []
 
     def run(self):
         rospy.loginfo("Shadow leap motion running.")
@@ -52,48 +52,45 @@ class SrLeapMotion():
         rospy.spin()
 
     def frame(self, human):
-        self.left_tfs = []
-        self.right_tfs = []
-        running = False
-        if (human.right_hand.is_present):
-            if (self.hand != SrLeapMotion.HAND_RIGHT):
+        if human.right_hand.is_present:
+            if self.hand != SrLeapMotion.HAND_RIGHT:
                 rospy.loginfo("Started tracking right hand!")
                 self.hand = SrLeapMotion.HAND_RIGHT
-        elif (human.left_hand.is_present):
-            if (self.hand != SrLeapMotion.HAND_LEFT):
+        elif human.left_hand.is_present:
+            if self.hand != SrLeapMotion.HAND_LEFT:
                 rospy.loginfo("Started tracking left hand!")
                 self.hand = SrLeapMotion.HAND_LEFT
         else:
-            if (self.hand is not None):
+            if self.hand is not None:
                 rospy.loginfo("Lost sight of any hands.")
                 self.hand = None
         self.left_tfs = self.common_frame(human=human, hand=human.left_hand, arm_prefix="la_", hand_prefix="lh_")
         self.right_tfs = self.common_frame(human=human, hand=human.right_hand, arm_prefix="ra_", hand_prefix="rh_")
         if self.left_tfs:
-            self.publish_tfs(tfs=self.left_tfs, root_tf_name=self.left_root_tf_name)
+            self.publish_tfs(transforms=self.left_tfs, root_tf_name=self.left_root_tf_name)
         if self.right_tfs:
-            self.publish_tfs(tfs=self.right_tfs, root_tf_name=self.right_root_tf_name)
+            self.publish_tfs(transforms=self.right_tfs, root_tf_name=self.right_root_tf_name)
         self.heartbeat_publisher.publish(not ((not self.left_tfs) and (not self.right_tfs)))
 
-    def publish_tfs(self, tfs, root_tf_name):
+    def publish_tfs(self, transforms, root_tf_name):
         buffer = Buffer()
         tf_authority = ""
         root_tf_found = False
-        for tf in tfs:
-            buffer.set_transform(tf, tf_authority)
-            if tf.child_frame_id == root_tf_name:
+        for transform in transforms:
+            buffer.set_transform(transform, tf_authority)
+            if transform.child_frame_id == root_tf_name:
                 root_tf_found = True
         # If the requested root TF name isn't one of the TFs reported by Leap Motion, report all TFs relative to Leap
         # sensor, named as the requested root TF name
         if not root_tf_found:
-            for tf in tfs:
-                tf.header.frame_id = root_tf_name
-                self.transform_broadcaster.sendTransform(tf)
+            for transform in transforms:
+                transform.header.frame_id = root_tf_name
+                self.transform_broadcaster.sendTransform(transform)
         # If the requested root TF name is one of the TFs reported by Leap Motion, report all TFs relative to that TF
         else:
-            for tf in tfs:
-                if tf.child_frame_id != root_tf_name:
-                    reparented_tf = buffer.lookup_transform(root_tf_name, tf.child_frame_id, rospy.Time())
+            for transform in transforms:
+                if transform.child_frame_id != root_tf_name:
+                    reparented_tf = buffer.lookup_transform(root_tf_name, transform.child_frame_id, rospy.Time())
                     self.transform_broadcaster.sendTransform(reparented_tf)
 
     def common_frame(self, human, hand=None, arm_prefix="ra_", hand_prefix="rh_"):
@@ -147,19 +144,21 @@ class SrLeapMotion():
                     new_tfs.append(bone_mid_tf)
         return new_tfs
 
-    def new_root_tf(self, name, timestamp):
-        tf = TransformStamped()
-        tf.header.stamp = timestamp
-        tf.header.frame_id = "root"
-        tf.child_frame_id = name
-        tf.transform.rotation.w = 1.0
-        return tf
+    @staticmethod
+    def new_root_tf(name, timestamp):
+        transform = TransformStamped()
+        transform.header.stamp = timestamp
+        transform.header.frame_id = "root"
+        transform.child_frame_id = name
+        transform.transform.rotation.w = 1.0
+        return transform
 
     def leap_pose_to_ros_tf(self, leap_pose, ros_tf):
         self.leap_orientation_to_ros_rotation(leap_pose.orientation, ros_tf.rotation)
         self.leap_position_to_ros_translation(leap_pose.position, ros_tf.translation)
 
-    def leap_orientation_to_ros_rotation(self, leap_orientation, ros_rotation):
+    @staticmethod
+    def leap_orientation_to_ros_rotation(leap_orientation, ros_rotation):
         # Ros roll is leap -yaw
         # Ros pitch is leap -roll
         # Ros yaw is leap pitch
@@ -171,7 +170,8 @@ class SrLeapMotion():
         ros_rotation.z = ros_quaternion[2]
         ros_rotation.w = ros_quaternion[3]
 
-    def leap_position_to_ros_translation(self, leap_position, ros_translation):
+    @staticmethod
+    def leap_position_to_ros_translation(leap_position, ros_translation):
         # Ros x is leap -z
         # Ros y is leap -x
         # Ros z is leap y
@@ -179,7 +179,8 @@ class SrLeapMotion():
         ros_translation.y = -leap_position.x
         ros_translation.z = leap_position.y
 
-    def ros_rpy_to_quat(self, ros_rpy):
+    @staticmethod
+    def ros_rpy_to_quat(ros_rpy):
         quat_array = quaternion_from_euler(ros_rpy[0], ros_rpy[1], ros_rpy[2])
         quat = Quaternion()
         quat.x = quat_array[0]
@@ -196,6 +197,6 @@ if __name__ == "__main__":
     bone_starts = rospy.get_param("~bone_starts", False)
     bone_middles = rospy.get_param("~bone_middles", False)
     heartbeat_topic = rospy.get_param("~heartbeat_topic", "/sr_leap_motion/heartbeat")
-    sr_leap_motion = SrLeapMotion(left_root_tf_name=left_root_tf_name, right_root_tf_name=right_root_tf_name,
+    sr_leap_motion = SrLeapMotion(left_root_tf=left_root_tf_name, right_root_tf=right_root_tf_name,
                                   bone_starts=bone_starts, bone_middles=bone_middles, heartbeat_topic=heartbeat_topic)
     sr_leap_motion.run()

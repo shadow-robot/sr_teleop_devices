@@ -16,18 +16,12 @@
 
 from __future__ import absolute_import, division
 
-import sys
-import threading
-import time
-
 import Leap
 import numpy
 import rospy
-import std_msgs.msg
 import tf
-import tf2_ros
 from geometry_msgs.msg import Quaternion
-from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
+from Leap import ScreenTapGesture, SwipeGesture
 from leap_motion.msg import Arm, Bone, Finger, Hand, Human
 
 
@@ -35,11 +29,12 @@ class SampleListener(Leap.Listener):
     CONST_BONE_NAMES = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     CONST_FRAME_ID = "leap_hands"
 
-    def on_init(self, controller):
+    def on_init(self):
         self._human_pub = rospy.Publisher("/leap_motion/leap_device", Human, queue_size=10)
         rospy.loginfo("Initialized")
 
-    def on_connect(self, controller):
+    @staticmethod
+    def on_connect(controller):
         rospy.loginfo("Connected")
 
         # Enable gestures
@@ -48,13 +43,16 @@ class SampleListener(Leap.Listener):
         controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP)
         controller.enable_gesture(Leap.Gesture.TYPE_SWIPE)
 
-    def on_disconnect(self, controller):
+    @staticmethod
+    def on_disconnect(controller):
         rospy.loginfo("Disconnected")
 
-    def on_exit(self, controller):
+    @staticmethod
+    def on_exit(controller):
         rospy.loginfo("Exited")
 
-    def quaternion_from_basis(self, basis, x_basis_sign):
+    @staticmethod
+    def quaternion_from_basis(basis, x_basis_sign):
         tf_matrix = numpy.array([[x_basis_sign * basis.x_basis.x, x_basis_sign * basis.x_basis.y,
                                   x_basis_sign * basis.x_basis.z, 0.0],
                                 [basis.y_basis.x, basis.y_basis.y, basis.y_basis.z, 0.0],
@@ -148,9 +146,9 @@ class SampleListener(Leap.Listener):
         hand_msg.sphere_radius = hand.sphere_radius / 1000
         hand_msg.arm = self.parse_arm(hand, x_basis_sign)
         for finger in hand.fingers:
-            f = Finger()
-            f = self.parse_finger(finger, f, x_basis_sign)
-            hand_msg.finger_list.append(f)
+            leap_finger = Finger()
+            leap_finger = self.parse_finger(finger, leap_finger, x_basis_sign)
+            hand_msg.finger_list.append(leap_finger)
         return hand_msg
 
     def parse_human(self, frame):
