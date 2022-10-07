@@ -2,7 +2,7 @@
 
 # -*- coding: latin-1 -*-
 
-# Copyright 2020-2022 Shadow Robot Company Ltd.
+# Copyright 2020, 2022 Shadow Robot Company Ltd.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -17,10 +17,13 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import absolute_import
-import rospy
+
 import sys
-from sr_pedal.msg import Status
 from threading import Lock, Thread
+
+import rospy
+
+from sr_pedal.msg import Status
 
 # If we're in a non-X-server (e.g. CI) environment, this import will fail
 try:
