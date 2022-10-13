@@ -198,5 +198,6 @@ if __name__ == "__main__":
     bone_middles = rospy.get_param("~bone_middles", False)
     heartbeat_topic = rospy.get_param("~heartbeat_topic", "/sr_leap_motion/heartbeat")
     sr_leap_motion = SrLeapMotion(left_root_tf=left_root_tf_name, right_root_tf=right_root_tf_name,
-                                  bone_starts=bone_starts, bone_middles=bone_middles, heartbeat_topic=heartbeat_topic)
+                                  bone_start=bone_starts, bone_middle=bone_middles,
+                                  heartbeat_topic_name=heartbeat_topic)
     sr_leap_motion.run()

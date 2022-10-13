@@ -21,7 +21,6 @@ import numpy
 import rospy
 import tf
 from geometry_msgs.msg import Quaternion
-from Leap import ScreenTapGesture, SwipeGesture
 from leap_motion.msg import Arm, Bone, Finger, Hand, Human
 
 
@@ -30,11 +29,10 @@ class SampleListener(Leap.Listener):
     CONST_FRAME_ID = "leap_hands"
 
     def on_init(self):
-        self._human_pub = rospy.Publisher("/leap_motion/leap_device", Human, queue_size=10)
+        self._human_pub = rospy.Publisher("/leap_motion/leap_device", Human, queue_size=10) # pylint: disable=W0201
         rospy.loginfo("Initialized")
 
-    @staticmethod
-    def on_connect(controller):
+    def on_connect(self, controller): # pylint: disable=R0201
         rospy.loginfo("Connected")
 
         # Enable gestures
@@ -43,12 +41,10 @@ class SampleListener(Leap.Listener):
         controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP)
         controller.enable_gesture(Leap.Gesture.TYPE_SWIPE)
 
-    @staticmethod
-    def on_disconnect(controller):
+    def on_disconnect(self, controller): # pylint: disable=W0613,R0201
         rospy.loginfo("Disconnected")
 
-    @staticmethod
-    def on_exit(controller):
+    def on_exit(self, controller): # pylint: disable=W0613,R0201
         rospy.loginfo("Exited")
 
     @staticmethod
@@ -175,14 +171,15 @@ class SampleListener(Leap.Listener):
         # self.print_frame(frame)
         self.parse_frame(frame)
 
-    def print_frame(self, frame):
+    @staticmethod
+    def print_frame(frame):
         print("Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
                frame.id, frame.timestamp, len(frame.hands), len(frame.fingers),
                len(frame.tools), len(frame.gestures())))
 
     # @TODO: re-implement gesture publishing:
     # https://github.com/ros-drivers/leap_motion/blob/hydro/src/lmc_listener.cpp#L363-L399
-    def state_string(self, state):
+    def state_string(self, state):  # pylint: disable=R1710,R0201
         if state == Leap.Gesture.STATE_START:
             return "STATE_START"
 

@@ -67,8 +67,8 @@ class DeviceHandler(threading.Thread):
                 self._ts[i] += 2 * np.pi * self._freq[i] / self._samplerate
 
                 if outdata[frame, i] != np.sign(self._oldsignal[i]):
-                    self._freq[i] = self._mount._frequencies[finger]
-                    self._amp[i] = self._mount._amplitudes[finger]
+                    self._freq[i] = self._mount.frequencies[finger]
+                    self._amp[i] = self._mount.amplitudes[finger]
                 self._oldsignal[i] = outdata[frame, i]
 
                 self._finger_msg[finger].feedback.data = [float(outdata[frame, i]), float(self._amp[i]),
@@ -109,8 +109,8 @@ class SrPiezoFeedback():
 
         self._normalized_pressure = 5 * [0]
         self._prev_values = dict(zip(self.CONST_FINGERS, len(self.CONST_FINGERS) * [0]))
-        self._amplitudes = dict(zip(self.CONST_FINGERS, len(self.CONST_FINGERS) * [0]))
-        self._frequencies = dict(zip(self.CONST_FINGERS, len(self.CONST_FINGERS) * [0]))
+        self.amplitudes = dict(zip(self.CONST_FINGERS, len(self.CONST_FINGERS) * [0]))
+        self.frequencies = dict(zip(self.CONST_FINGERS, len(self.CONST_FINGERS) * [0]))
 
         self._device_handlers = [None, None, None]
 
@@ -190,7 +190,8 @@ class SrPiezoFeedback():
 
             self._prev_values[finger] = mapped_values[finger]
 
-    def mapping(self, value, threshold, saturation, exponent=1.0, out_min=0.0, out_max=1.0):
+    @staticmethod
+    def mapping(value, threshold, saturation, exponent=1.0, out_min=0.0, out_max=1.0):
         out = 0.0
         try:
             out = (value - threshold)/(saturation-threshold)
@@ -282,7 +283,7 @@ class SrPiezoFeedbackBiotac(SrPiezoFeedback):
             rospy.logwarn(f"Missing data. Expected to receive {len(self.CONST_FINGERS)}, "
                           f"but got {len(processed_biotac_pressure)} Biotac values")
 
-    def _reconfigure(self, config):
+    def reconfigure(self, config):
         self._contact_time = config.contact_time
         self._amp_max = config.max_amplitude
         self._amp_min = config.min_amplitude
@@ -316,10 +317,10 @@ if __name__ == "__main__":
     if tactile_type == "PST":
         pst_feedback = SrPiezoFeedbackPST(fingers_list, hand_id_param)
         from sr_piezo_feedback.cfg import SrPiezoFeedbackPSTConfig
-        srv = Server(SrPiezoFeedbackPSTConfig, pst_feedback._reconfigure)
+        srv = Server(SrPiezoFeedbackPSTConfig, pst_feedback.reconfigure)
     elif tactile_type == "biotac":
         biotac_feedback = SrPiezoFeedbackBiotac(fingers_list, hand_id_param)
         from sr_piezo_feedback.cfg import SrPiezoFeedbackBiotacConfig
-        srv = Server(SrPiezoFeedbackBiotacConfig, biotac_feedback._reconfigure)
+        srv = Server(SrPiezoFeedbackBiotacConfig, biotac_feedback.reconfigure)
 
     rospy.spin()
