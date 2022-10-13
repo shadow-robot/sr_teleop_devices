@@ -178,15 +178,15 @@ class SrPiezoFeedback():
                 self.fading_amplitudes[finger] = 0
                 self.fading_frequencies[finger] = 0
 
-            self._amplitudes[finger] = ((mapped_values[finger] - self.CONST_TACTILE_MIN) /
+            self.amplitudes[finger] = ((mapped_values[finger] - self.CONST_TACTILE_MIN) /
                                         (self.CONST_TACTILE_MAX - self.CONST_TACTILE_MIN)) * \
                 (self._amp_max - self._amp_min) + self._amp_min
             self._frequencies[finger] = ((mapped_values[finger] - self.CONST_TACTILE_MIN) /
                                          (self.CONST_TACTILE_MAX - self.CONST_TACTILE_MIN)) * \
                 (self._freq_max - self._freq_min) + self._freq_min
 
-            self._amplitudes[finger] = max(self._amplitudes[finger], self.fading_amplitudes[finger])
-            self._frequencies[finger] = max(self._frequencies[finger], self.fading_frequencies[finger])
+            self.amplitudes[finger] = max(self.amplitudes[finger], self.fading_amplitudes[finger])
+            self.frequencies[finger] = max(self.frequencies[finger], self.fading_frequencies[finger])
 
             self._prev_values[finger] = mapped_values[finger]
 
@@ -227,7 +227,7 @@ class SrPiezoFeedbackPST(SrPiezoFeedback):
             rospy.logwarn("Missing data. Expected to receive {}, but got {} PST values".format(len(self.CONST_FINGERS),
                                                                                                len(data.pressure)))
 
-    def _reconfigure(self, config):
+    def reconfigure(self, config):
         self._contact_time = config.contact_time
         self._amp_max = config.max_amplitude
         self._amp_min = config.min_amplitude
