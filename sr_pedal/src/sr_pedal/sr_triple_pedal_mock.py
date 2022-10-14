@@ -20,7 +20,6 @@ from __future__ import absolute_import
 
 import sys
 from threading import Lock, Thread
-
 import rospy
 from sr_pedal.msg import Status
 
