@@ -130,7 +130,7 @@ class ShuttleXpressUsb():
         self._pub.publish(self.__state)
 
     @staticmethod
-    def __check_btn( raw_data, btn_index):
+    def __check_btn(raw_data, btn_index):
         """
         returns a positive value if the bit at btn_index in raw_data is set.
         """
@@ -138,6 +138,7 @@ class ShuttleXpressUsb():
         btn_index = 1 << btn_index
 
         return raw_data & btn_index
+
 
 if __name__ == "__main__":
     rospy.init_node("shuttle_xpress")

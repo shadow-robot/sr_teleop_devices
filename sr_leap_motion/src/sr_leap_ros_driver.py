@@ -29,10 +29,10 @@ class SampleListener(Leap.Listener):
     CONST_FRAME_ID = "leap_hands"
 
     def on_init(self):
-        self._human_pub = rospy.Publisher("/leap_motion/leap_device", Human, queue_size=10) # pylint: disable=W0201
+        self._human_pub = rospy.Publisher("/leap_motion/leap_device", Human, queue_size=10)  # pylint: disable=W0201
         rospy.loginfo("Initialized")
 
-    def on_connect(self, controller): # pylint: disable=R0201
+    def on_connect(self, controller):  # pylint: disable=R0201
         rospy.loginfo("Connected")
 
         # Enable gestures
@@ -41,10 +41,10 @@ class SampleListener(Leap.Listener):
         controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP)
         controller.enable_gesture(Leap.Gesture.TYPE_SWIPE)
 
-    def on_disconnect(self, controller): # pylint: disable=W0613,R0201
+    def on_disconnect(self, controller):  # pylint: disable=W0613,R0201
         rospy.loginfo("Disconnected")
 
-    def on_exit(self, controller): # pylint: disable=W0613,R0201
+    def on_exit(self, controller):  # pylint: disable=W0613,R0201
         rospy.loginfo("Exited")
 
     @staticmethod
