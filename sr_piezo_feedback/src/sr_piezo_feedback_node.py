@@ -181,7 +181,7 @@ class SrPiezoFeedback():
             self.amplitudes[finger] = ((mapped_values[finger] - self.CONST_TACTILE_MIN) /
                                         (self.CONST_TACTILE_MAX - self.CONST_TACTILE_MIN)) * \
                 (self._amp_max - self._amp_min) + self._amp_min
-            self._frequencies[finger] = ((mapped_values[finger] - self.CONST_TACTILE_MIN) /
+            self.frequencies[finger] = ((mapped_values[finger] - self.CONST_TACTILE_MIN) /
                                          (self.CONST_TACTILE_MAX - self.CONST_TACTILE_MIN)) * \
                 (self._freq_max - self._freq_min) + self._freq_min
 
