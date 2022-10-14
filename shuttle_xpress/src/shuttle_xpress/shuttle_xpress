@@ -23,7 +23,7 @@ CONTOUR_ID_VENDOR = 0x0b33
 CONTOUR_ID_PRODUCT = 0x0020
 
 
-class ShuttleXpressUsb(object):
+class ShuttleXpressUsb():
     """
     Usb driver for the Contour Shuttle Xpress.
 
@@ -53,7 +53,7 @@ class ShuttleXpressUsb(object):
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value, traceback):
         self.release_device()
 
     def grab_device(self):
@@ -129,7 +129,8 @@ class ShuttleXpressUsb(object):
 
         self._pub.publish(self.__state)
 
-    def __check_btn(self, raw_data, btn_index):
+    @staticmethod
+    def __check_btn( raw_data, btn_index):
         """
         returns a positive value if the bit at btn_index in raw_data is set.
         """

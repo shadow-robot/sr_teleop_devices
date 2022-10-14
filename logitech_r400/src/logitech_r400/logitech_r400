@@ -22,7 +22,7 @@ import yaml
 from logitech_r400.msg import LogitechR400
 
 
-class LogitechR400Usb(object):
+class LogitechR400Usb():
     """
     Usb driver for the Logitech R400.
 
@@ -65,16 +65,16 @@ class LogitechR400Usb(object):
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value, traceback):
         for device in self._devices:
             self._release_device(device)
 
     def _read_config(self):
         configs_file_path = rospkg.RosPack().get_path('logitech_r400') + '/config/config.yaml'
-        with open(configs_file_path, 'r') as stream:
+        with open(configs_file_path, 'r', encoding="utf8") as stream:
             self._configs = yaml.load(stream)
 
-    def _is_R400(self, dev):
+    def _is_r400(self, dev):
         for idx, config in enumerate(self._configs):
             if dev.idVendor == config['vendor'] and dev.idProduct == config['product']:
                 self._used_config_idx = idx
@@ -86,7 +86,7 @@ class LogitechR400Usb(object):
         Finds the usb devices in the system.
         """
 
-        devices = list(usb.core.find(find_all=True, custom_match=self._is_R400))
+        devices = list(usb.core.find(find_all=True, custom_match=self._is_r400))
         return devices
 
     def _grab_device(self, device):

@@ -15,6 +15,8 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+# pylint: disable-all
+
 from __future__ import absolute_import, division
 
 import math
