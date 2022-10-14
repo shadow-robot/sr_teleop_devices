@@ -18,7 +18,7 @@ from __future__ import absolute_import
 import os
 import subprocess
 import threading
-
+from abc import ABC
 import actionlib
 import paramiko
 import requests
@@ -37,19 +37,24 @@ from sr_teleop_manager.srv import (CustomRelayCommand,
                                    CustomRelayCommandResponse)
 
 
-class PowerControlCommon():
+class PowerControlCommon(ABC):
     _on_off_delay = 0.4
 
-    def check_relays_connected(self, devices):
-        for device in devices:
+    @devices.setter
+    def devices(self, value):
+        self._devices = value
+
+    def check_relays_connected(self):
+        for device in self._devices:
             if 'arm' in device['name']:
                 if self.does_ip_relay_respond(device['power_ip']):
                     rospy.loginfo("Contacted " + device['name'] + " ip relay at " + device['power_ip'])
                 else:
                     rospy.logwarn("Could not contact " + device['name'] + " ip relay at " + device['power_ip'])
 
-    def set_relays_to_default(self, devices):
-        for device in devices:
+
+    def set_relays_to_default(self):
+        for device in self._devices:
             device_ip = device['power_ip']
             if self.does_ip_relay_respond(device_ip):
                 self.requests_retry_session().get('http://' + device_ip + '/setpara[45]=0')
@@ -117,18 +122,22 @@ class RemotePowerControl(PowerControlCommon):
 
     def __init__(self, name, devices):
         self._action_name = name
-        self._devices = devices
+        self.devices(devices)
         self._ALL_THREADS_FINISHED_TIMEOUT = 200
         self._as = actionlib.SimpleActionServer(self._action_name, PowerManagerAction, execute_cb=self.execute_cb,
                                                 auto_start=False)
         self._custom_relay_service = rospy.Service('custom_power_relay_command', CustomRelayCommand,
                                                    self.handle_custom_relay_request)
         self._as.start()
-        self.check_relays_connected(self._devices)
+        self.check_relays_connected()
         self.print_config()
-        self.set_relays_to_default(self._devices)
+        self.set_relays_to_default()
         while not rospy.is_shutdown():
             rospy.spin()
+
+    @devices.setter
+    def devices(self, value):
+        self._devices = value
 
     def print_config(self):
         rospy.loginfo("Devices in config:")
