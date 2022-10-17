@@ -74,8 +74,7 @@ class SrPedalMock():
             with self._lock:
                 self._status.header.stamp = rospy.Time.now()
                 self._publisher.publish(self._status)
-                self._lock.release()
-                self._rate.sleep()
+            self._rate.sleep()
 
     def stop(self):
         rospy.loginfo("Stopping mock pedal publishing.")

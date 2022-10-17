@@ -167,8 +167,7 @@ class SrPiezoFeedback:
             if self.fading_time[finger] <= self._contact_time:
                 fading = -4 / (self._contact_time * self._contact_time)
                 fading_factor = (fading * self.fading_time[finger] *
-                                 self.fading_time[finger]) + (fading *
-                                 self.fading_time[finger])
+                                 self.fading_time[finger]) + (fading * self.fading_time[finger])
                 self.fading_amplitudes[finger] = self._amp_max * 1.0 * fading_factor
                 self.fading_frequencies[finger] = self._freq_max * fading_factor
             else:

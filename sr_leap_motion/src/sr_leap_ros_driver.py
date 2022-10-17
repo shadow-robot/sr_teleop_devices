@@ -32,7 +32,8 @@ class SampleListener(Leap.Listener):
         self._human_pub = rospy.Publisher("/leap_motion/leap_device", Human, queue_size=10)  # pylint: disable=W0201
         rospy.loginfo("Initialized")
 
-    def on_connect(self, _controller):
+    @staticmethod
+    def on_connect(_controller):
         rospy.loginfo("Connected")
 
         # Enable gestures
@@ -41,10 +42,12 @@ class SampleListener(Leap.Listener):
         _controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP)
         _controller.enable_gesture(Leap.Gesture.TYPE_SWIPE)
 
-    def on_disconnect(self, _controller):
+    @staticmethod
+    def on_disconnect(_controller):
         rospy.loginfo("Disconnected")
 
-    def on_exit(self, _controller):
+    @staticmethod
+    def on_exit(_controller):
         rospy.loginfo("Exited")
 
     @staticmethod
