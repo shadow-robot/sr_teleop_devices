@@ -17,21 +17,18 @@
 
 # pylint: disable-all
 
-with file = open("cyberglovetoshadowhand.map")
+with open("cyberglovetoshadowhand.map", 'r', encoding="utf8") as file_to_read:
+    first = True
+    matrix = []
 
-first = True
-matrix = []
-
-for line in file.readlines():
-    if first:
-        first = False
-        continue
-    else:
-        line = line.strip("\n")
-        line = line.split(" ")
-        matrix.append(line)
-
-file.close()
+    for line in file_to_read.readlines():
+        if first:
+            first = False
+            continue
+        else:
+            line = line.strip("\n")
+            line = line.split(" ")
+            matrix.append(line)
 
 matrix_t = []
 
@@ -42,9 +39,9 @@ for i in range(0, len(matrix)):
     for j in range(0, len(line)):
         matrix_t[j][i] = matrix[i][j]
 
-file = open("cyberglovetoshadowhand_transposed.map", "w")
-for line in matrix_t:
-    for col in line:
-        file.write(col + " ")
-    file.write("\n")
-file.close()
+with open("cyberglovetoshadowhand_transposed.map", 'w', encoding="utf8") as file_to_write:
+    for line in matrix_t:
+        for col in line:
+            file_to_write.write(col + " ")
+        file_to_write.write("\n")
+    file_to_write.close()

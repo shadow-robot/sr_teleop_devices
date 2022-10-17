@@ -48,16 +48,15 @@ class PowerControlCommon(ABC):
         for device in self._devices:
             if 'arm' in device['name']:
                 if self.does_ip_relay_respond(device['power_ip']):
-                    rospy.loginfo("Contacted " + device['name'] + " ip relay at " + device['power_ip'])
+                    rospy.loginfo(f"Contacted {device['name']} ip relay at {device['power_ip']}")
                 else:
-                    rospy.logwarn("Could not contact " + device['name'] + " ip relay at " + device['power_ip'])
-
+                    rospy.logwarn(f"Could not contact {device['name']} ip relay at {device['power_ip']}")
 
     def set_relays_to_default(self):
         for device in self._devices:
             device_ip = device['power_ip']
             if self.does_ip_relay_respond(device_ip):
-                self.requests_retry_session().get('http://' + device_ip + '/setpara[45]=0')
+                self.requests_retry_session().get(f"http://{device_ip}/setpara[45]=0")
 
     @staticmethod
     def requests_retry_session(retries=3, backoff_factor=0.3, status_forcelist=(500, 502, 504), session=None):
@@ -76,13 +75,13 @@ class PowerControlCommon(ABC):
 
     @staticmethod
     def is_ping_successful(ping_ip):
-        command = 'fping -c1 -t500 ' + ping_ip + ' 2>&1 >/dev/null'
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
-        stdout = process.communicate()[0]
-        if 'fping: command not found' in stdout:
-            rospy.logerr("fping not installed, please install fping")
-        if process.returncode == 0:
-            return True
+        command = f"fping -c1 -t500 {ping_ip} 2>&1 >/dev/null"
+        with subprocess.Popen(command, stdout=subprocess.PIPE, shell=True) as process:
+            stdout = process.communicate()[0]
+            if 'fping: command not found' in stdout:
+                rospy.logerr("fping not installed, please install fping")
+            if process.returncode == 0:
+                return True
 
         return False
 
@@ -97,20 +96,20 @@ class PowerControlCommon(ABC):
 
     def power_on(self, power_ip):
         responses = []
-        response = self.requests_retry_session().get('http://' + power_ip + '/setpara[45]=1')
+        response = self.requests_retry_session().get(f'http://{power_ip}/setpara[45]=1')
         responses.append(response)
         rospy.sleep(self._on_off_delay)
-        response = self.requests_retry_session().get('http://' + power_ip + '/setpara[45]=0')
+        response = self.requests_retry_session().get(f'http://{power_ip}/setpara[45]=0')
         responses.append(response)
         rospy.sleep(self._on_off_delay)
         return responses
 
     def power_off(self, power_ip):
         responses = []
-        response = self.requests_retry_session().get('http://' + power_ip + '/setpara[46]=1')
+        response = self.requests_retry_session().get(f'http://{power_ip}/setpara[46]=1')
         responses.append(response)
         rospy.sleep(self._on_off_delay)
-        response = self.requests_retry_session().get('http://' + power_ip + '/setpara[46]=0')
+        response = self.requests_retry_session().get(f'http://{power_ip}/setpara[46]=0')
         responses.append(response)
         rospy.sleep(self._on_off_delay)
         return responses
@@ -123,7 +122,7 @@ class RemotePowerControl(PowerControlCommon):
     def __init__(self, name, devices):
         self._action_name = name
         self.devices(devices)
-        self._ALL_THREADS_FINISHED_TIMEOUT = 200
+        self._all_threads_finished_timeout = 200
         self._as = actionlib.SimpleActionServer(self._action_name, PowerManagerAction, execute_cb=self.execute_cb,
                                                 auto_start=False)
         self._custom_relay_service = rospy.Service('custom_power_relay_command', CustomRelayCommand,
@@ -142,10 +141,10 @@ class RemotePowerControl(PowerControlCommon):
     def print_config(self):
         rospy.loginfo("Devices in config:")
         for device in self._devices:
-            rospy.loginfo("Name: %s", device['name'])
+            rospy.loginfo(f"Name: {device['name']}")
             for key, value in device.items():
                 if key != 'name':
-                    rospy.loginfo("  %s: %s", key, value)
+                    rospy.loginfo(f"  {key}: {value}")
 
     def handle_custom_relay_request(self, req):
         if 'get' in req.request_type.lower():
@@ -153,17 +152,17 @@ class RemotePowerControl(PowerControlCommon):
         if 'set' in req.request_type.lower():
             req_type = 'set'
         if req.command_string == "":
-            request_string = 'http://' + str(req.ip_address) + '/' + str(req_type) + 'para[' + str(
-                req.param_number) + ']=' + str(req.value)
+            request_string = (f"http://{req.ip_address}/{req_type}para["
+                              f"{req.param_number}]={req.value}")
         else:
-            request_string = 'http://' + str(req.ip_address) + '/' + req.command_string
+            request_string = f"http://{req.ip_address}/{req.command_string}"
         response = self.requests_retry_session().get(request_string)
         response_content = response.content.replace("<html><body>", '').replace("</body></html>\r\n\r\n", '')
         return CustomRelayCommandResponse(response_content)
 
     def execute_cb(self, goal):
-        rospy.loginfo('%s: Executing. \nPower on list: %s \nPower off list: %s' % (
-                        self._action_name, goal.power_on, goal.power_off))
+        rospy.loginfo(f'{self._action_name}: Executing. \nPower on list: {goal.power_on} \n'
+                      f'Power off list: {goal.power_off}')
         threads = {}
         thread_id_counter = 1
         for power_on_goal in goal.power_on:
@@ -187,7 +186,7 @@ class RemotePowerControl(PowerControlCommon):
         now = rospy.get_rostime()
         rospy.logwarn("waiting for threads to complete...")
         while any(thread.is_alive() for name, thread in threads.items()):
-            if (now.secs + self._ALL_THREADS_FINISHED_TIMEOUT) < rospy.get_rostime().secs:
+            if (now.secs + self._all_threads_finished_timeout) < rospy.get_rostime().secs:
                 break
         rospy.loginfo("All goal tasks processed")
 
@@ -210,22 +209,22 @@ class BootMonitor(threading.Thread, PowerControlCommon):
         self._on_off = on_off
         self.thread_id = thread_id
         self._feedback = feedback
-        self._UR_ARM_SSH_USERNAME = 'root'
-        self._UR_ARM_SSH_PASSWORD = 'easybot'
+        self._ur_arm_ssh_username = 'root'
+        self._ur_arm_ssh_password = 'easybot'
         self._device_name = device['name']
         if 'arm' in device['name']:
             self._data_ip = device['data_ip']
         self._power_ip = device['power_ip']
         self._as = action_server
-        self._PING_TIMEOUT = 80.0
-        self._GET_LOG_TIMEOUT = 60.0
-        self._FINISH_BOOTING_TIMEOUT = 60.0
+        self._ping_timeout = 80.0
+        self._get_log_timeout = 60.0
+        self._finish_booting_timeout = 60.0
         self._result = result
 
     def check_preempt(self):
         if self._as.is_preempt_requested():
-            rospy.loginfo('Preempted: %s' % self._device_name)
-            self.add_feedback('Preempted: %s' % self._device_name, boot_status=BootProgress.BOOT_STATUS_BOOT_CANCELED,
+            rospy.loginfo(f'Preempted: {self._device_name}')
+            self.add_feedback(f'Preempted: {self._device_name}', boot_status=BootProgress.BOOT_STATUS_BOOT_CANCELED,
                               failed=True, finished=False)
             self._as.set_preempted()
             return True
@@ -243,17 +242,17 @@ class BootMonitor(threading.Thread, PowerControlCommon):
             if success:
                 result.success = True
                 self._result.results.append(result)
-                rospy.loginfo('%s: Succeeded' % self._device_name)
+                rospy.loginfo(f'{self._device_name}: Succeeded')
                 return True
             result.success = False
             self._result.results.append(result)
-            rospy.logerr('%s: FAILED' % self._device_name)
+            rospy.logerr(f'{self._device_name}: FAILED')
             return False
         return self.boot_hand()
 
     def shutdown_arm(self):
         if self.is_arm_on(self._data_ip):
-            self.add_feedback("shutting down %s" % self._device_name,
+            self.add_feedback(f"shutting down {self._device_name}",
                               boot_status=BootProgress.BOOT_STATUS_SHUTTING_DOWN)
             responses = self.power_off(self._power_ip)
             if not all(response.status_code == 200 for response in responses):
@@ -262,7 +261,7 @@ class BootMonitor(threading.Thread, PowerControlCommon):
                 return False
             now = rospy.get_rostime()
             while self.is_ping_successful(self._data_ip):
-                if (rospy.get_rostime().secs + self._PING_TIMEOUT) < now.secs:
+                if (rospy.get_rostime().secs + self._ping_timeout) < now.secs:
                     rospy.logerr("")
                     self.add_feedback("Failed to shutdown arm", failed=True,
                                       boot_status=BootProgress.BOOT_STATUS_SHUTDOWN_FAILED)
@@ -304,7 +303,7 @@ class BootMonitor(threading.Thread, PowerControlCommon):
             while not self.is_ping_successful(self._data_ip):
                 if self.check_preempt():
                     return False
-                if (rospy.get_rostime().secs + self._CONST_PING_TIMEOUT) < now.secs:
+                if (rospy.get_rostime().secs + self._ping_timeout) < now.secs:
                     rospy.logerr("Failed to ping arm, boot failed")
                     self.add_feedback("ping failed, cannot boot arm", failed=True,
                                       boot_status=BootProgress.BOOT_STATUS_BOOT_FAIL_NO_ARM)
@@ -319,7 +318,7 @@ class BootMonitor(threading.Thread, PowerControlCommon):
                 self.add_feedback("waiting for log...", boot_status=BootProgress.BOOT_STATUS_WAITING_FOR_LOG)
                 if self.check_preempt():
                     return False
-                if (rospy.get_rostime().secs + self._GET_LOG_TIMEOUT) < now.secs:
+                if (rospy.get_rostime().secs + self._get_log_timeout) < now.secs:
                     rospy.logerr("Failed to retrieve log, arm boot failed")
                     self.add_feedback("log retrieval timed out, cannot boot arm", failed=True, finished=True,
                                       boot_status=BootProgress.BOOT_STATUS_BOOT_FAILED)
@@ -336,7 +335,7 @@ class BootMonitor(threading.Thread, PowerControlCommon):
                         return False
                     if "New safety mode: SAFETY_MODE_NORMAL" in log_line:
                         break
-                if (rospy.get_rostime().secs + self._FINISH_BOOTING_TIMEOUT) < now.secs:
+                if (rospy.get_rostime().secs + self._finish_booting_timeout) < now.secs:
                     rospy.logerr("Failed to finish booting, arm boot failed")
                     self.add_feedback("arm boot time out, failed", failed=True, finished=True,
                                       boot_status=BootProgress.BOOT_STATUS_BOOT_FAILED)
@@ -349,7 +348,7 @@ class BootMonitor(threading.Thread, PowerControlCommon):
         return False
 
     def add_feedback(self, status_message, boot_status, finished=False, failed=False):
-        rospy.loginfo("%s: %s", self._device_name, status_message)
+        rospy.loginfo(f"{self._device_name}: {status_message}")
         power_fb = PowerFeedback()
         power_fb.status = self._device_name + " " + status_message
         power_fb.name = self._device_name
@@ -365,7 +364,7 @@ class BootMonitor(threading.Thread, PowerControlCommon):
     def get_log_from_arm(self, arm_ip):
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(arm_ip, username=self._UR_ARM_SSH_USERNAME, password=self._UR_ARM_SSH_PASSWORD)
+        client.connect(arm_ip, username=self._ur_arm_ssh_username, password=self._ur_arm_ssh_password)
         _stdin, stdout, _stderr = client.exec_command('cat /tmp/log/urcontrol/current')
         log = stdout.readlines()
         client.close()

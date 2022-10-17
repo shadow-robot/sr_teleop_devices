@@ -28,23 +28,23 @@ class SampleListener(Leap.Listener):
     CONST_BONE_NAMES = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     CONST_FRAME_ID = "leap_hands"
 
-    def on_init(self):
+    def on_init(self, _controller):
         self._human_pub = rospy.Publisher("/leap_motion/leap_device", Human, queue_size=10)  # pylint: disable=W0201
         rospy.loginfo("Initialized")
 
-    def on_connect(self, controller):  # pylint: disable=R0201
+    def on_connect(self, _controller):
         rospy.loginfo("Connected")
 
         # Enable gestures
-        controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE)
-        controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP)
-        controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP)
-        controller.enable_gesture(Leap.Gesture.TYPE_SWIPE)
+        _controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE)
+        _controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP)
+        _controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP)
+        _controller.enable_gesture(Leap.Gesture.TYPE_SWIPE)
 
-    def on_disconnect(self, controller):  # pylint: disable=W0613,R0201
+    def on_disconnect(self, _controller):
         rospy.loginfo("Disconnected")
 
-    def on_exit(self, controller):  # pylint: disable=W0613,R0201
+    def on_exit(self, _controller):
         rospy.loginfo("Exited")
 
     @staticmethod
@@ -166,8 +166,8 @@ class SampleListener(Leap.Listener):
         human_msg = self.parse_human(frame)
         self._human_pub.publish(human_msg)
 
-    def on_frame(self, controller):
-        frame = controller.frame()
+    def on_frame(self, _controller):
+        frame = _controller.frame()
         # self.print_frame(frame)
         self.parse_frame(frame)
 
