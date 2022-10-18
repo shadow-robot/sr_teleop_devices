@@ -267,7 +267,7 @@ class SrPiezoFeedbackBiotac(SrPiezoFeedback):
     def _biotac_tactile_cb(self, data):
         processed_biotac_pressure = self._process_biotac_tactile_msg(data)
         if len(processed_biotac_pressure) == len(self.CONST_FINGERS):
-            for i, _press in enumerate(processed_biotac_pressure):
+            for i, _ in enumerate(processed_biotac_pressure):
                 pdc = processed_biotac_pressure[i][0]
                 pac = processed_biotac_pressure[i][1]
                 pdc_out = self.mapping(pdc, self._pdc_threshold, self._pdc_saturation,
