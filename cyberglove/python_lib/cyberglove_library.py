@@ -19,17 +19,13 @@
 
 from __future__ import absolute_import, division
 
-import math
-import os
-import subprocess
 import threading
 import time
 
 import rosgraph.masterapi
 import roslib
 import rospy
-from sensor_msgs.msg import *
-from sr_robot_msgs.msg import joint, joints_data, sendupdate
+from sensor_msgs.msg import JointState
 
 roslib.load_manifest('cyberglove')
 

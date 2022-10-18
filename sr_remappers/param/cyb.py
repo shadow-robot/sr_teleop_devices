@@ -15,29 +15,23 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-# pylint: disable-all
-
 with open("cyberglovetoshadowhand.map", 'r', encoding="utf8") as file_to_read:
-    first = True
     matrix = []
 
+    next(file_to_read)
     for line in file_to_read.readlines():
-        if first:
-            first = False
-            continue
-        else:
-            line = line.strip("\n")
-            line = line.split(" ")
-            matrix.append(line)
+        line = line.strip("\n")
+        line = line.split(" ")
+        matrix.append(line)
 
 matrix_t = []
 
 for i in range(0, len(matrix[0])):
     matrix_t.append(list(range(0, len(matrix))))
 
-for i in range(0, len(matrix)):
-    for j in range(0, len(line)):
-        matrix_t[j][i] = matrix[i][j]
+for index_row, line in enumerate(matrix):
+    for index_column, _ in enumerate(line):
+        matrix_t[index_column][index_row] = matrix[index_row][index_column]
 
 with open("cyberglovetoshadowhand_transposed.map", 'w', encoding="utf8") as file_to_write:
     for line in matrix_t:
