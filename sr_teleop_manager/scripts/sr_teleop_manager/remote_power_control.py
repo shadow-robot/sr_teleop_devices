@@ -350,7 +350,7 @@ class BootMonitor(threading.Thread, PowerControlCommon):
     def add_feedback(self, status_message, boot_status, finished=False, failed=False):
         rospy.loginfo(f"{self._device_name}: {status_message}")
         power_fb = PowerFeedback()
-        power_fb.status = self._device_name + " " + status_message
+        power_fb.status = f"{self._device_name} {status_message}"
         power_fb.name = self._device_name
         power_fb.complete = finished
         boot_process = BootProgress()

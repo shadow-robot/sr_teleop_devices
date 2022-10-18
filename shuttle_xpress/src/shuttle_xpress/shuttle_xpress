@@ -23,7 +23,7 @@ CONTOUR_ID_VENDOR = 0x0b33
 CONTOUR_ID_PRODUCT = 0x0020
 
 
-class ShuttleXpressUsb():
+class ShuttleXpressUsb:
     """
     Usb driver for the Contour Shuttle Xpress.
 
@@ -72,7 +72,7 @@ class ShuttleXpressUsb():
                 self.__device.detach_kernel_driver(self.__interface)
                 rospy.logdebug("kernel driver detached")
             except usb.core.USBError as usb_exc:
-                sysexit("Could not detach kernel driver: %s" % str(usb_exc))
+                sysexit(f"Could not detach kernel driver: {usb_exc}")
 
         self.__device.set_configuration()
         usb.util.claim_interface(self.__device, self.__interface)

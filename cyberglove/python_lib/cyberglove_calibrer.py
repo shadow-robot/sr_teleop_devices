@@ -91,16 +91,16 @@ def default_description(step_name, max=0):
     @param max: if 0=>we're reading the min values, if 1=> max values
     """
     if max == 0:
-        print("calibrating min values for: " + str(step_name))
+        print(f"calibrating min values for: {step_name}")
     else:
-        print("calibrating max values for: " + str(step_name))
+        print(f"calibrating max values for: {step_name}")
 
 
-def do_nothing(step_name, max=0):
+def do_nothing():
     """
     A function that does nothing. Used to have an empty description function.
     """
-    nothing = True
+    return
 
 
 class CybergloveCalibrer:

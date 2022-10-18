@@ -176,9 +176,8 @@ class SampleListener(Leap.Listener):
 
     @staticmethod
     def print_frame(frame):
-        print("Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
-               frame.id, frame.timestamp, len(frame.hands), len(frame.fingers),
-               len(frame.tools), len(frame.gestures())))
+        print(f"Frame id: {frame.id}, timestamp: {frame.timestamp}, hands: {len(frame.hands)}, "
+              f"fingers: {len(frame.fingers)}, tools: {len(frame.tools)}, gestures: {len(frame.gestures())}")
 
     # @TODO: re-implement gesture publishing:
     # https://github.com/ros-drivers/leap_motion/blob/hydro/src/lmc_listener.cpp#L363-L399

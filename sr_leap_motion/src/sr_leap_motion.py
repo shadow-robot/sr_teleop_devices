@@ -99,16 +99,16 @@ class SrLeapMotion():
             hand = human.right_hand
         if not hand.is_present:
             return new_tfs
-        elbow_tf = self.new_root_tf("{}leap_elbow".format(arm_prefix), human.header.stamp)
+        elbow_tf = self.new_root_tf(f"{arm_prefix}leap_elbow", human.header.stamp)
         self.leap_pose_to_ros_tf(hand.arm.elbow, elbow_tf.transform)
-        palm_tf = self.new_root_tf("{}leap_palm".format(hand_prefix), human.header.stamp)
+        palm_tf = self.new_root_tf(f"{hand_prefix}leap_palm", human.header.stamp)
         palm_tf.transform.translation.x = -hand.palm_center.z
         palm_tf.transform.translation.y = -hand.palm_center.x
         palm_tf.transform.translation.z = hand.palm_center.y
         palm_tf.transform.rotation = self.ros_rpy_to_quat([-hand.roll, -hand.pitch, -hand.yaw])
-        wrist_tf = self.new_root_tf("{}leap_wrist".format(arm_prefix), human.header.stamp)
+        wrist_tf = self.new_root_tf(f"{arm_prefix}leap_wrist", human.header.stamp)
         self.leap_pose_to_ros_tf(hand.arm.wrist, wrist_tf.transform)
-        arm_tf = self.new_root_tf("{}leap_arm_center".format(arm_prefix), human.header.stamp)
+        arm_tf = self.new_root_tf(f"{arm_prefix}leap_arm_center", human.header.stamp)
         arm_tf.transform.translation.x = -hand.arm.center[2]
         arm_tf.transform.translation.y = -hand.arm.center[0]
         arm_tf.transform.translation.z = hand.arm.center[1]
@@ -119,24 +119,21 @@ class SrLeapMotion():
         new_tfs.append(arm_tf)
         for finger in hand.finger_list:
             for bone in finger.bone_list:
-                bone_end_tf = self.new_root_tf(
-                    "{}leap_{}_{}_end".format(
-                        hand_prefix, SrLeapMotion.FINGER_NAMES[finger.type], SrLeapMotion.BONE_NAMES[bone.type]),
-                    human.header.stamp)
+                bone_end_tf = self.new_root_tf(f"{hand_prefix}leap_{SrLeapMotion.FINGER_NAMES[finger.type]}"
+                                               f"_{SrLeapMotion.BONE_NAMES[bone.type]}_end",
+                                               human.header.stamp)
                 self.leap_pose_to_ros_tf(bone.bone_end, bone_end_tf.transform)
                 new_tfs.append(bone_end_tf)
                 if self.bone_starts:
-                    bone_start_tf = self.new_root_tf(
-                        "{}leap_{}_{}_start".format(
-                            hand_prefix, SrLeapMotion.FINGER_NAMES[finger.type], SrLeapMotion.BONE_NAMES[bone.type]),
-                        human.header.stamp)
+                    bone_start_tf = self.new_root_tf(f"{hand_prefix}leap_{SrLeapMotion.FINGER_NAMES[finger.type]}"
+                                                     f"_{SrLeapMotion.BONE_NAMES[bone.type]}_start",
+                                                     human.header.stamp)
                     self.leap_pose_to_ros_tf(bone.bone_start, bone_start_tf.transform)
                     new_tfs.append(bone_start_tf)
                 if self.bone_middles:
-                    bone_mid_tf = self.new_root_tf(
-                        "{}leap_{}_{}_mid".format(
-                            hand_prefix, SrLeapMotion.FINGER_NAMES[finger.type], SrLeapMotion.BONE_NAMES[bone.type]),
-                        human.header.stamp)
+                    bone_mid_tf = self.new_root_tf(f"{hand_prefix}leap_{SrLeapMotion.FINGER_NAMES[finger.type]}"
+                                                   f"_{SrLeapMotion.BONE_NAMES[bone.type]}_mid",
+                                                   human.header.stamp)
                     bone_mid_tf.transform.translation.x = -bone.center[2]
                     bone_mid_tf.transform.translation.y = -bone.center[0]
                     bone_mid_tf.transform.translation.z = bone.center[1]
