@@ -38,4 +38,3 @@ with open("cyberglovetoshadowhand_transposed.map", 'w', encoding="utf8") as file
         for col in line:
             file_to_write.write(col + " ")
         file_to_write.write("\n")
-    file_to_write.close()
