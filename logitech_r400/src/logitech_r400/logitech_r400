@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # ####################################################################
-# Copyright (c) 2013 Shadow Robot Company Ltd.
+# Copyright (c) 2013, 2022 Shadow Robot Company Ltd.
 # All rights reserved.
 # This code is proprietary and may not be used, copied, distributed without
 # prior authorisation and agreement from Shadow Robot Company Ltd. *
@@ -11,17 +11,18 @@
 see README.md
 """
 
-from logitech_r400.msg import LogitechR400
-import rospy
-import rospkg
 from sys import exit as sysexit
 from time import sleep
+
+import rospkg
+import rospy
 import usb.core
 import usb.util
 import yaml
+from logitech_r400.msg import LogitechR400
 
 
-class LogitechR400Usb(object):
+class LogitechR400Usb:
     """
     Usb driver for the Logitech R400.
 
@@ -64,16 +65,16 @@ class LogitechR400Usb(object):
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value, traceback):
         for device in self._devices:
             self._release_device(device)
 
     def _read_config(self):
-        configs_file_path = rospkg.RosPack().get_path('logitech_r400') + '/config/config.yaml'
-        with open(configs_file_path, 'r') as stream:
+        configs_file_path = f"{rospkg.RosPack().get_path('logitech_r400')}/config/config.yaml"
+        with open(configs_file_path, 'r', encoding="utf8") as stream:
             self._configs = yaml.load(stream)
 
-    def _is_R400(self, dev):
+    def _is_r400(self, dev):
         for idx, config in enumerate(self._configs):
             if dev.idVendor == config['vendor'] and dev.idProduct == config['product']:
                 self._used_config_idx = idx
@@ -85,7 +86,7 @@ class LogitechR400Usb(object):
         Finds the usb devices in the system.
         """
 
-        devices = list(usb.core.find(find_all=True, custom_match=self._is_R400))
+        devices = list(usb.core.find(find_all=True, custom_match=self._is_r400))
         return devices
 
     def _grab_device(self, device):
@@ -99,7 +100,7 @@ class LogitechR400Usb(object):
                 device.detach_kernel_driver(self.__interface)
                 rospy.logdebug("kernel driver detached")
             except usb.core.USBError as usb_exc:
-                sysexit("Could not detach kernel driver: %s" % str(usb_exc))
+                sysexit(f"Could not detach kernel driver: {usb_exc}")
 
         device.set_configuration()
         usb.util.claim_interface(device, self.__interface)

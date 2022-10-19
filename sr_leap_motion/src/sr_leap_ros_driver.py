@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Copyright 2021 Shadow Robot Company Ltd.
+# Copyright 2021, 2022 Shadow Robot Company Ltd.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -15,44 +15,43 @@
 
 
 from __future__ import absolute_import, division
+
 import Leap
-import sys
-import threading
-import time
+import numpy
 import rospy
-import tf2_ros
 import tf
 from geometry_msgs.msg import Quaternion
-from leap_motion.msg import Human, Hand, Finger, Bone, Arm
-import std_msgs.msg
-import numpy
-from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
+from leap_motion.msg import Arm, Bone, Finger, Hand, Human
 
 
 class SampleListener(Leap.Listener):
     CONST_BONE_NAMES = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     CONST_FRAME_ID = "leap_hands"
 
-    def on_init(self, controller):
-        self._human_pub = rospy.Publisher("/leap_motion/leap_device", Human, queue_size=10)
+    def on_init(self, _controller):
+        self._human_pub = rospy.Publisher("/leap_motion/leap_device", Human, queue_size=10)  # pylint: disable=W0201
         rospy.loginfo("Initialized")
 
-    def on_connect(self, controller):
+    @staticmethod
+    def on_connect(_controller):
         rospy.loginfo("Connected")
 
         # Enable gestures
-        controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE)
-        controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP)
-        controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP)
-        controller.enable_gesture(Leap.Gesture.TYPE_SWIPE)
+        _controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE)
+        _controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP)
+        _controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP)
+        _controller.enable_gesture(Leap.Gesture.TYPE_SWIPE)
 
-    def on_disconnect(self, controller):
+    @staticmethod
+    def on_disconnect(_controller):
         rospy.loginfo("Disconnected")
 
-    def on_exit(self, controller):
+    @staticmethod
+    def on_exit(_controller):
         rospy.loginfo("Exited")
 
-    def quaternion_from_basis(self, basis, x_basis_sign):
+    @staticmethod
+    def quaternion_from_basis(basis, x_basis_sign):
         tf_matrix = numpy.array([[x_basis_sign * basis.x_basis.x, x_basis_sign * basis.x_basis.y,
                                   x_basis_sign * basis.x_basis.z, 0.0],
                                 [basis.y_basis.x, basis.y_basis.y, basis.y_basis.z, 0.0],
@@ -146,9 +145,9 @@ class SampleListener(Leap.Listener):
         hand_msg.sphere_radius = hand.sphere_radius / 1000
         hand_msg.arm = self.parse_arm(hand, x_basis_sign)
         for finger in hand.fingers:
-            f = Finger()
-            f = self.parse_finger(finger, f, x_basis_sign)
-            hand_msg.finger_list.append(f)
+            leap_finger = Finger()
+            leap_finger = self.parse_finger(finger, leap_finger, x_basis_sign)
+            hand_msg.finger_list.append(leap_finger)
         return hand_msg
 
     def parse_human(self, frame):
@@ -170,19 +169,19 @@ class SampleListener(Leap.Listener):
         human_msg = self.parse_human(frame)
         self._human_pub.publish(human_msg)
 
-    def on_frame(self, controller):
-        frame = controller.frame()
+    def on_frame(self, _controller):
+        frame = _controller.frame()
         # self.print_frame(frame)
         self.parse_frame(frame)
 
-    def print_frame(self, frame):
-        print("Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
-               frame.id, frame.timestamp, len(frame.hands), len(frame.fingers),
-               len(frame.tools), len(frame.gestures())))
+    @staticmethod
+    def print_frame(frame):
+        print(f"Frame id: {frame.id}, timestamp: {frame.timestamp}, hands: {len(frame.hands)}, "
+              f"fingers: {len(frame.fingers)}, tools: {len(frame.tools)}, gestures: {len(frame.gestures())}")
 
     # @TODO: re-implement gesture publishing:
     # https://github.com/ros-drivers/leap_motion/blob/hydro/src/lmc_listener.cpp#L363-L399
-    def state_string(self, state):
+    def state_string(self, state):  # pylint: disable=R1710,R0201
         if state == Leap.Gesture.STATE_START:
             return "STATE_START"
 

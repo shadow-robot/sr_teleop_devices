@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2011 Shadow Robot Company Ltd.
+# Copyright 2011, 2022 Shadow Robot Company Ltd.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -14,6 +14,9 @@
 # You should have received a copy of the GNU General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 #
+
+# pylint: disable-all
+
 """
 Calibration utility for the cyberglove.
 
@@ -22,13 +25,15 @@ Calibration utility for the cyberglove.
 """
 
 from __future__ import absolute_import
-from builtins import input
-import os
-from cyberglove_library import Cyberglove
-from cyberglove.srv import Calibration as CalibrationSrv
 
-import rospy
+import os
+from builtins import input
+
 import roslib
+import rospy
+from cyberglove.srv import Calibration as CalibrationSrv
+from cyberglove_library import Cyberglove
+
 roslib.load_manifest('sr_control_gui')
 
 
@@ -86,16 +91,16 @@ def default_description(step_name, max=0):
     @param max: if 0=>we're reading the min values, if 1=> max values
     """
     if max == 0:
-        print("calibrating min values for: " + str(step_name))
+        print(f"calibrating min values for: {step_name}")
     else:
-        print("calibrating max values for: " + str(step_name))
+        print(f"calibrating max values for: {step_name}")
 
 
-def do_nothing(step_name, max=0):
+def do_nothing():
     """
     A function that does nothing. Used to have an empty description function.
     """
-    nothing = True
+    return
 
 
 class CybergloveCalibrer:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2011 Shadow Robot Company Ltd.
+# Copyright 2011, 2022 Shadow Robot Company Ltd.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -14,6 +14,9 @@
 # You should have received a copy of the GNU General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 #
+
+# pylint: disable-all
+
 """
 Minimizes the mapping matrix using a simplex algorithm
 
@@ -22,11 +25,14 @@ Minimizes the mapping matrix using a simplex algorithm
 """
 
 from __future__ import absolute_import
+
 from builtins import input
-import rospy
-from scipy.optimize import fmin
-from cyberglove_library import Cyberglove
+
 import roslib
+import rospy
+from cyberglove_library import Cyberglove
+from scipy.optimize import fmin
+
 roslib.load_manifest('sr_control_gui')
 
 

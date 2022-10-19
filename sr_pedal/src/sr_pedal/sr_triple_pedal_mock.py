@@ -20,9 +20,7 @@ from __future__ import absolute_import
 
 import sys
 from threading import Lock, Thread
-
 import rospy
-
 from sr_pedal.msg import Status
 
 # If we're in a non-X-server (e.g. CI) environment, this import will fail
@@ -73,10 +71,9 @@ class SrPedalMock():
     def _publish_thread(self):
         rospy.loginfo("Starting mock pedal publishing.")
         while not (self._stopping or rospy.is_shutdown()):
-            self._lock.acquire()
-            self._status.header.stamp = rospy.Time.now()
-            self._publisher.publish(self._status)
-            self._lock.release()
+            with self._lock:
+                self._status.header.stamp = rospy.Time.now()
+                self._publisher.publish(self._status)
             self._rate.sleep()
 
     def stop(self):
@@ -87,32 +84,31 @@ class SrPedalMock():
         self._thread.join()
 
     def set_status(self, connected=None, left_pressed=None, middle_pressed=None, right_pressed=None):
-        self._lock.acquire()
-        if connected is not None:
-            self._status.connected = connected
-            if connected:
-                rospy.loginfo("Mock pedal now connected.")
-            else:
-                rospy.loginfo("Mock pedal now disconnected.")
-        if left_pressed is not None:
-            self._status.left_pressed = left_pressed
-            if left_pressed:
-                rospy.loginfo("Mock left pedal now pressed.")
-            else:
-                rospy.loginfo("Mock left pedal now released.")
-        if middle_pressed is not None:
-            self._status.middle_pressed = middle_pressed
-            if middle_pressed:
-                rospy.loginfo("Mock middle pedal now pressed.")
-            else:
-                rospy.loginfo("Mock middle pedal now released.")
-        if right_pressed is not None:
-            self._status.right_pressed = right_pressed
-            if right_pressed:
-                rospy.loginfo("Mock right pedal now pressed.")
-            else:
-                rospy.loginfo("Mock right pedal now released.")
-        self._lock.release()
+        with self._lock:
+            if connected is not None:
+                self._status.connected = connected
+                if connected:
+                    rospy.loginfo("Mock pedal now connected.")
+                else:
+                    rospy.loginfo("Mock pedal now disconnected.")
+            if left_pressed is not None:
+                self._status.left_pressed = left_pressed
+                if left_pressed:
+                    rospy.loginfo("Mock left pedal now pressed.")
+                else:
+                    rospy.loginfo("Mock left pedal now released.")
+            if middle_pressed is not None:
+                self._status.middle_pressed = middle_pressed
+                if middle_pressed:
+                    rospy.loginfo("Mock middle pedal now pressed.")
+                else:
+                    rospy.loginfo("Mock middle pedal now released.")
+            if right_pressed is not None:
+                self._status.right_pressed = right_pressed
+                if right_pressed:
+                    rospy.loginfo("Mock right pedal now pressed.")
+                else:
+                    rospy.loginfo("Mock right pedal now released.")
 
     def toggle_status(self, status):
         if status == "connected":
@@ -154,13 +150,15 @@ class SrPedalMock():
 
 if __name__ == "__main__":
     rospy.init_node("sr_pedal_mock")
-    rate = rospy.get_param("~rate", 20)
-    connected = rospy.get_param("~connected", True)
-    left_pressed = rospy.get_param("~left_pressed", False)
-    middle_pressed = rospy.get_param("~middle_pressed", False)
-    right_pressed = rospy.get_param("~right_pressed", False)
-    keyboard_control = rospy.get_param("~keyboard_control", False)
-    sr_pedal_mock = SrPedalMock(connected, left_pressed, middle_pressed, right_pressed, rate, keyboard_control)
+    publishing_rate = rospy.get_param("~rate", 20)
+    is_connected = rospy.get_param("~connected", True)
+    is_left_pressed = rospy.get_param("~left_pressed", False)
+    is_middle_pressed = rospy.get_param("~middle_pressed", False)
+    is_right_pressed = rospy.get_param("~right_pressed", False)
+    is_keyboard_control = rospy.get_param("~keyboard_control", False)
+    sr_pedal_mock = SrPedalMock(is_connected, is_left_pressed,
+                                is_middle_pressed, is_right_pressed,
+                                publishing_rate, is_keyboard_control)
     sr_pedal_mock.run()
     rospy.spin()
     sr_pedal_mock.stop()

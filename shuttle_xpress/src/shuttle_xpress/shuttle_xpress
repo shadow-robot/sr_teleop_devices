@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # ####################################################################
-# Copyright (c) 2013 Shadow Robot Company Ltd.
+# Copyright (c) 2013, 2022 Shadow Robot Company Ltd.
 # All rights reserved.
 # This code is proprietary and may not be used, copied, distributed without
 # prior authorisation and agreement from Shadow Robot Company Ltd. *
@@ -11,19 +11,19 @@
 see README.md
 """
 
-import usb.core
-import usb.util
 from sys import exit as sysexit
 from time import sleep
 
 import rospy
+import usb.core
+import usb.util
 from shuttle_xpress.msg import ShuttleXpress
 
 CONTOUR_ID_VENDOR = 0x0b33
 CONTOUR_ID_PRODUCT = 0x0020
 
 
-class ShuttleXpressUsb(object):
+class ShuttleXpressUsb:
     """
     Usb driver for the Contour Shuttle Xpress.
 
@@ -53,7 +53,7 @@ class ShuttleXpressUsb(object):
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value, traceback):
         self.release_device()
 
     def grab_device(self):
@@ -72,7 +72,7 @@ class ShuttleXpressUsb(object):
                 self.__device.detach_kernel_driver(self.__interface)
                 rospy.logdebug("kernel driver detached")
             except usb.core.USBError as usb_exc:
-                sysexit("Could not detach kernel driver: %s" % str(usb_exc))
+                sysexit(f"Could not detach kernel driver: {usb_exc}")
 
         self.__device.set_configuration()
         usb.util.claim_interface(self.__device, self.__interface)
@@ -129,7 +129,8 @@ class ShuttleXpressUsb(object):
 
         self._pub.publish(self.__state)
 
-    def __check_btn(self, raw_data, btn_index):
+    @staticmethod
+    def __check_btn(raw_data, btn_index):
         """
         returns a positive value if the bit at btn_index in raw_data is set.
         """
@@ -137,6 +138,7 @@ class ShuttleXpressUsb(object):
         btn_index = 1 << btn_index
 
         return raw_data & btn_index
+
 
 if __name__ == "__main__":
     rospy.init_node("shuttle_xpress")

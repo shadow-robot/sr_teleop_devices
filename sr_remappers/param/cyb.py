@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2011 Shadow Robot Company Ltd.
+# Copyright 2011, 2022 Shadow Robot Company Ltd.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -14,34 +14,27 @@
 # You should have received a copy of the GNU General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 #
-file = open("cyberglovetoshadowhand.map")
 
-first = True
-matrix = []
+with open("cyberglovetoshadowhand.map", 'r', encoding="utf8") as file_to_read:
+    matrix = []
 
-for line in file.readlines():
-    if first:
-        first = False
-        continue
-    else:
+    next(file_to_read)
+    for line in file_to_read.readlines():
         line = line.strip("\n")
         line = line.split(" ")
         matrix.append(line)
-
-file.close()
 
 matrix_t = []
 
 for i in range(0, len(matrix[0])):
     matrix_t.append(list(range(0, len(matrix))))
 
-for i in range(0, len(matrix)):
-    for j in range(0, len(line)):
-        matrix_t[j][i] = matrix[i][j]
+for index_row, line in enumerate(matrix):
+    for index_column, _ in enumerate(line):
+        matrix_t[index_column][index_row] = matrix[index_row][index_column]
 
-file = open("cyberglovetoshadowhand_transposed.map", "w")
-for line in matrix_t:
-    for col in line:
-        file.write(col + " ")
-    file.write("\n")
-file.close()
+with open("cyberglovetoshadowhand_transposed.map", 'w', encoding="utf8") as file_to_write:
+    for line in matrix_t:
+        for col in line:
+            file_to_write.write(col + " ")
+        file_to_write.write("\n")
