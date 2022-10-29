@@ -28,8 +28,11 @@ class SampleListener(Leap.Listener):
     CONST_BONE_NAMES = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     CONST_FRAME_ID = "leap_hands"
 
-    def on_init(self):
+    def __init__(self):
         self._human_pub = rospy.Publisher("/leap_motion/leap_device", Human, queue_size=10)  # pylint: disable=W0201
+        Leap.Listener.__init__(self)
+
+    def on_init(self, _):
         rospy.loginfo("Initialized")
 
     def on_connect(self, controller):  # pylint: disable=R0201

@@ -19,8 +19,9 @@ from __future__ import absolute_import
 import rospy
 from geometry_msgs.msg import Quaternion, TransformStamped
 from leap_motion.msg import Human
+from sr_leap_motion.srv import Skeleton, SkeletonResponse
 from std_msgs.msg import Bool
-from tf2_ros import Buffer, TransformBroadcaster
+from tf2_ros import Buffer, TransformBroadcaster, LookupException
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 
@@ -34,17 +35,33 @@ class SrLeapMotion():
 
     def __init__(self, left_root_tf, right_root_tf, bone_start=False, bone_middle=False,
                  heartbeat_topic_name="/sr_leap_motion/heartbeat"):
-        self.right_root_tf_name = right_root_tf
-        self.left_root_tf_name = left_root_tf
         self.bone_starts = bone_start
         self.bone_middles = bone_middle
         self.heartbeat_publisher = rospy.Publisher(heartbeat_topic_name, Bool, queue_size=1)
-        self.hand = None
-        self.left_hand_mode = SrLeapMotion.JOINT_ANGLE_MODE
-        self.right_hand_mode = SrLeapMotion.FINGERTIP_MODE
+        self.hands = []
         self.transform_broadcaster = TransformBroadcaster()
-        self.left_tfs = []
-        self.right_tfs = []
+        self.tf_structure = self.default_tf_structure()
+        self.set_root_tf("lh", left_root_tf)
+        self.set_root_tf("rh", right_root_tf)
+        self.skeleton_service = rospy.Service('/sr_leap_motion/skeleton', Skeleton, self.on_skeleton_request)
+        self.local_tf_buffer = Buffer()
+        self.human = None
+
+    def on_skeleton_request(self, request):
+        response = SkeletonResponse()
+        if (request.root_tf_name != ""):
+            for finger_name in SrLeapMotion.FINGER_NAMES:
+                for bone_name in SrLeapMotion.BONE_NAMES:
+                    try:
+                        transform = self.local_tf_buffer.lookup_transform(f'{request.root_tf_name}', f'rh_leap_{finger_name}_{bone_name}_end', rospy.Time(0))
+                        response.transforms.append(transform)
+                        translation = transform.transform.translation
+                        response.manus_skeleton = f'{response.manus_skeleton}{translation.x}f, {translation.y}f, {translation.z}f, {finger_name}_{bone_name}_end\n'
+                    except LookupException as e:
+                        raise rospy.ServiceException(f'Failed to find skeleton transform: {e}')
+        response.human = self.human
+        rospy.loginfo(response.manus_skeleton)
+        return response
 
     def run(self):
         rospy.loginfo("Shadow leap motion running.")
@@ -52,63 +69,67 @@ class SrLeapMotion():
         rospy.spin()
 
     def frame(self, human):
-        if human.right_hand.is_present:
-            if self.hand != SrLeapMotion.HAND_RIGHT:
+        self.human = human
+        all_tfs = []
+        if self.human.right_hand.is_present:
+            if not SrLeapMotion.HAND_RIGHT in self.hands:
                 rospy.loginfo("Started tracking right hand!")
-                self.hand = SrLeapMotion.HAND_RIGHT
-        elif human.left_hand.is_present:
-            if self.hand != SrLeapMotion.HAND_LEFT:
+                self.hands.append(SrLeapMotion.HAND_RIGHT)
+            all_tfs = all_tfs + self.common_frame(hand=self.human.right_hand, hand_prefix="rh")
+        else:
+            if SrLeapMotion.HAND_RIGHT in self.hands:
+                rospy.loginfo("Stopped tracking right hand!")
+                self.hands.remove(SrLeapMotion.HAND_RIGHT)
+        if self.human.left_hand.is_present:
+            if not SrLeapMotion.HAND_LEFT in self.hands:
                 rospy.loginfo("Started tracking left hand!")
-                self.hand = SrLeapMotion.HAND_LEFT
+                self.hands.append(SrLeapMotion.HAND_LEFT)
+            all_tfs = all_tfs + self.common_frame(hand=self.human.left_hand, hand_prefix="lh")
         else:
-            if self.hand is not None:
-                rospy.loginfo("Lost sight of any hands.")
-                self.hand = None
-        self.left_tfs = self.common_frame(human=human, hand=human.left_hand, arm_prefix="la_", hand_prefix="lh_")
-        self.right_tfs = self.common_frame(human=human, hand=human.right_hand, arm_prefix="ra_", hand_prefix="rh_")
-        if self.left_tfs:
-            self.publish_tfs(transforms=self.left_tfs, root_tf_name=self.left_root_tf_name)
-        if self.right_tfs:
-            self.publish_tfs(transforms=self.right_tfs, root_tf_name=self.right_root_tf_name)
-        self.heartbeat_publisher.publish(not ((not self.left_tfs) and (not self.right_tfs)))
+            if SrLeapMotion.HAND_LEFT in self.hands:
+                rospy.loginfo("Stopped tracking left hand!")
+                self.hands.remove(SrLeapMotion.HAND_LEFT)
+        # left_tfs = self.common_frame(hand=self.human.left_hand, hand_prefix="lh")
+        # right_tfs = self.common_frame(hand=self.human.right_hand, hand_prefix="rh")
+        # all_tfs = left_tfs + right_tfs
+        all_tfs = self.reparent_tfs(all_tfs)
+        self.transform_broadcaster.sendTransform(all_tfs)
+        self.heartbeat_publisher.publish(all_tfs)
 
-    def publish_tfs(self, transforms, root_tf_name):
-        buffer = Buffer()
-        tf_authority = ""
-        root_tf_found = False
-        for transform in transforms:
-            buffer.set_transform(transform, tf_authority)
-            if transform.child_frame_id == root_tf_name:
-                root_tf_found = True
-        # If the requested root TF name isn't one of the TFs reported by Leap Motion, report all TFs relative to Leap
-        # sensor, named as the requested root TF name
-        if not root_tf_found:
-            for transform in transforms:
-                transform.header.frame_id = root_tf_name
-                self.transform_broadcaster.sendTransform(transform)
-        # If the requested root TF name is one of the TFs reported by Leap Motion, report all TFs relative to that TF
-        else:
-            for transform in transforms:
-                if transform.child_frame_id != root_tf_name:
-                    reparented_tf = buffer.lookup_transform(root_tf_name, transform.child_frame_id, rospy.Time())
-                    self.transform_broadcaster.sendTransform(reparented_tf)
-
-    def common_frame(self, human, hand=None, arm_prefix="ra_", hand_prefix="rh_"):
+    def reparent_tfs(self, transforms):
         new_tfs = []
-        if hand is None:
-            hand = human.right_hand
+        right_present = False
+        left_present = False
+        for transform in transforms:
+            self.local_tf_buffer.set_transform(transform, "local_buffer")
+            right_present = right_present or transform.header.frame_id == "rh_leap_camera"
+            left_present = left_present or transform.header.frame_id == "lh_leap_camera"
+        for transform in transforms:
+            if transform.child_frame_id in self.tf_structure:
+                new_tfs.append(self.local_tf_buffer.lookup_transform(self.tf_structure[transform.child_frame_id], transform.child_frame_id, transform.header.stamp))
+        if right_present and self.right_root_tf_name != "rh_leap_camera":
+            new_tfs.append(self.local_tf_buffer.lookup_transform(self.right_root_tf_name, "rh_leap_camera", transform.header.stamp))
+        if left_present and self.left_root_tf_name != "lh_leap_camera":
+            new_tfs.append(self.local_tf_buffer.lookup_transform(self.left_root_tf_name, "lh_leap_camera", transform.header.stamp))
+        return new_tfs
+
+    def publish_tfs(self, transforms):
+        self.transform_broadcaster.sendTransform(transforms)
+
+    def common_frame(self, hand, hand_prefix="rh"):
+        new_tfs = []
         if not hand.is_present:
             return new_tfs
-        elbow_tf = self.new_root_tf("{}leap_elbow".format(arm_prefix), human.header.stamp)
+        elbow_tf = self.new_root_tf(f'{hand_prefix}_leap_elbow', hand.header.stamp, hand_prefix)
         self.leap_pose_to_ros_tf(hand.arm.elbow, elbow_tf.transform)
-        palm_tf = self.new_root_tf("{}leap_palm".format(hand_prefix), human.header.stamp)
+        palm_tf = self.new_root_tf(f'{hand_prefix}_leap_palm', hand.header.stamp, hand_prefix)
         palm_tf.transform.translation.x = -hand.palm_center.z
         palm_tf.transform.translation.y = -hand.palm_center.x
         palm_tf.transform.translation.z = hand.palm_center.y
         palm_tf.transform.rotation = self.ros_rpy_to_quat([-hand.roll, -hand.pitch, -hand.yaw])
-        wrist_tf = self.new_root_tf("{}leap_wrist".format(arm_prefix), human.header.stamp)
+        wrist_tf = self.new_root_tf(f'{hand_prefix}_leap_wrist', hand.header.stamp, hand_prefix)
         self.leap_pose_to_ros_tf(hand.arm.wrist, wrist_tf.transform)
-        arm_tf = self.new_root_tf("{}leap_arm_center".format(arm_prefix), human.header.stamp)
+        arm_tf = self.new_root_tf(f'{hand_prefix}_leap_arm_center', hand.header.stamp, hand_prefix)
         arm_tf.transform.translation.x = -hand.arm.center[2]
         arm_tf.transform.translation.y = -hand.arm.center[0]
         arm_tf.transform.translation.z = hand.arm.center[1]
@@ -118,25 +139,24 @@ class SrLeapMotion():
         new_tfs.append(palm_tf)
         new_tfs.append(arm_tf)
         for finger in hand.finger_list:
+            finger_name = SrLeapMotion.FINGER_NAMES[finger.type]
             for bone in finger.bone_list:
+                bone_name = SrLeapMotion.BONE_NAMES[bone.type]
                 bone_end_tf = self.new_root_tf(
-                    "{}leap_{}_{}_end".format(
-                        hand_prefix, SrLeapMotion.FINGER_NAMES[finger.type], SrLeapMotion.BONE_NAMES[bone.type]),
-                    human.header.stamp)
+                    f'{hand_prefix}_leap_{finger_name}_{bone_name}_end',
+                    hand.header.stamp, hand_prefix)
                 self.leap_pose_to_ros_tf(bone.bone_end, bone_end_tf.transform)
                 new_tfs.append(bone_end_tf)
                 if self.bone_starts:
                     bone_start_tf = self.new_root_tf(
-                        "{}leap_{}_{}_start".format(
-                            hand_prefix, SrLeapMotion.FINGER_NAMES[finger.type], SrLeapMotion.BONE_NAMES[bone.type]),
-                        human.header.stamp)
+                        f'{hand_prefix}_leap_{finger_name}_{bone_name}_start',
+                        hand.header.stamp, hand_prefix)
                     self.leap_pose_to_ros_tf(bone.bone_start, bone_start_tf.transform)
                     new_tfs.append(bone_start_tf)
                 if self.bone_middles:
                     bone_mid_tf = self.new_root_tf(
-                        "{}leap_{}_{}_mid".format(
-                            hand_prefix, SrLeapMotion.FINGER_NAMES[finger.type], SrLeapMotion.BONE_NAMES[bone.type]),
-                        human.header.stamp)
+                        f'{hand_prefix}_leap_{finger_name}_{bone_name}_mid',
+                        hand.header.stamp, hand_prefix)
                     bone_mid_tf.transform.translation.x = -bone.center[2]
                     bone_mid_tf.transform.translation.y = -bone.center[0]
                     bone_mid_tf.transform.translation.z = bone.center[1]
@@ -145,10 +165,10 @@ class SrLeapMotion():
         return new_tfs
 
     @staticmethod
-    def new_root_tf(name, timestamp):
+    def new_root_tf(name, timestamp, side_prefix="rh"):
         transform = TransformStamped()
         transform.header.stamp = timestamp
-        transform.header.frame_id = "root"
+        transform.header.frame_id = f'{side_prefix}_leap_camera'
         transform.child_frame_id = name
         transform.transform.rotation.w = 1.0
         return transform
@@ -189,11 +209,47 @@ class SrLeapMotion():
         quat.w = quat_array[3]
         return quat
 
+    def set_root_tf(self, side="lh", root_tf_name="lh_leap_camera"):
+        if side == "rh":
+            self.right_root_tf_name = root_tf_name
+        if side == "lh":
+            self.left_root_tf_name = root_tf_name
+        self.tf_structure.update({f'{side}_leap_camera': root_tf_name})
+        if root_tf_name in self.tf_structure:
+            del self.tf_structure[root_tf_name]
+        # rospy.loginfo(self.tf_structure)
+
+    def default_tf_structure(self):
+        tf_structure = {}
+        for side in ["rh", "lh"]:
+            tf_structure.update({
+                f'{side}_leap_elbow': f'{side}_leap_camera', f'{side}_leap_arm_center': f'{side}_leap_elbow',
+                f'{side}_leap_wrist': f'{side}_leap_arm_center', f'{side}_leap_palm': f'{side}_leap_wrist'})
+            for finger in ["ff", "mf", "rf", "lf", "th"]:
+                tf_structure.update(self.default_bone_tf_structure(side=side, bone="mca", finger=finger, default_root="wrist"))
+                tf_structure.update(self.default_bone_tf_structure(side=side, bone="prx", finger=finger, default_root=f'{finger}_mca_end'))
+                tf_structure.update(self.default_bone_tf_structure(side=side, bone="int", finger=finger, default_root=f'{finger}_prx_end'))
+                tf_structure.update(self.default_bone_tf_structure(side=side, bone="dis", finger=finger, default_root=f'{finger}_int_end'))
+        return tf_structure      
+
+    def default_bone_tf_structure(self, side="rh", bone="mca", finger="ff", default_root="wrist"):
+        tf_structure = {}
+        tf_structure.update({f'{side}_leap_{finger}_{bone}_end': f'{side}_leap_{default_root}'})
+        if (self.bone_starts):
+                tf_structure.update({f'{side}_leap_{finger}_{bone}_start': f'{side}_leap_{default_root}'})
+                tf_structure.update({f'{side}_leap_{finger}_{bone}_end': f'{side}_leap_{finger}_{bone}_start'})
+        if (self.bone_middles):
+            tf_structure.update({f'{side}_leap_{finger}_{bone}_mid': f'{side}_leap_{default_root}'})
+            tf_structure.update({f'{side}_leap_{finger}_{bone}_end': f'{side}_leap_{finger}_{bone}_mid'})
+            if (self.bone_starts):
+                tf_structure.update({f'{side}_leap_{finger}_{bone}_mid': f'{side}_leap_{finger}_{bone}_start'})
+        return tf_structure
+
 
 if __name__ == "__main__":
     rospy.init_node("sr_leap_motion")
-    left_root_tf_name = rospy.get_param("~left_root_tf_name", "sr_leap_motion_root")
-    right_root_tf_name = rospy.get_param("~right_root_tf_name", "sr_leap_motion_root")
+    left_root_tf_name = rospy.get_param("~left_root_tf_name", "lh_leap_camera")
+    right_root_tf_name = rospy.get_param("~right_root_tf_name", "rh_leap_camera")
     bone_starts = rospy.get_param("~bone_starts", False)
     bone_middles = rospy.get_param("~bone_middles", False)
     heartbeat_topic = rospy.get_param("~heartbeat_topic", "/sr_leap_motion/heartbeat")

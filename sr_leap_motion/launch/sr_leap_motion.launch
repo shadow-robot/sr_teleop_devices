@@ -13,13 +13,13 @@
 
 <launch>
     <arg name="rviz" default="false"/>
-    <arg name="right_root_tf_name" default="sr_leap_motion_root"/>
-    <arg name="left_root_tf_name" default="sr_leap_motion_root"/>
+    <arg name="right_root_tf_name" default="rh_leap_camera"/>
+    <arg name="left_root_tf_name" default="lh_leap_camera"/>
     <arg name="bone_starts" default="false"/>
     <arg name="bone_middles" default="false"/>
     <arg name="heartbeat_topic" default="/sr_leap_motion/heartbeat"/>
     <include file="$(find sr_leap_motion)/launch/leap_motion.launch"/>
-    <node pkg="sr_leap_motion" type="sr_leap_motion.py" name="sr_leap_motion" output="screen">
+    <node pkg="sr_leap_motion" type="sr_leap_motion_node.py" name="sr_leap_motion" output="screen">
         <param name="right_root_tf_name" value="$(arg right_root_tf_name)"/>
         <param name="left_root_tf_name" value="$(arg left_root_tf_name)"/>
         <param name="bone_starts" value="$(arg bone_starts)"/>
@@ -28,4 +28,6 @@
     </node>
     <!-- Open a preconfigured RViz window -->
     <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find sr_leap_motion)/config/rviz.rviz" />
+    <node if="$(eval right_root_tf_name == 'rh_leap_camera' and left_root_tf_name == 'lh_leap_camera')" pkg="tf2_ros" type="static_transform_publisher" name="sr_leap_link" args="0 0 0 0 0 0 1 rh_leap_camera lh_leap_camera" />
+
 </launch>

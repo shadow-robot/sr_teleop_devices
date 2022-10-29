@@ -22,7 +22,7 @@
 
 #include <vector>
 #include <iostream>
-#include "../include/lmc_filter_node.h"
+#include "sr_leap_motion/lmc_filter_node.h"
 
 static ros::Publisher* filt_pub;
 

@@ -1,0 +1,181 @@
+These are the config options and their defaults, as reported by leapd -h.
+
+Public Configurations:
+  --camera_type arg (=UVCI)
+  --camera_framerate_limit arg (=1000)
+  --camera_requires_calib [=arg(=1)]
+  --camera_y_sample_rate arg (=0)
+  --camera_x_sample_rate arg (=0)
+  --camera_mode arg (=HVGA)
+  --image_width arg (=640)
+  --image_height arg (=480)
+  --image_calib_width arg (=640)
+  --image_calib_height arg (=480)
+  --tracking_mode arg (=balanced)
+  --tracking_tool_enabled [=arg(=1)]
+  --tracking_hand_enabled [=arg(=1)]
+  --tracking_version arg (=v2)
+  --sampling_sparse_gap arg (=0.100000001)
+  --sampling_max_gap arg (=1)
+  --sampling_min_gap arg (=1)
+  --robust_mode_enabled [=arg(=1)]
+  --force_robust_mode [=arg(=1)]        0 = standard, 1 = mandatory robust mode
+  --low_resource_mode_enabled [=arg(=1)]
+  --avoid_poor_performance [=arg(=1)]
+  --background_app_mode arg (=1)        0 = disallow, 1 = not set, 2 = always
+  --images_mode arg (=1)                0 = disallow, 1 = not set, 2 = always
+  --parallelizing_filter_graph [=arg(=1)]
+  --support_xs_transport [=arg(=1)]
+  --websockets_enabled [=arg(=1)]
+  --websockets_allow_remote [=arg(=1)]
+  --ws_port arg (=6437)
+  --wss_port arg (=6436)
+  --use_autonet [=arg(=1)]              Enable Autonet monitoring server
+  --server_connect_ip arg (=127.0.0.1)
+  --print_timestamps_in_log [=arg(=1)]
+  --interval_record_path arg            Write timestamps to the specified file,
+                                        empty disables this behavior
+  --training_image_width arg (=64)
+  --training_image_height arg (=48)
+  --training_image_hand_size arg (=16)
+  --training_image_fix_scale [=arg(=1)]
+  --training_image_interval arg (=0)
+  --skeleton_initialization_error arg (=6)
+  --skeleton_palm_filtering arg (=0.5)
+  --skeleton_finger_filtering arg (=0.59999999999999998)
+  --skeleton_velocity_filtering arg (=0.69999999999999996)
+  --skeleton_half_filter_vel arg (=900)
+  --skeleton_half_tip_filter_vel arg (=1500)
+  --skeleton_half_palm_filter_vel arg (=600)
+  --skeleton_iterations arg (=10)
+  --skeleton_error_bound arg (=0.01)
+  --skeleton_finger_samples arg (=85)
+  --skeleton_separation arg (=10)
+  --skeleton_use_sampling [=arg(=1)]
+  --skeleton_extreme [=arg(=1)]
+  --skeleton_finger_recovery [=arg(=1)]
+  --skeleton_try_ik [=arg(=1)]
+  --skeleton_reinitialize [=arg(=1)]
+  --skeleton_v [=arg(=1)]
+  --skeleton_use_swarm [=arg(=1)]
+  --skeleton_swarm_iterations arg (=15)
+  --skeleton_swarm_particles arg (=15)
+  --skeleton_recovery [=arg(=1)]
+  --skeleton_match_conf [=arg(=1)]
+  --skeleton_sampling_interlace [=arg(=1)]
+  --skeleton_finger_pivot [=arg(=1)]
+  --skeleton_inertia [=arg(=1)]
+  --skeleton_use_palm_weight [=arg(=1)]
+  --skeleton_update_stubbiness [=arg(=1)]
+  --skeleton_use_loop_init [=arg(=1)]
+  --skeleton_block_flow [=arg(=1)]
+  --skeleton_default_scale arg (=1)
+  --skeleton_use_origin_basis [=arg(=1)]
+  --skeleton_max_scale arg (=1.0800000000000001)
+  --skeleton_min_scale arg (=0.71999999999999997)
+  --use_new_matching [=arg(=1)]
+  --use_new_matching_hmd [=arg(=1)]
+  --use_new_matching_hp [=arg(=1)]
+  --use_contour_tree [=arg(=1)]
+  --use_optical_flow [=arg(=1)]
+  --use_hardware_crop [=arg(=1)]
+  --key_tap_max_comp_down_ratio arg (=0.5)
+  --no_cp_startup [=arg(=1)]
+  --tool_refinement_use_Newton [=arg(=1)]
+  --tool_max_init_RMS_error arg (=2)
+  --tool_max_init_error arg (=0.001)
+  --tool_max_growth_error arg (=0.00050000000000000001)
+  --tool_refinement_iterations arg (=2)
+  --tool_refinement_step_size arg (=1)
+  --tool_refinement_update_reg arg (=0.01)
+  --tool_removal_max_error arg (=2.2999999999999998)
+  --tool_removal_straightness arg (=0.002)
+  --tool_axial_adjustment [=arg(=1)]
+  --tool_course_adjustment [=arg(=1)]
+  --tool_growth_dist arg (=10)
+  --tool_filtering arg (=0.5)
+  --tool_axial_filtering arg (=0.90000000000000002)
+  --tool_radius_filtering arg (=0.999)
+  --hand_to_tool_reinitialization [=arg(=1)]
+  --use_halide [=arg(=1)]
+  --run_candidate_detection [=arg(=1)]
+  --image_processing_auto_flip [=arg(=1)]
+  --image_processing_standby [=arg(=1)]
+  --image_processing_r_weight arg (=0.25)
+  --image_processing_max_dist arg (=700)
+  --image_processing_min_dist arg (=45)
+  --image_processing_sample_step arg (=4)
+  --image_processing_use_peaks [=arg(=1)]
+  --image_processing_use_2d_peaks [=arg(=1)]
+  --image_processing_region_ids [=arg(=1)]
+  --image_processing_dynamic_thresh [=arg(=1)]
+  --image_processing_hessian_edge [=arg(=1)]
+  --image_processing_adaptive_edge_density [=arg(=1)]
+  --use_noise_correction [=arg(=1)]
+  --head_mounted_display_mode [=arg(=1)]
+  --power_saving_adapter [=arg(=1)]
+  --power_saving_battery [=arg(=1)]
+  --os_interaction_multi_monitor [=arg(=1)]
+  --interaction_box_auto [=arg(=1)]
+  --interaction_box_height arg (=200)
+  --interaction_box_scale arg (=0.80000000000000004)
+  --interaction_center_x arg (=0)
+  --interaction_center_y arg (=200)
+  --interaction_center_z arg (=0)
+  --autoplane_closeness_epsilon arg (=4)
+  --autoplane_covariance_scale_factor arg (=0.5)
+  --autoplane_time_window arg (=0.40000000000000002)
+  --autoplane_warmup_time arg (=0.33300000000000002)
+  --autoplane_hover_zone_cutoff arg (=70)
+  --autoplane_dead_zone_cutoff arg (=220)
+  --autoplane_function_steepness arg (=1)
+  --autoplane_function_width arg (=4)
+  --autoplane_function_speed arg (=0.5)
+  --adjust_radiance [=arg(=1)]
+  --radiance_use_bg [=arg(=1)]
+  --screen_detected [=arg(=1)]
+  --screen_point0_x arg (=0)
+  --screen_point0_y arg (=0)
+  --screen_point0_z arg (=0)
+  --screen_point1_x arg (=0)
+  --screen_point1_y arg (=0)
+  --screen_point1_z arg (=0)
+  --screen_point2_x arg (=0)
+  --screen_point2_y arg (=0)
+  --screen_point2_z arg (=0)
+  --screen_point3_x arg (=0)
+  --screen_point3_y arg (=0)
+  --screen_point3_z arg (=0)
+  --screen_point4_x arg (=0)
+  --screen_point4_y arg (=0)
+  --screen_point4_z arg (=0)
+  --screen_point5_x arg (=0)
+  --screen_point5_y arg (=0)
+  --screen_point5_z arg (=0)
+  --screen_point6_x arg (=0)
+  --screen_point6_y arg (=0)
+  --screen_point6_z arg (=0)
+  --screen_point7_x arg (=0)
+  --screen_point7_y arg (=0)
+  --screen_point7_z arg (=0)
+  --reflection_removal_enabled [=arg(=1)]
+  --tracking_quad_enabled [=arg(=1)]
+  --quad_color arg (=BluePink)
+  --quad_num_cols arg (=4)
+  --quad_num_rows arg (=7)
+  --quad_step_x arg (=16.5)
+  --quad_step_y arg (=16.5)
+  --quad_res_x arg (=1080)
+  --quad_res_y arg (=1920)
+  --testing_output_json arg
+  --testing_interface_type arg
+  --testing_verbose [=arg(=1)]
+  --testing_indented_output [=arg(=1)]
+  --auto_check_updates [=arg(=1)]
+  --auto_install_updates [=arg(=1)]
+  --force_accept_updates [=arg(=1)]
+  --update_channel arg (=stable)
+  --allow_firmware_write [=arg(=1)]
+  --metrics_enabled [=arg(=1)]
+  --v4l2_pid arg (=19)
+  --ref_impl arg

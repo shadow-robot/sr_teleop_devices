@@ -1,0 +1,6 @@
+{
+    "configuration": {
+      "image_processing_flipped": true,
+      "skeleton_inertia": 0
+    }
+}

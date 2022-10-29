@@ -14,7 +14,7 @@
 <launch>
     <node name="leapd" pkg="sr_leap_motion" type="start_service.sh"/>
     <rosparam file="$(find leap_motion)/config/listener_params.yaml" command="load"/>
-    <node pkg="sr_leap_motion" type="sr_leap_ros_driver.py" name="sr_leap_ros_driver" output="screen"/>
+    <node pkg="sr_leap_motion" type="sr_leap_ros_driver.py" name="sr_leap_ros_driver" output="screen" respawn="true"/>
     <rosparam file="$(find leap_motion)/config/filter_params.yaml" command="load"/>
     <node pkg="sr_leap_motion" type="sr_leap_motion_filter_node" name="sr_leap_motion_filter_node" output="screen"/>
 </launch>
