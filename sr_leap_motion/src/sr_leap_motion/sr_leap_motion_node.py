@@ -49,18 +49,44 @@ class SrLeapMotion():
 
     def on_skeleton_request(self, request):
         response = SkeletonResponse()
+        names = "["
+        translations = ""
+        root_transform = self.local_tf_buffer.lookup_transform(f'{request.root_tf_name}', f'rh_leap_mf_mca_end', rospy.Time.now(), rospy.Duration(1.0))
+        time = root_transform.header.stamp
+        rotations = ""
+        rotation_fix_tf = TransformStamped()
+        rotation_fix_tf.header.stamp = time
+        rotation_fix_tf.transform.rotation.x = 0.5
+        rotation_fix_tf.transform.rotation.y = -0.5
+        rotation_fix_tf.transform.rotation.z = 0.5
+        rotation_fix_tf.transform.rotation.w = 0.5
+        rotation_fix_tf.header.frame_id = f'{request.root_tf_name}'
+        rotation_fix_tf.child_frame_id = f'{request.root_tf_name}_manus'
+        self.local_tf_buffer.set_transform(rotation_fix_tf, "local_buffer")
+        tf_names = [f'rh_leap_th_prx_start', f'rh_leap_th_prx_end', f'rh_leap_th_int_end', f'rh_leap_th_dis_end']
+        for finger_name in ["ff", "mf", "rf", "lf"]:
+            tf_names.extend([f'rh_leap_{finger_name}_mca_start', f'rh_leap_{finger_name}_mca_end', f'rh_leap_{finger_name}_prx_end', f'rh_leap_{finger_name}_int_end', f'rh_leap_{finger_name}_dis_end'])
         if (request.root_tf_name != ""):
-            for finger_name in SrLeapMotion.FINGER_NAMES:
-                for bone_name in SrLeapMotion.BONE_NAMES:
-                    try:
-                        transform = self.local_tf_buffer.lookup_transform(f'{request.root_tf_name}', f'rh_leap_{finger_name}_{bone_name}_end', rospy.Time(0))
-                        response.transforms.append(transform)
-                        translation = transform.transform.translation
-                        response.manus_skeleton = f'{response.manus_skeleton}{translation.x}f, {translation.y}f, {translation.z}f, {finger_name}_{bone_name}_end\n'
-                    except LookupException as e:
-                        raise rospy.ServiceException(f'Failed to find skeleton transform: {e}')
+            for tf_name in tf_names:
+                try:
+                    rotation_fix_tf.header.frame_id = f'{tf_name}'
+                    rotation_fix_tf.child_frame_id = f'{tf_name}_manus'
+                    self.local_tf_buffer.set_transform(rotation_fix_tf, "local_buffer")
+                    transform = self.local_tf_buffer.lookup_transform(f'{request.root_tf_name}_manus', f'{tf_name}_manus', time)
+                    names = f'{names}, "{tf_name}"'
+                    response.transforms.append(transform)
+                    translation = transform.transform.translation
+                    rotation = transform.transform.rotation
+                    translations = f'{translations}{{{round(translation.x, 5)}f, {round(translation.y, 5)}f, {round(translation.z, 5)}f}}, '
+                    rotations = f'{rotations}{{{round(rotation.x, 5)}f, {round(rotation.y, 5)}f, {round(rotation.z, 5)}f, {round(rotation.w, 5)}f}}, '
+                    response.manus_skeleton = f'{response.manus_skeleton}{translation.x}f, {translation.y}f, {translation.z}f, {tf_name}\n'
+                except LookupException as e:
+                    raise rospy.ServiceException(f'Failed to find skeleton transform: {e}')
         response.human = self.human
         rospy.loginfo(response.manus_skeleton)
+        rospy.loginfo(f'{names}]')
+        rospy.loginfo(f'{translations}')
+        rospy.loginfo(f'{rotations}')
         return response
 
     def run(self):
