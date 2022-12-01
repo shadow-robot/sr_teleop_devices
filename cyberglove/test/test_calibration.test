@@ -1,3 +1,0 @@
-<launch>
-  <test test-name="test_cyberglove_calibration" pkg="cyberglove" type="test_cyberglove" />
-</launch>
