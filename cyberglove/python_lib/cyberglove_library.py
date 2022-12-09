@@ -17,11 +17,9 @@
 
 # pylint: disable-all
 
-from __future__ import absolute_import, division
 
 import threading
 import time
-
 import rosgraph.masterapi
 import roslib
 import rospy
