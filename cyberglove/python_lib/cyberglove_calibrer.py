@@ -26,9 +26,7 @@ Calibration utility for the cyberglove.
 
 from __future__ import absolute_import
 
-import os
 from builtins import input
-
 import roslib
 import rospy
 from cyberglove.srv import Calibration as CalibrationSrv

@@ -27,7 +27,6 @@ Minimizes the mapping matrix using a simplex algorithm
 from __future__ import absolute_import
 
 from builtins import input
-
 import roslib
 import rospy
 from cyberglove_library import Cyberglove
