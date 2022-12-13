@@ -14,8 +14,6 @@
 # You should have received a copy of the GNU General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-
 import rospy
 from geometry_msgs.msg import Quaternion, TransformStamped
 from leap_motion.msg import Human
@@ -73,11 +71,11 @@ class SrLeapMotion():
         self.heartbeat_publisher.publish(not ((not self.left_tfs) and (not self.right_tfs)))
 
     def publish_tfs(self, transforms, root_tf_name):
-        buffer = Buffer()
+        tf_buffer = Buffer()
         tf_authority = ""
         root_tf_found = False
         for transform in transforms:
-            buffer.set_transform(transform, tf_authority)
+            tf_buffer.set_transform(transform, tf_authority)
             if transform.child_frame_id == root_tf_name:
                 root_tf_found = True
         # If the requested root TF name isn't one of the TFs reported by Leap Motion, report all TFs relative to Leap
@@ -90,7 +88,7 @@ class SrLeapMotion():
         else:
             for transform in transforms:
                 if transform.child_frame_id != root_tf_name:
-                    reparented_tf = buffer.lookup_transform(root_tf_name, transform.child_frame_id, rospy.Time())
+                    reparented_tf = tf_buffer.lookup_transform(root_tf_name, transform.child_frame_id, rospy.Time())
                     self.transform_broadcaster.sendTransform(reparented_tf)
 
     def common_frame(self, human, hand=None, arm_prefix="ra_", hand_prefix="rh_"):
